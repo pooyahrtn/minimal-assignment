@@ -5,7 +5,7 @@
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
-    "build": "bun build src/index.ts --outfile dist/agent.js --target=browser --format=iife --minify"
+    "build": "bun build src/boot.ts --outfile dist/agent.js --target=browser --format=iife --minify"
   },
   "dependencies": {
     "@maximal/tokens": "workspace:*"
