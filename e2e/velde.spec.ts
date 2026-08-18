@@ -8,8 +8,8 @@ import { isOccludedAtCenter, isStruckThrough, noBrokenImages, productJsonLd } fr
 const BASE = 'http://localhost:4001'
 
 // A normal, in-stock, photographed product — used for the happy path and the 375px checks.
-const MAIN = { handle: 'kade-waxed-parka', title: 'Kade Waxed Parka', price: '€495.00' }
-const OUT_OF_STOCK = { handle: 'wold-chunky-rollneck', title: 'Wold Chunky Rollneck' }
+const MAIN = { handle: 'noord-wool-overcoat', title: 'Noord Wool Overcoat', price: '€545.00' }
+const OUT_OF_STOCK = { handle: 'ij-trench', title: 'IJ Wool Jacket' }
 const ON_SALE = {
   handle: 'doorn-rain-coat',
   title: 'Doorn Rain Coat',
@@ -31,7 +31,7 @@ test.describe('critical purchase path', () => {
 
     const jsonLd = await productJsonLd(page)
     expect(jsonLd['@type']).toBe('Product')
-    expect(jsonLd.offers.price).toBe('495.00')
+    expect(jsonLd.offers.price).toBe('545.00')
     expect(jsonLd.additionalProperty.length).toBeGreaterThan(0)
   })
 
@@ -47,7 +47,7 @@ test.describe('critical purchase path', () => {
     const drawer = page.getByRole('complementary', { name: 'Bag' })
     await expect(drawer).toBeVisible()
     await expect(drawer).toContainText(MAIN.title)
-    await expect(drawer).toContainText('495.00')
+    await expect(drawer).toContainText('545.00')
   })
 
   test('the out-of-stock product cannot be added to the bag', async ({ page }) => {

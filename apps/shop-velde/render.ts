@@ -220,7 +220,7 @@ export const homePage = (): string =>
 <section class="section-hero page-width">
   <p class="micro-label">Autumn / Winter</p>
   <h1 class="hero__heading">Clothes that outlast the season you bought them in.</h1>
-  <p class="hero__text">Thirty-two pieces. Waxed cotton, merino, vegetable-tanned leather. Made in
+  <p class="hero__text">Nineteen pieces. Waxed cotton, merino, vegetable-tanned leather. Made in
     Portugal, Italy and Scotland, and cut to be repaired rather than replaced.</p>
   <a class="link-arrow" href="#outerwear">See the collection</a>
 </section>

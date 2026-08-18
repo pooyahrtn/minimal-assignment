@@ -62,7 +62,7 @@
     "kind": "product-card",
     "product": {
       "id": "dijk-chore-jacket",
-      "title": "Dijk Chore Jacket",
+      "title": "Dijk Peacoat",
       "url": "http://localhost:4001/products/dijk-chore-jacket",
       "image": "http://localhost:4001/photos/outerwear-06.jpg",
       "price": 245,
@@ -71,11 +71,11 @@
       "specs": [
         {
           "label": "Material",
-          "value": "100% garment-dyed cotton twill, 11oz"
+          "value": "80% wool, 20% polyamide, peacoat weight"
         },
         {
           "label": "Fit",
-          "value": "Boxy"
+          "value": "Relaxed, mid-thigh"
         },
         {
           "label": "Made in",
@@ -83,7 +83,7 @@
         },
         {
           "label": "Care",
-          "value": "Machine wash 30°. Line dry. Expect it to fade."
+          "value": "Dry clean only. Brush after wear."
         }
       ],
       "tags": ["jacket", "black", "matte", "office", "bike", "outerwear"]
@@ -94,28 +94,28 @@
     "kind": "product-card",
     "product": {
       "id": "sluis-anorak",
-      "title": "Sluis Anorak",
+      "title": "Sluis Leather Coat",
       "url": "http://localhost:4001/products/sluis-anorak",
-      "image": "http://localhost:4001/photos/outerwear-06.jpg",
+      "image": "http://localhost:4001/photos/outerwear-09.jpg",
       "price": 245,
       "currency": "EUR",
       "inStock": true,
       "specs": [
         {
           "label": "Material",
-          "value": "Recycled polyester, bonded three-layer"
+          "value": "Full-grain leather, belted"
         },
         {
           "label": "Fit",
-          "value": "Relaxed"
+          "value": "Relaxed, mid-thigh"
         },
         {
           "label": "Made in",
-          "value": "Vietnam"
+          "value": "Italy"
         },
         {
           "label": "Care",
-          "value": "Machine wash 30°. Do not tumble dry."
+          "value": "Wipe with a dry cloth. Condition yearly. Never machine wash."
         }
       ],
       "tags": ["jacket", "black", "matte", "office", "bike", "outerwear"]

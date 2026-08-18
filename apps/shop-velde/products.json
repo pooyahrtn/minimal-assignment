@@ -1,26 +1,5 @@
 [
   {
-    "handle": "kade-waxed-parka",
-    "title": "Kade Waxed Parka",
-    "category": "outerwear",
-    "colour": "Charcoal",
-    "price": 49500,
-    "compareAt": null,
-    "image": "velde-outerwear-01.jpg",
-    "inStock": true,
-    "rating": {
-      "value": 4.6,
-      "count": 23
-    },
-    "description": "A long parka in 8oz waxed cotton, cut straight and finished with a storm placket. The wax dulls and marks with wear; that is the point of it.",
-    "specs": {
-      "material": "8oz waxed cotton, cotton twill lining",
-      "fit": "Regular, hits mid-thigh",
-      "madeIn": "Portugal",
-      "care": "Sponge clean. Rewax once a year. Never machine wash."
-    }
-  },
-  {
     "handle": "noord-wool-overcoat",
     "title": "Noord Wool Overcoat",
     "category": "outerwear",
@@ -33,7 +12,7 @@
       "value": 4.8,
       "count": 61
     },
-    "description": "Single-breasted, unstructured through the shoulder, in a dense Italian wool melton. Wears over a jacket without pulling across the back.",
+    "description": "Double-breasted, cut with a full lapel and flap pockets, in a dense Italian wool melton. Wears over a jacket without pulling across the back.",
     "specs": {
       "material": "80% virgin wool, 20% polyamide melton, 640g",
       "fit": "Relaxed, knee length",
@@ -42,49 +21,10 @@
     }
   },
   {
-    "handle": "veer-shell-jacket",
-    "title": "Veer Shell Jacket",
-    "category": "outerwear",
-    "colour": "Black",
-    "price": 32000,
-    "compareAt": null,
-    "image": "velde-outerwear-03.jpg",
-    "inStock": true,
-    "rating": {
-      "value": 4.3,
-      "count": 11
-    },
-    "description": "A two-layer recycled nylon shell with taped seams and a concealed hood. Packs into its own chest pocket.",
-    "specs": {
-      "material": "100% recycled nylon, 10k/10k membrane",
-      "fit": "Regular",
-      "madeIn": "Vietnam",
-      "care": "Machine wash 30°. Tumble dry low to reactivate the DWR."
-    }
-  },
-  {
-    "handle": "dijk-chore-jacket",
-    "title": "Dijk Chore Jacket",
-    "category": "outerwear",
-    "colour": "Black",
-    "price": 24500,
-    "compareAt": null,
-    "image": "velde-outerwear-04.jpg",
-    "inStock": true,
-    "rating": null,
-    "description": "Three patch pockets, a flat collar, and nothing else. Garment-dyed cotton twill that softens after a week — cut close enough for the bike, plain enough for the office.",
-    "specs": {
-      "material": "100% garment-dyed cotton twill, 11oz",
-      "fit": "Boxy",
-      "madeIn": "Portugal",
-      "care": "Machine wash 30°. Line dry. Expect it to fade."
-    }
-  },
-  {
     "handle": "spui-quilted-liner",
-    "title": "Spui Quilted Liner",
+    "title": "Spui Wool Jacket",
     "category": "outerwear",
-    "colour": "Ecru",
+    "colour": "Camel",
     "price": 28500,
     "compareAt": null,
     "image": "velde-outerwear-05.jpg",
@@ -93,31 +33,49 @@
       "value": 4.1,
       "count": 8
     },
-    "description": "A thin quilted layer built to go under the parka or on its own in October. Recycled wadding, no bulk at the shoulder.",
+    "description": "A single-breasted wool jacket, cut clean through the body with covered buttons. No bulk at the shoulder, plain enough to wear under a coat or on its own.",
     "specs": {
-      "material": "Recycled polyamide shell, recycled polyester wadding",
-      "fit": "Slim, hip length",
-      "madeIn": "Vietnam",
-      "care": "Machine wash 30°. Do not iron."
+      "material": "100% wool, twill weave",
+      "fit": "Tailored, hip length",
+      "madeIn": "Portugal",
+      "care": "Dry clean only."
+    }
+  },
+  {
+    "handle": "dijk-chore-jacket",
+    "title": "Dijk Peacoat",
+    "category": "outerwear",
+    "colour": "Black",
+    "price": 24500,
+    "compareAt": null,
+    "image": "velde-outerwear-04.jpg",
+    "inStock": true,
+    "rating": null,
+    "description": "A double-breasted wool peacoat, flap pockets and a deep collar, nothing else. The wool softens after a week — cut close enough for the bike, plain enough for the office.",
+    "specs": {
+      "material": "80% wool, 20% polyamide, peacoat weight",
+      "fit": "Relaxed, mid-thigh",
+      "madeIn": "Portugal",
+      "care": "Dry clean only. Brush after wear."
     }
   },
   {
     "handle": "ij-trench",
-    "title": "IJ Trench",
+    "title": "IJ Wool Jacket",
     "category": "outerwear",
     "colour": "Stone",
     "price": 42500,
     "compareAt": null,
     "image": "velde-outerwear-06.jpg",
-    "inStock": true,
+    "inStock": false,
     "rating": {
       "value": 4.7,
       "count": 34
     },
-    "description": "The trench stripped of its epaulettes, storm flap and D-rings. What is left is a coat, a belt and a good cotton gabardine.",
+    "description": "A single-breasted wool jacket, cut clean with notch lapels and welt pockets, fully lined. Plain enough to wear over anything else here.",
     "specs": {
-      "material": "100% cotton gabardine, water-repellent finish",
-      "fit": "Relaxed, below the knee",
+      "material": "100% wool, twill weave, lined",
+      "fit": "Tailored, hip length",
       "madeIn": "Portugal",
       "care": "Dry clean only."
     }
@@ -132,20 +90,20 @@
     "image": "velde-outerwear-07.jpg",
     "inStock": true,
     "rating": {
-      "value": 4.4,
-      "count": 19
+      "value": 4.3,
+      "count": 11
     },
-    "description": "Four pockets, a drawcord waist, and a collar that stands without help. Cut wide enough for a knit underneath.",
+    "description": "A long field coat with a storm flap, twin epaulettes and a collar that stands without help. Cut wide enough for a knit underneath.",
     "specs": {
-      "material": "100% organic cotton ripstop, 7oz",
-      "fit": "Regular",
+      "material": "Waxed cotton with a water-resistant finish",
+      "fit": "Relaxed, below the knee",
       "madeIn": "Portugal",
-      "care": "Machine wash 30°. Line dry."
+      "care": "Sponge clean. Rewax once a year."
     }
   },
   {
     "handle": "sluis-anorak",
-    "title": "Sluis Anorak",
+    "title": "Sluis Leather Coat",
     "category": "outerwear",
     "colour": "Black",
     "price": 24500,
@@ -153,17 +111,17 @@
     "image": "velde-outerwear-08.jpg",
     "inStock": true,
     "rating": null,
-    "description": "Half-zip, one kangaroo pocket, a hood that closes down to a slot. Made for a wet ride home — layers clean enough to walk straight into the office once you're dry.",
+    "description": "A belted coat in soft matte leather, cut for a wet ride home — layers clean enough to walk straight into the office once you're dry.",
     "specs": {
-      "material": "Recycled polyester, bonded three-layer",
-      "fit": "Relaxed",
-      "madeIn": "Vietnam",
-      "care": "Machine wash 30°. Do not tumble dry."
+      "material": "Full-grain leather, belted",
+      "fit": "Relaxed, mid-thigh",
+      "madeIn": "Italy",
+      "care": "Wipe with a dry cloth. Condition yearly. Never machine wash."
     }
   },
   {
     "handle": "havik-bomber",
-    "title": "Havik Bomber",
+    "title": "Havik Wool Blazer",
     "category": "outerwear",
     "colour": "Charcoal",
     "price": 29500,
@@ -174,19 +132,19 @@
       "value": 3.9,
       "count": 7
     },
-    "description": "A wool-blend bomber with knitted rib at the cuff and hem. Short in the body, wide in the sleeve.",
+    "description": "A single-breasted wool jacket with a checked lining and flap pockets. Cut straight through the body, plain at the collar.",
     "specs": {
-      "material": "62% wool, 38% polyamide, rib trim in merino",
-      "fit": "Boxy, cropped",
+      "material": "62% wool, 38% polyamide, twill weave, lined",
+      "fit": "Regular, hip length",
       "madeIn": "Portugal",
       "care": "Dry clean only."
     }
   },
   {
     "handle": "wal-overshirt",
-    "title": "Wal Overshirt",
+    "title": "Wal Wool Coat",
     "category": "outerwear",
-    "colour": "Ecru",
+    "colour": "Navy",
     "price": 19500,
     "compareAt": null,
     "image": "velde-outerwear-10.jpg",
@@ -195,12 +153,12 @@
       "value": 4.5,
       "count": 26
     },
-    "description": "Heavy enough to be a jacket, soft enough to be a shirt. Two chest pockets, corozo buttons.",
+    "description": "A single-breasted swing coat in soft wool with a checked lining, cut loose through the body. Wears open as easily as buttoned.",
     "specs": {
-      "material": "100% brushed cotton, 9oz",
-      "fit": "Regular",
+      "material": "100% wool",
+      "fit": "Relaxed, mid-thigh",
       "madeIn": "Portugal",
-      "care": "Machine wash 30°. Warm iron."
+      "care": "Dry clean only."
     }
   },
   {
@@ -225,150 +183,6 @@
     }
   },
   {
-    "handle": "merino-crew",
-    "title": "Merino Crew",
-    "category": "knitwear",
-    "colour": "Black",
-    "price": 16500,
-    "compareAt": null,
-    "image": "velde-knitwear-01.jpg",
-    "inStock": true,
-    "rating": {
-      "value": 4.7,
-      "count": 88
-    },
-    "description": "The plain crew, knitted in extrafine merino at a gauge that holds its shape. Wears alone or under everything else here.",
-    "specs": {
-      "material": "100% extrafine merino wool, 18.5 micron",
-      "fit": "Slim",
-      "madeIn": "Italy",
-      "care": "Hand wash cold. Dry flat. Do not wring."
-    }
-  },
-  {
-    "handle": "kern-cable-knit",
-    "title": "Kern Cable Knit",
-    "category": "knitwear",
-    "colour": "Ecru",
-    "price": 22500,
-    "compareAt": null,
-    "image": "velde-knitwear-02.jpg",
-    "inStock": true,
-    "rating": {
-      "value": 4.6,
-      "count": 31
-    },
-    "description": "A five-gauge cable in undyed lambswool. Heavy in the hand, and it will grow half a size with wear.",
-    "specs": {
-      "material": "100% lambswool, undyed",
-      "fit": "Relaxed",
-      "madeIn": "Scotland",
-      "care": "Hand wash cold. Dry flat."
-    }
-  },
-  {
-    "handle": "bree-half-zip",
-    "title": "Bree Half-Zip",
-    "category": "knitwear",
-    "colour": "Charcoal",
-    "price": 19500,
-    "compareAt": null,
-    "image": "velde-knitwear-03.jpg",
-    "inStock": true,
-    "rating": {
-      "value": 4.4,
-      "count": 22
-    },
-    "description": "A long zip through a stand collar, in a milled merino that sits flat. Closed it is a rollneck; open it is not.",
-    "specs": {
-      "material": "100% merino wool, milled finish",
-      "fit": "Regular",
-      "madeIn": "Italy",
-      "care": "Hand wash cold. Dry flat."
-    }
-  },
-  {
-    "handle": "loof-mock-neck",
-    "title": "Loof Mock Neck",
-    "category": "knitwear",
-    "colour": "Navy",
-    "price": 18500,
-    "compareAt": null,
-    "image": "velde-knitwear-04.jpg",
-    "inStock": true,
-    "rating": null,
-    "description": "A short stand collar instead of a fold. Fine merino, ribbed at the cuff and hem, nothing at the shoulder.",
-    "specs": {
-      "material": "100% extrafine merino wool",
-      "fit": "Slim",
-      "madeIn": "Italy",
-      "care": "Hand wash cold. Dry flat."
-    }
-  },
-  {
-    "handle": "stil-fine-gauge-crew",
-    "title": "Stil Fine-Gauge Crew",
-    "category": "knitwear",
-    "colour": "Stone",
-    "price": 15500,
-    "compareAt": null,
-    "image": "velde-knitwear-05.jpg",
-    "inStock": true,
-    "rating": {
-      "value": 4.5,
-      "count": 44
-    },
-    "description": "Twelve-gauge cotton, knitted thin enough to wear indoors all year. The neck is banded, not rolled.",
-    "specs": {
-      "material": "100% long-staple cotton",
-      "fit": "Slim",
-      "madeIn": "Portugal",
-      "care": "Machine wash 30° on wool cycle. Dry flat."
-    }
-  },
-  {
-    "handle": "wold-chunky-rollneck",
-    "title": "Wold Chunky Rollneck",
-    "category": "knitwear",
-    "colour": "Charcoal",
-    "price": 24500,
-    "compareAt": null,
-    "image": "velde-knitwear-06.jpg",
-    "inStock": false,
-    "rating": {
-      "value": 4.9,
-      "count": 52
-    },
-    "description": "Three-gauge virgin wool with a collar deep enough to fold twice. Warm past the point of needing a coat.",
-    "specs": {
-      "material": "100% virgin wool, 3-gauge",
-      "fit": "Relaxed",
-      "madeIn": "Scotland",
-      "care": "Hand wash cold. Dry flat. Store folded."
-    }
-  },
-  {
-    "handle": "vlas-linen-knit",
-    "title": "Vlas Linen Knit",
-    "category": "knitwear",
-    "colour": "Ecru",
-    "price": 17500,
-    "compareAt": null,
-    "image": "velde-knitwear-07.jpg",
-    "inStock": true,
-    "rating": {
-      "value": 3.7,
-      "count": 3
-    },
-    "description": "An open-gauge linen crew for the four weeks a year it is warm here. Creases immediately and looks better for it.",
-    "specs": {
-      "material": "85% European linen, 15% cotton",
-      "fit": "Relaxed",
-      "madeIn": "Portugal",
-      "care": "Machine wash 30°. Dry flat. Do not bleach."
-    }
-  },
-  {
     "handle": "kaap-cardigan",
     "title": "Kaap Cardigan",
     "category": "knitwear",
@@ -381,11 +195,74 @@
       "value": 4.6,
       "count": 17
     },
-    "description": "A long cardigan in brushed lambswool with horn buttons and deep patch pockets. Cut to be worn open.",
+    "description": "A cropped cardigan in brushed lambswool with horn buttons. Cut to be worn open.",
     "specs": {
       "material": "90% lambswool, 10% cashmere, brushed",
-      "fit": "Relaxed, hits the hip",
+      "fit": "Cropped, hits the waist",
       "madeIn": "Scotland",
+      "care": "Hand wash cold. Dry flat."
+    }
+  },
+  {
+    "handle": "merino-crew",
+    "title": "Merino Crew",
+    "category": "knitwear",
+    "colour": "Black",
+    "price": 16500,
+    "compareAt": null,
+    "image": "velde-knitwear-01.jpg",
+    "inStock": true,
+    "rating": {
+      "value": 4.7,
+      "count": 88
+    },
+    "description": "The plain crew, in extrafine merino, cut long with a contrast cuff. Wears alone or under everything else here.",
+    "specs": {
+      "material": "100% extrafine merino wool, contrast cuff trim",
+      "fit": "Relaxed, tunic length",
+      "madeIn": "Italy",
+      "care": "Hand wash cold. Dry flat. Do not wring."
+    }
+  },
+  {
+    "handle": "zand-waffle-knit",
+    "title": "Zand Ribbed V-Neck",
+    "category": "knitwear",
+    "colour": "Stone",
+    "price": 14500,
+    "compareAt": null,
+    "image": "velde-knitwear-09.jpg",
+    "inStock": true,
+    "rating": {
+      "value": 4.2,
+      "count": 13
+    },
+    "description": "A ribbed V-neck knitted in a heathered wool-cotton blend. Substantial in the hand, plain at the shoulder.",
+    "specs": {
+      "material": "60% cotton, 40% merino wool, rib knit",
+      "fit": "Regular",
+      "madeIn": "Portugal",
+      "care": "Hand wash cold. Dry flat."
+    }
+  },
+  {
+    "handle": "winter-leather-gloves",
+    "title": "Winter Knit Gloves",
+    "category": "knitwear",
+    "colour": "Ecru",
+    "price": 14500,
+    "compareAt": null,
+    "image": "velde-leather-07.jpg",
+    "inStock": true,
+    "rating": {
+      "value": 4.1,
+      "count": 9
+    },
+    "description": "Long knitted gloves in fine-gauge wool, finished with a fold at the cuff. For the coldest six weeks of the year.",
+    "specs": {
+      "material": "100% merino wool",
+      "fit": "One size, elbow length",
+      "madeIn": "Italy",
       "care": "Hand wash cold. Dry flat."
     }
   },
@@ -411,132 +288,6 @@
     }
   },
   {
-    "handle": "zand-waffle-knit",
-    "title": "Zand Waffle Knit",
-    "category": "knitwear",
-    "colour": "Stone",
-    "price": 14500,
-    "compareAt": null,
-    "image": "velde-knitwear-09.jpg",
-    "inStock": true,
-    "rating": {
-      "value": 4.2,
-      "count": 13
-    },
-    "description": "A waffle-structure crew in cotton and wool. Textured enough to carry a plain outfit on its own.",
-    "specs": {
-      "material": "60% cotton, 40% merino wool",
-      "fit": "Regular",
-      "madeIn": "Portugal",
-      "care": "Hand wash cold. Dry flat."
-    }
-  },
-  {
-    "handle": "grid-rib-scarf",
-    "title": "Grid Rib Scarf",
-    "category": "knitwear",
-    "colour": "Charcoal",
-    "price": 12000,
-    "compareAt": null,
-    "image": "velde-knitwear-10.jpg",
-    "inStock": true,
-    "rating": {
-      "value": 4.8,
-      "count": 29
-    },
-    "description": "Two metres of ribbed merino, wide enough to double. Finished by hand at both ends.",
-    "specs": {
-      "material": "100% merino wool",
-      "fit": "200 × 30 cm",
-      "madeIn": "Italy",
-      "care": "Hand wash cold. Dry flat."
-    }
-  },
-  {
-    "handle": "merino-beanie",
-    "title": "Merino Beanie",
-    "category": "knitwear",
-    "colour": "Black",
-    "price": 9500,
-    "compareAt": null,
-    "image": "velde-knitwear-11.jpg",
-    "inStock": true,
-    "rating": {
-      "value": 4.5,
-      "count": 76
-    },
-    "description": "A fine-rib watch cap with a single fold. No badge, no label on the outside.",
-    "specs": {
-      "material": "100% extrafine merino wool",
-      "fit": "One size",
-      "madeIn": "Italy",
-      "care": "Hand wash cold. Dry flat."
-    }
-  },
-  {
-    "handle": "boucle-crew",
-    "title": "Bouclé Crew",
-    "category": "knitwear",
-    "colour": "Ecru",
-    "price": 21000,
-    "compareAt": null,
-    "image": "velde-knitwear-12.jpg",
-    "inStock": true,
-    "rating": {
-      "value": 5,
-      "count": 2
-    },
-    "description": "A looped bouclé yarn in an otherwise plain crew. All of the texture is in the thread.",
-    "specs": {
-      "material": "70% wool, 20% alpaca, 10% polyamide",
-      "fit": "Relaxed",
-      "madeIn": "Italy",
-      "care": "Hand wash cold. Dry flat."
-    }
-  },
-  {
-    "handle": "kraal-leather-jacket",
-    "title": "Kraal Leather Jacket",
-    "category": "leather",
-    "colour": "Black",
-    "price": 65000,
-    "compareAt": null,
-    "image": "velde-leather-01.jpg",
-    "inStock": true,
-    "rating": {
-      "value": 4.9,
-      "count": 41
-    },
-    "description": "Full-grain calfskin, unlined through the body, with a plain zip and no hardware beyond it. It will crease at the elbow within a month and keep those creases.",
-    "specs": {
-      "material": "Full-grain vegetable-tanned calfskin, 1.2mm",
-      "fit": "Slim, cropped at the hip",
-      "madeIn": "Italy",
-      "care": "Wipe with a dry cloth. Condition yearly. Never machine wash."
-    }
-  },
-  {
-    "handle": "kade-leather-bomber",
-    "title": "Kade Leather Bomber",
-    "category": "leather",
-    "colour": "Black",
-    "price": 59500,
-    "compareAt": null,
-    "image": "velde-leather-02.jpg",
-    "inStock": true,
-    "rating": {
-      "value": 4.7,
-      "count": 12
-    },
-    "description": "A soft lambskin bomber with merino rib at the collar, cuff and hem. Heavier than it looks on the hanger.",
-    "specs": {
-      "material": "Full-grain lambskin, 0.9mm, merino rib trim",
-      "fit": "Regular",
-      "madeIn": "Italy",
-      "care": "Wipe with a dry cloth. Condition yearly."
-    }
-  },
-  {
     "handle": "veld-leather-tote",
     "title": "Veld Leather Tote",
     "category": "leather",
@@ -558,28 +309,49 @@
     }
   },
   {
-    "handle": "haven-weekend-holdall",
-    "title": "Haven Weekend Holdall",
+    "handle": "kade-leather-bomber",
+    "title": "Kade Leather Bomber",
     "category": "leather",
-    "colour": "Charcoal",
+    "colour": "Black",
+    "price": 59500,
+    "compareAt": null,
+    "image": "velde-leather-02.jpg",
+    "inStock": true,
+    "rating": {
+      "value": 4.7,
+      "count": 12
+    },
+    "description": "A soft lambskin bomber with a ribbed collar, cuff and hem. Heavier than it looks on the hanger.",
+    "specs": {
+      "material": "Full-grain lambskin, 0.9mm, ribbed trim",
+      "fit": "Cropped, hits the waist",
+      "madeIn": "Italy",
+      "care": "Wipe with a dry cloth. Condition yearly."
+    }
+  },
+  {
+    "handle": "haven-weekend-holdall",
+    "title": "Haven Canvas Pack",
+    "category": "leather",
+    "colour": "Sand",
     "price": 54500,
     "compareAt": null,
     "image": "velde-leather-04.jpg",
     "inStock": true,
     "rating": null,
-    "description": "A 40-litre holdall with a detachable strap and solid brass hardware, aged dark. Sized for the cabin.",
+    "description": "A canvas backpack with a fold-over flap and two adjustable straps, sized for a laptop and a change of clothes.",
     "specs": {
-      "material": "Full-grain vegetable-tanned leather, cotton canvas lining",
-      "fit": "55 × 30 × 25 cm, 40L",
+      "material": "Water-resistant cotton canvas, leather trim",
+      "fit": "30 × 40 × 14 cm",
       "madeIn": "Italy",
-      "care": "Wipe with a dry cloth. Condition twice a year."
+      "care": "Spot clean with a damp cloth. Do not machine wash."
     }
   },
   {
     "handle": "riem-belt",
     "title": "Riem Belt",
     "category": "leather",
-    "colour": "Black",
+    "colour": "Tan",
     "price": 12000,
     "compareAt": null,
     "image": "velde-leather-05.jpg",
@@ -588,59 +360,17 @@
       "value": 4.4,
       "count": 37
     },
-    "description": "Thirty millimetres of bridle leather with a brushed steel buckle. Five holes, no keeper logo.",
+    "description": "Thirty millimetres of vegetable-tanned leather with a steel frame buckle and five hand-punched holes.",
     "specs": {
-      "material": "Bridle leather, 3.5mm, brushed steel buckle",
+      "material": "Vegetable-tanned leather, 3.5mm, steel buckle",
       "fit": "30mm wide, sizes 80–105",
       "madeIn": "Italy",
       "care": "Wipe with a dry cloth. Condition yearly."
     }
   },
   {
-    "handle": "kaart-card-holder",
-    "title": "Kaart Card Holder",
-    "category": "leather",
-    "colour": "Black",
-    "price": 9500,
-    "compareAt": null,
-    "image": "velde-leather-06.jpg",
-    "inStock": true,
-    "rating": {
-      "value": 4.3,
-      "count": 24
-    },
-    "description": "Four slots, one centre pocket, cut and folded from a single piece. Flat enough for a front pocket.",
-    "specs": {
-      "material": "Full-grain vegetable-tanned leather, 1.4mm",
-      "fit": "10 × 7 cm, holds 8 cards",
-      "madeIn": "Italy",
-      "care": "Wipe with a dry cloth."
-    }
-  },
-  {
-    "handle": "winter-leather-gloves",
-    "title": "Winter Leather Gloves",
-    "category": "leather",
-    "colour": "Black",
-    "price": 14500,
-    "compareAt": null,
-    "image": "velde-leather-07.jpg",
-    "inStock": true,
-    "rating": {
-      "value": 4.1,
-      "count": 9
-    },
-    "description": "Hairsheep leather over a cashmere lining, with three points of hand stitching across the back.",
-    "specs": {
-      "material": "Hairsheep leather, 100% cashmere lining",
-      "fit": "Sizes 7.5–10",
-      "madeIn": "Italy",
-      "care": "Wipe with a dry cloth. Do not soak."
-    }
-  },
-  {
     "handle": "damrak-derby",
-    "title": "Damrak Derby",
+    "title": "Damrak Suede Boots",
     "category": "leather",
     "colour": "Black",
     "price": 32000,
@@ -651,12 +381,12 @@
       "value": 4.5,
       "count": 28
     },
-    "description": "A plain derby on a blake-stitched leather sole, with a rounded last that is neither square nor sharp. Resoleable.",
+    "description": "Over-the-knee boots in brushed suede with a pointed toe and flat sole. Cut close through the leg, easy to walk in despite the height.",
     "specs": {
-      "material": "Full-grain box calf upper, leather sole",
-      "fit": "True to size, EU 39–46",
+      "material": "Suede upper, leather sole",
+      "fit": "Knee-high, true to size, EU 36–41",
       "madeIn": "Portugal",
-      "care": "Brush after wear. Use trees. Resole when the sole thins."
+      "care": "Brush after wear. Store with boot trees. Avoid the rain."
     }
   }
 ]
