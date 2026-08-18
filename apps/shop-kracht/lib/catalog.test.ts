@@ -7,7 +7,7 @@ import { flavourSiblings, photoSrc, products } from './products'
  * honest: shape, the four deliberate messy cases, and the money maths behind the BTW toggle.
  */
 test('catalogue is complete and well formed', () => {
-  expect(products.length).toBe(34)
+  expect(products.length).toBe(36)
   expect(new Set(products.map((p) => p.slug)).size).toBe(products.length)
 
   for (const product of products) {

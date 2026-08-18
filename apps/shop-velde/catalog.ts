@@ -38,25 +38,93 @@ async function readManifest(): Promise<PhotoManifestEntry[]> {
 
 const manifest: PhotoManifestEntry[] = await readManifest()
 
-/** Photography is shot and catalogued separately; products claim a slot in their category's
- *  reel rather than a filename, so a re-shoot never has to touch the catalog. A product whose
- *  `image` is null has no photograph on purpose and never gets one. */
+/**
+ * Each handle below was matched to a specific shoot frame by garment type and colour: the
+ * product title against the shoot's own `alt` description, and the product's declared `colour`
+ * against the file's `dominant` hex — checked by eye with the Read tool against the actual
+ * photos, not assumed from either label. A product with no entry here (e.g. a leather jacket
+ * when the shoot has no jacket in it) is left unmapped on purpose: `assignPhotos` below then
+ * leaves it photo-less, same as a product whose `image` is null, rather than hand it a photo of
+ * the wrong kind of thing.
+ *
+ * The set is being actively re-shot while this fix is being written — it changed from the
+ * original 32 files to a 20-file set mid-task, and the 20 files were then renumbered under the
+ * same names a second time (the "black wool cardigan with ribbed cuffs" moved from
+ * `knitwear-03.jpg` to `knitwear-04.jpg` between two checks). A table keyed by filename breaks
+ * silently on a renumber like that: the file it names still exists, in the right category, just
+ * holding different content now. So each entry below is a distinctive substring of the shoot's
+ * own `alt` text instead of a filename — content the manifest itself carries, which travels with
+ * a photo when it gets renumbered and only stops matching if the photo is actually replaced
+ * (at which point the safe fallback below is no photo, not a re-numbered wrong one). The shoot is
+ * also noticeably smaller than the catalog: 9 outerwear frames for 11 products, 4 knitwear frames
+ * for 12, 7 leather frames for 8 — where one frame is the closest available match for more than
+ * one product, it is reused rather than a mismatched frame forced onto the extra product, noted
+ * inline. This is a one-time editorial call, not a formula, which is why it is a table: the
+ * alternative is scoring every product against every frame by colour distance and hoping the
+ * arithmetic lands on the same judgement a person makes by looking. [hand-off]
+ */
+const PHOTO_BY_HANDLE: Record<string, string> = {
+  // outerwear — 11 products, 9 usable frames ("black wool cape with stand collar" matches no
+  // product in this catalog and is left unused rather than forced onto one). Three frames are
+  // each reused once for the closest remaining colour match.
+  'kade-waxed-parka': 'grey leather car coat', // closest to "Charcoal"
+  'noord-wool-overcoat': 'black wool double-breasted overcoat', // exact type match
+  'veer-shell-jacket': 'black leather belted coat',
+  'dijk-chore-jacket': 'black wool pea coat', // nearest plain black coat
+  'spui-quilted-liner': 'ecru cotton long coat',
+  'ij-trench': 'single-breasted camel wool blazer', // closest warm neutral to "Stone"
+  'vecht-field-jacket': 'taupe wool blazer', // closest warm tone to "Olive"
+  'sluis-anorak': 'black wool pea coat', // reuse: nearest plain black coat, see dijk-chore-jacket
+  'havik-bomber': 'grey leather car coat', // reuse: nearest "Charcoal", see kade-waxed-parka
+  'wal-overshirt': 'ecru cotton long coat', // reuse: both this and spui-quilted-liner are "Ecru"
+  'doorn-rain-coat': 'navy wool overcoat', // the one blue frame, matches "Navy"
+  // knitwear — 12 products needing a photo (nes-knit-polo is deliberately image-less) against
+  // only 4 frames in this set (two black cardigans, one taupe sweater, one pair of ecru
+  // gloves), so every frame here is shared by several products, grouped by nearest colour.
+  'merino-crew': 'black wool button cardigan',
+  'kern-cable-knit': 'ecru knitted evening gloves', // no ecru sweater in this shoot
+  'bree-half-zip': 'black wool cardigan with ribbed cuffs',
+  'loof-mock-neck': 'black wool button cardigan', // no navy frame — nearest cool-dark tone
+  'stil-fine-gauge-crew': 'taupe wool v-neck sweater', // closest to "Stone"
+  'wold-chunky-rollneck': 'black wool cardigan with ribbed cuffs',
+  'vlas-linen-knit': 'ecru knitted evening gloves',
+  'kaap-cardigan': 'black wool button cardigan', // exact type match
+  'zand-waffle-knit': 'taupe wool v-neck sweater',
+  'grid-rib-scarf': 'black wool cardigan with ribbed cuffs',
+  'merino-beanie': 'black wool button cardigan',
+  'boucle-crew': 'ecru knitted evening gloves',
+  // leather — 8 products, 7 frames, all bags/boots/a belt (no jacket, wallet, glove or dress-shoe
+  // frame at all in this set). kraal-leather-jacket, kade-leather-bomber, kaart-card-holder and
+  // winter-leather-gloves have no entry below on purpose — none of the 7 frames are close enough
+  // in kind to stand in for a jacket or small leather good without being a wrong-item bug in a
+  // different shape, so those four fall back to the placeholder instead.
+  'veld-leather-tote': 'black leather shoulder tote', // exact type and colour
+  'haven-weekend-holdall': 'black textured leather frame bag', // nearest bag to "Charcoal"
+  'riem-belt': 'black woven leather belt', // exact type match
+  'damrak-derby': 'black leather lace-up boots', // closest footwear to a derby
+}
+
+const altFor = (product: Product): string => `${product.title}, ${product.colour.toLowerCase()}`
+
+/** Photography is shot and catalogued separately, so the mapping above is driven by whatever the
+ *  manifest says today: a handle's chosen frame only wins if some entry in the product's own
+ *  category still carries that exact description, wherever it currently sits in the numbering. A
+ *  re-shoot that drops or renames the description leaves that product photo-less again rather
+ *  than silently showing something wrong — the same fallback the storefront already gives a
+ *  product whose `image` is null on purpose. */
 function assignPhotos(): Map<string, Photo> {
-  const pools = new Map<string, PhotoManifestEntry[]>()
-  for (const entry of manifest) {
-    const pool = pools.get(entry.category) ?? []
-    pool.push(entry)
-    pools.set(entry.category, pool)
-  }
-  const taken = new Map<string, number>()
   const assigned = new Map<string, Photo>()
   for (const product of products) {
-    const pool = pools.get(product.category) ?? []
-    if (product.image === null || pool.length === 0) continue
-    const next = taken.get(product.category) ?? 0
-    taken.set(product.category, next + 1)
-    const entry = pool[next % pool.length]
-    if (entry) assigned.set(product.handle, { src: `/photos/${entry.file}`, alt: entry.alt })
+    if (product.image === null) continue
+    const description = PHOTO_BY_HANDLE[product.handle]
+    if (description === undefined) continue
+    const entry = manifest.find(
+      (candidate) =>
+        candidate.category === product.category &&
+        candidate.alt.toLowerCase().includes(description),
+    )
+    if (entry === undefined) continue
+    assigned.set(product.handle, { src: `/photos/${entry.file}`, alt: altFor(product) })
   }
   return assigned
 }

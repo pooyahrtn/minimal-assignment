@@ -420,6 +420,70 @@
     "tags": ["protein-shake", "protein", "no-sweeteners"]
   },
   {
+    "id": "pure-whey-isolate-500g",
+    "title": "KRACHT Pure Whey Isolate 500 g — Unflavoured",
+    "url": "http://localhost:4002/product/pure-whey-isolate-500g",
+    "image": null,
+    "price": 32.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Protein per serving",
+        "value": "28 g"
+      },
+      {
+        "label": "Flavour",
+        "value": "Unflavoured"
+      },
+      {
+        "label": "Size",
+        "value": "500 g"
+      },
+      {
+        "label": "Servings",
+        "value": "16"
+      },
+      {
+        "label": "Diet",
+        "value": "lactose-free, no sweeteners"
+      }
+    ],
+    "tags": ["protein-shake", "protein", "lactose-free", "no-sweeteners"]
+  },
+  {
+    "id": "pure-casein-1kg",
+    "title": "KRACHT Pure Casein 1 kg — Unflavoured",
+    "url": "http://localhost:4002/product/pure-casein-1kg",
+    "image": null,
+    "price": 38.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Protein per serving",
+        "value": "25 g"
+      },
+      {
+        "label": "Flavour",
+        "value": "Unflavoured"
+      },
+      {
+        "label": "Size",
+        "value": "1 kg"
+      },
+      {
+        "label": "Servings",
+        "value": "31"
+      },
+      {
+        "label": "Diet",
+        "value": "lactose-free, no sweeteners"
+      }
+    ],
+    "tags": ["protein-shake", "protein", "lactose-free", "no-sweeteners"]
+  },
+  {
     "id": "vegan-protein-900g-chocolate",
     "title": "KRACHT Vegan Protein 900 g — Chocolate hazelnut",
     "url": "http://localhost:4002/product/vegan-protein-900g-chocolate",

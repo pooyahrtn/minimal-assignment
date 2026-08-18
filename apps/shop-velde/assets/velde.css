@@ -226,7 +226,8 @@ h3 {
 
 /* ---------- home ---------- */
 .section-hero {
-  padding: calc(var(--section) * 0.9) 0 var(--section);
+  padding-top: calc(var(--section) * 0.9);
+  padding-bottom: var(--section);
   border-bottom: 1px solid var(--rule);
 }
 

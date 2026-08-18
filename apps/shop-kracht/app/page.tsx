@@ -81,7 +81,7 @@ function Hero() {
                 −{discountPercent(deal)}%
               </span>
             </div>
-            <Packshot product={deal} className="my-4 h-48 w-full rounded-xl" />
+            <Packshot product={deal} className="my-4 aspect-4/5 w-full rounded-xl" />
             <div className="flex items-baseline gap-3">
               <Price amount={deal.price} className="text-3xl font-black tracking-tight" />
               {deal.compareAt !== null && (

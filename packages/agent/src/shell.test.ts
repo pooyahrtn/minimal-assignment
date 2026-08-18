@@ -156,7 +156,15 @@ describe('the obstacle sentence', () => {
     // The blocking chip's own label, and the real price of the nearest product — neither is a
     // literal anywhere in the payload; both are interpolated into the template.
     expect(sentence).toContain('under €30')
-    expect(sentence).toContain('€49')
+    // Derive the expected number from the catalog rather than pinning a literal. The first
+    // version of this test hardcoded '€49'; a catalog change made the sentence correctly say
+    // €32.95 and the test failed for being right. The invariant is "the cheapest product that
+    // clears every constraint except price is the number quoted" — that survives merchandising.
+    const cheapestNearMiss = catalog
+      .filter((p) => p.tags.includes('no-sweeteners') && p.tags.includes('lactose-free'))
+      .reduce((low, p) => (p.price < low ? p.price : low), Number.POSITIVE_INFINITY)
+    expect(cheapestNearMiss).toBeLessThan(Number.POSITIVE_INFINITY)
+    expect(sentence).toContain(String(cheapestNearMiss))
     expect(sentence).not.toContain('{')
 
     const dropped = step(opening.state, { type: 'drop-chip', id: 'chip-price' })
