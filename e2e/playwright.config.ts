@@ -32,5 +32,14 @@ export default defineConfig({
       reuseExistingServer: true,
       timeout: 60_000,
     },
+    // Both storefronts' one embed line points here for /v1/agent.js and /v1/config/:shop — T12's
+    // agent.spec.ts needs it running too, so the whole suite is still one command from a cold repo.
+    {
+      command: 'bun run dev:platform',
+      cwd: repoRoot,
+      url: 'http://localhost:4003/v1/config/velde',
+      reuseExistingServer: true,
+      timeout: 30_000,
+    },
   ],
 })
