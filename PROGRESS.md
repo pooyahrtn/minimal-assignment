@@ -8,6 +8,18 @@ Estimates are in two units because nobody types here: **A** = agent wall-clock,
 |---|---|---|---|---|---|---|
 | T0 contracts, guardrails, skeleton | 2.5h | **6m build / 31m incl. review round** | — | pending | 6 | Estimate was in human-typing hours. Six corrections total: Biome v2 deprecated `recommended`; `bunx --bun biome` printed a spawn stack inside the git hook; then the adversarial round found 4 gate defects (organizeImports on by default against §4.9, `apps/**` outside the typecheck, import-boundary glob missing package subpaths, `as`-casts unenforced). |
 | — re-plan + adversarial review | — | **8.5m agent / 95k tokens** | — | pending | — | One review round on the plan returned 23 findings, 19 applied. This is the per-task process overhead the A column does not yet include. |
+| — plan review for T1/T2/T3/T4/T8 | — | **7m agent / 88k tokens** | — | pending | — | 25 findings. Caught two that would have blocked every commit in a whole wave (`jsx` unset in the root tsconfig; the T2 proof grep hitting the package names). |
+| T1 tokens engine | 20m | **19m over 3 rounds** | 15m | pending | 2 | Estimate was right, for the wrong reason. Build was ~12m; two correction rounds found real defects an independent check caught after the implementer's own 17 tests were green. |
+| T4 agent brain | 30m | **8m** | 20m | pending | 0 | Cleanest task of the session. Fixture deliberately not tuned, and it showed: the independent H3 check found 3 chips rescuing where the DoD assumed 1. |
+| H3 transcript bench | — | **10m over 2 rounds** | — | pending | 1 | Written blind to the brain. Round 2 re-assigned two assertions to T8's `--expect` layer. |
+| H1 contrast bench | — | **7m** | — | pending | 0 | Cross-checked its pair list against T3's actual CSS rather than trusting the engine's own list. Found no gap. |
+| T3 agent shell | 45m | **18.5m** | 45m | pending | 0 | Found a real launcher/sticky-bar collision at 375px by looking at the screen. |
+| T2 VELDE | 90m (both) | **18.5m** | 90m | pending | 0 | Found 4 layout bugs by opening the page. I found 2 more it missed. |
+| T2 KRACHT | (in above) | **24m** | (in above) | pending | 1 | One cwd-relative path broke `bun run test` from the root; caught by another desk, not by its own gates. |
+| T2 photography | not estimated | **88m over 2 full attempts** | — | pending | 2 | The largest single line in the session and the one no estimate existed for. First set failed as a group; rebuilt by filtering mechanically then judging as a grid. |
+| T8 ingest + extractor | 45m | **19.4m** | 30m | pending | 0 | Landing gate green first time. Two extractor bugs surfaced only by pointing it at real Dutch sites. |
+| Brain↔shell wire | not estimated | **15m** | — | pending | 0 | Not a task in TASKS.md at all — T3 and T4 were parallel-safe precisely because nothing joined them, and nothing was scheduled to. |
+| Storefront fix pass | not estimated | **32m** | — | pending | 0 | Merchandising + 2 layout defects + photo mapping, all forced before the freeze. |
 
 ## Standing lessons
 
@@ -26,3 +38,21 @@ Estimates are in two units because nobody types here: **A** = agent wall-clock,
 5. **Process overhead is now the largest single line in the A column.** One adversarial round cost
    more wall-clock than building all of T0. That is a real cost and it bought six defects, four of
    which would have surfaced in T9 or T10 with no budget left.
+
+6. **The estimates were not wrong in the way the last re-baseline assumed.** Pure-logic tasks came in
+   at 25-40% of estimate, as predicted. But the two largest lines in this session — **photography at
+   88 minutes and the storefront fix pass at 32** — had *no estimate at all*, because neither is a
+   task in `TASKS.md`. The schedule risk was never the tasks; it was the work between them.
+7. **Asset sourcing is its own task class and needs its own baseline.** `TASKS.md` §1 says "sourcing
+   60-80 coherent product photos is the least compressible hour in the project and is *not* in the
+   90m" — that was right, and it still went unbudgeted. It took two full attempts and was ultimately
+   bounded by someone else's rate limiter, which is a category of cost no agent estimate models.
+8. **The split between implementer and independent checker paid for itself four times.** T1's clamp
+   (green on 17 of its own tests, failing at 4.4807:1 on the bytes it shipped), T1's second defect
+   found while writing the check the first defect prompted, H3's two findings against the brain, and
+   the KRACHT packshot labels — caught by the *storefront* agent reading its own catalog against
+   images another agent had made. Nothing self-reported found any of them.
+9. **Integration work is invisible to a task graph that was built for parallelism.** `TASKS.md` §1
+   lists T1/T2/T3/T4/T8 as "truly parallel", which was true and useful. What it does not say is that
+   after they land the widget still cannot hold a conversation, because nothing owns the seam. That
+   was 15 minutes of work and zero minutes of plan.
