@@ -1,8 +1,5 @@
 import type { DerivedTokens, Voice } from '@maximal/tokens'
 
-/** Drives copy, number and currency formatting. `Intl` does the formatting; we only carry the tag. */
-export type Locale = 'en-GB' | 'nl-NL'
-
 /**
  * Normalised product. PRINCIPLES §6 — messy JSON-LD is cleaned once, at ingest, and nothing
  * downstream sees a half-normalised product. [ENGINEERING §2.5]
@@ -57,16 +54,18 @@ export type Block =
  * last month still has to render whatever this returns. [ENGINEERING §2.2]
  */
 export type ConfigResponse = {
-  locale: Locale
   tokens: DerivedTokens
   voice: Voice
   /**
    * Every user-visible string the widget renders, keyed. Templates carry `{placeholders}` the
    * widget interpolates — the obstacle sentence is a template plus arithmetic, never a hardcoded
-   * sentence. Without this the shipped binary would need `if (locale === 'nl')` inside it, which
-   * is the one thing ENGINEERING §2.1 exists to prevent: a copy fix would need every merchant to
-   * re-paste their script tag. `noUncheckedIndexedAccess` makes a missing key `string | undefined`,
-   * so a gap is a type error at the callsite rather than "undefined" on a merchant's page.
+   * sentence.
+   *
+   * This survives the localization descope on its own merits: the embed script is a binary we
+   * cannot recall, so copy that lives inside it can only be fixed by every merchant re-pasting
+   * their script tag [ENGINEERING §2.1]. One language, still server-owned.
+   * `noUncheckedIndexedAccess` makes a missing key `string | undefined`, so a gap is a type error
+   * at the callsite rather than the word "undefined" on a merchant's page.
    */
   strings: Record<string, string>
   catalog: Product[]

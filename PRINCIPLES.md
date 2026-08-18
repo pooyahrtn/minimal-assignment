@@ -8,7 +8,7 @@
 |---|---|---|
 | **Maximal AI** | the platform — config page, embed script, config API | `maximal.releashed.io` |
 | **VELDE** | merchant A — Amsterdam minimal apparel, English | `velde.releashed.io` |
-| **KRACHT** | merchant B — Dutch sports nutrition, Nederlands | `kracht.releashed.io` |
+| **KRACHT** | merchant B — Dutch-market sports nutrition, English copy | `kracht.releashed.io` |
 
 **The two merchants are archetypes of Minimal's actual customers, not invented from nothing.**
 Minimal AI (YC S25, Amsterdam) publishes its client list: XXL Nutrition, Cloudpillo, Mobiel NL,
@@ -111,27 +111,32 @@ which also makes it a useful stress case for the contrast clamp). Light grotesk,
 ground with an acid `#C6F441` signal, heavy display weights at large sizes, rounded badges,
 compact density, dense grids, flavour swatches, `−25%` flags and struck-through pricing, a
 `9,6/10` review badge, bulk pricing. Emphasis comes from weight and colour, not tracking, so
-labels stay sentence case. **Nederlands** — the whole store, including the shopper. Catalog:
-proteïne, creatine, pre-workout — spec fields are `eiwit per portie`, `smaak`, `inhoud`,
-`dosering`, `dieet`.
+labels stay sentence case. Catalog: protein, creatine, pre-workout — spec fields are
+`protein per serving`, `flavour`, `size`, `servings`, `diet`.
 
-**Dutch e-commerce furniture is part of the realism, and it is the detail no generic take-home
-will have.** On KRACHT: prices with comma decimals (`€36,95`), an `Excl./Incl. BTW` display,
-`Gratis verzending vanaf €50`, `Voor 23:00 besteld, morgen in huis`, iDEAL and *achteraf betalen*
-badges, a Kiyoh-style score out of 10, an AVG *cookiemelding*. On VELDE: `Free shipping over
-€150`, `14 days to decide`, iDEAL / Klarna / Bancontact / Apple Pay. Both are lifted from what
-ETQ and Proforto actually render today.
+**Both stores ship in English. Localization is explicitly not built** (§10). What stays is the
+*market*, not the language: a Dutch webshop selling in English still shows iDEAL, Klarna and
+Bancontact, still promises `Voor 23:00 besteld, morgen in huis` as a delivery badge, still prices
+around a BTW toggle. ETQ proves it — English across ten locales, iDEAL at checkout. We keep the
+furniture and drop the translation, which is where the market signal actually lives.
+
+**Dutch-market furniture is part of the realism, and it is the detail no generic take-home will
+have.** On KRACHT: an `Excl./Incl. VAT` toggle, `Free shipping over €50`, a next-day cut-off
+badge, iDEAL and pay-later badges, a Kiyoh-style score out of 10 with a review count, a GDPR
+cookie bar. On VELDE: `Free shipping over €150`, `14 days to decide`, iDEAL / Klarna / Bancontact
+/ Apple Pay. Both sets are lifted from what ETQ and Proforto actually render today — the VAT
+toggle and the score-out-of-10 are the two a non-European build never thinks to include.
 
 **Persona is a token too, and the two brands must prove it — including language.** KRACHT
 personifies, because a sports nutrition store does: the agent is **Joep**, a coach, with an
-illustrated avatar, first person, warm and direct, *in het Nederlands*. VELDE does not
+illustrated avatar, first person, warm and direct. VELDE does not
 personify, because a minimal-lux store never would: no name, a small mark instead of a face,
 clipped English lines, tracked caps labels. Same component, same code — one is a training buddy,
 the other is a quiet shop assistant that stays out of the way. Reviewers expect colour and type
-to be configurable; **voice, personification and locale** are the axes that show you thought past
-the obvious.
+to be configurable; **voice and personification** are the axes that show you thought past the
+obvious.
 
-The two catalogs deliberately have **different spec schemas**. The agent's product card must render `{label, value}[]` generically. If the card hardcodes "smaak", it fails.
+The two catalogs deliberately have **different spec schemas**. The agent's product card must render `{label, value}[]` generically. If the card hardcodes "flavour", it fails.
 
 ---
 
@@ -229,24 +234,24 @@ Deterministic finite state machine. No model call.
 **Message protocol** — typed blocks, each with its own renderer:
 `text` · `quick-replies` · `chips-update` · `product-card` · `product-compare` · `no-match` · `cta`
 
-**Constraint chips.** A persistent, editable row holding the shopper's accumulated brief — `zonder zoetstoffen` · `lactosevrij` · `onder €30`. This is the spine of the whole interaction. It makes state visible, it wraps cleanly at 375px, it handles the mind-change case, and it turns the no-match moment into a decision instead of a dead end.
+**Constraint chips.** A persistent, editable row holding the shopper's accumulated brief — `no sweeteners` · `lactose-free` · `under €30`. This is the spine of the whole interaction. It makes state visible, it wraps cleanly at 375px, it handles the mind-change case, and it turns the no-match moment into a decision instead of a dead end.
 
 **Opening messages** (shopper-written, open-ended, two-plus constraints):
 
 - VELDE — *"I need a jacket I can wear to the office and on the bike. Black, nothing shiny, and ideally under €250."*
-- KRACHT — *"Ik zoek een eiwitshake zonder zoetstoffen, lactosevrij, en het liefst onder de €30."*
+- KRACHT — *"I'm after a protein shake with no sweeteners, lactose-free, and ideally under €30."*
 
 **The obstacle (required by the brief).** Nothing in the catalog satisfies all three constraints. The agent does not apologise vaguely. It names the blocking constraint, quantifies the trade-off, and hands the choice back:
 
-> Niks voldoet aan alle drie. Twee opties passen op alles behalve de prijs — de goedkoopste is
-> €36,95. Zal ik het budget oprekken, of laat je *zonder zoetstoffen* los en blijf je onder €30?
+> Nothing clears all three. Two options fit everything except price — the closest is €36.95. Want
+> me to stretch the budget, or drop *no sweeteners* and stay under €30?
 
-The English half of the same moment, on VELDE, is the same computation in the other locale — which
-is the point: the blocking constraint and its cost are arithmetic, and only the wording is a token.
+The sentence is a template in the config payload plus arithmetic in the widget, never a hardcoded
+string: the blocking constraint and its quantified cost are computed, and only the wording is a token.
 
 The dropped chip stays visible, struck through, restorable in one tap. That single interaction demonstrates state, recovery, and respect for the shopper simultaneously.
 
-**Second obstacle if time allows:** mid-flow reversal — *"eigenlijk is het voor mijn vriendin, zij traint voor een marathon"* — chips rewrite, previous recommendations visibly retract.
+**Second obstacle if time allows:** mid-flow reversal — *"actually it's for my girlfriend, she's training for a marathon"* — chips rewrite, previous recommendations visibly retract.
 
 ---
 
@@ -268,7 +273,7 @@ Undo, and reset-to-detected, throughout.
 
 Auth, billing, multi-tenant permissions, analytics, conversation persistence, a real LLM, and ingestion tiers 1–2 from §6. Every one of these goes in DECISIONS.md under "what I cut," which is a question they asked and therefore a place to score.
 
-**i18n was on this list and has been removed deliberately** — KRACHT ships in Dutch, so locale is a real axis, not a cut. What we are *not* building is an i18n framework: no message catalogue tooling, no pluralisation rules, no locale negotiation, no RTL. There is a `locale` tag and a flat `strings` map in the config payload, and `Intl` does the number and currency formatting. Two locales, hand-written, server-owned. Say it that way in DECISIONS.md — claiming "i18n" either as built or as cut would be wrong in both directions.
+**i18n stays on this list, deliberately, after being briefly taken off it.** A Dutch-language KRACHT was planned and then descoped: the market signal it bought lives in the *furniture* (iDEAL, the VAT toggle, the delivery cut-off, the review score), not in the translation, and translated copy is the one surface on this build that a native-speaking reviewer would judge hardest and that no benchmark can check. Both stores ship English. What *survives* from that plan is architectural and worth keeping on its own merits: every user-visible string still travels in the config payload rather than living in the widget (§5), because a copy fix must not require a merchant to re-paste their script tag.
 
 ---
 

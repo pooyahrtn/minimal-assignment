@@ -32,7 +32,7 @@ it is **spent on iteration loops over T2/T5/T7**.
 | 7 | 3 Vercel projects on `releashed.io` apex | **3 Vercel projects on free `*.vercel.app`** first; custom DNS last, if slack remains. | Still genuinely cross-origin, so the CORS point stands. Zero DNS yak-shaving. Brief: "your code does not have to be deployed anywhere." |
 | 8 | `product-compare`, 2nd obstacle (mind-change) | **Explicitly optional.** Cut candidates #1 and #2. | Named now so they can't quietly eat the polish budget. |
 | 9 | PRINCIPLES §4: MARENNE (warm editorial skincare) + KLYFT (Nordic technical outdoor) | **VELDE** (Amsterdam minimal apparel, EN) + **KRACHT** (Dutch sports nutrition, NL) | The originals were `TAKE_HOME.md`'s own example sentence handed back to its author. Replaced with archetypes of Minimal's published client list (ETQ, XXL Nutrition). Full entry in `DECISIONS-LOG.md`. **Cost, measured and owned:** the old accents stressed the contrast clamp harder (MARENNE sage was 3.23:1 against its surface); the new ones are 16.5:1 and 14.7:1. T11's pale-yellow brand is therefore promoted from stretch to **required** — it is now the only place the clamp visibly does its job. |
-| 10 | PRINCIPLES §10 listed i18n as explicitly not built | Locale is a real axis; an i18n *framework* is not built | KRACHT ships in Dutch, so the old line was false. §10 now says exactly what is and isn't built. |
+| 10 | A Dutch-language KRACHT, with locale as a fourth brand axis | **Descoped. Both stores ship English; the Dutch *market* furniture stays.** | The signal that reads as "he knows this market" lives in the furniture — iDEAL, the VAT toggle, the delivery cut-off, the score out of 10 — not in the translation. Translated copy was also the one surface no benchmark can check and that a native-speaking reviewer would judge hardest. i18n goes back on the §10 not-building list. What survives is architectural: user-visible strings still travel in the config payload (ENGINEERING §2.1), which is right for one language too. |
 
 **Additions not in PRINCIPLES:**
 - **T10** makes "what AI suggested that I overrode" a tracked artifact, not an end-of-build reconstruction.
@@ -168,7 +168,7 @@ radius/elevation map to a numeric spacing + radius + shadow ramp.
 ---
 
 ## T2 — Two storefronts
-`apps/shop-velde` (static HTML/CSS, **English**), `apps/shop-kracht` (Next + Tailwind, **Nederlands**).
+`apps/shop-velde` (static HTML/CSS), `apps/shop-kracht` (Next + Tailwind). **Both English.**
 **Integration-blind: build as if the agent is never coming.** Splits cleanly across two desks.
 
 **The realism bar changed.** These are archetypes of Minimal's own clients — VELDE after ETQ
@@ -176,17 +176,17 @@ Amsterdam, KRACHT after XXL Nutrition (PRINCIPLES §4). A reviewer at Minimal sh
 *category* immediately. Model the conventions, never the identity: our names, our logos, our copy.
 
 **Scope per shop.** 3 templates only — home (with inline listing grid), product detail, cart drawer.
-30–40 products as a JSON file, rendered by template. Real stock photography. Real copy in-voice,
-**in the shop's own language**. `sitemap.xml` + `schema.org/Product` JSON-LD on every PDP with
+30–40 products as a JSON file, rendered by template. Real stock photography. Real copy in-voice.
+`sitemap.xml` + `schema.org/Product` JSON-LD on every PDP with
 `additionalProperty` specs. Deliberate mess: one out of stock, one on sale with strikethrough, one
 missing image, odd ratings.
 
-**Dutch e-commerce furniture — the detail no generic take-home has.** On KRACHT: comma decimals
-(`€36,95`), an `Excl./Incl. BTW` toggle, `Gratis verzending vanaf €50`, `Voor 23:00 besteld,
-morgen in huis`, iDEAL + *achteraf betalen* badges, a Kiyoh-style `9,6/10` score with a review
-count, an AVG *cookiemelding*. On VELDE: `Free shipping over €150`, `14 days to decide`, iDEAL /
-Klarna / Bancontact / Apple Pay. Both sets are lifted from what ETQ and Proforto render today —
-verified, not imagined.
+**Dutch-market furniture — the detail no generic take-home has.** Localization is descoped; the
+*market* is not. On KRACHT: an `Excl./Incl. VAT` toggle, `Free shipping over €50`, a next-day
+cut-off badge, iDEAL + pay-later badges, a Kiyoh-style `9.6/10` score with a review count, a GDPR
+cookie bar. On VELDE: `Free shipping over €150`, `14 days to decide`, iDEAL / Klarna / Bancontact
+/ Apple Pay. Lifted from what ETQ and Proforto render today — verified, not imagined. The VAT
+toggle and the score-out-of-10 are the two a non-European build never thinks to include.
 
 **Adversaries to build on purpose (3 required):**
 - cookie banner at `z-index: 2147483647` (VELDE)
@@ -198,7 +198,7 @@ Stretch adversaries: focus-trap newsletter modal, announcement bar that reflows 
 **DoD**
 - [ ] Zero occurrences of `maximal`, `agent`, or any mount point in storefront source. `grep -ri` proves it.
 - [ ] The two shops are visibly different products in **greyscale** — spacing rhythm, border-vs-shadow, label case, not just hue.
-- [ ] A Dutch reader finds nothing machine-translated on KRACHT. Product copy, USP bar, and the cookiemelding read as written by the merchant.
+- [ ] Both shops read as written by their merchant, in-voice — KRACHT direct and coach-like, VELDE spare and product-led. Neither reads as filler.
 - [ ] Every PDP validates as `schema.org/Product`.
 - [ ] Shops share **no** code, no assortment service, no common component.
 - [ ] **Frozen after the `<script>` tag is added.** From that point, any visual bug is a widget bug.
@@ -244,7 +244,7 @@ test the intersection *without* it → return the single removal that yields res
 quantified cost ("closest is €48"). Chip removal is reversible.
 
 **DoD**
-- [ ] Feeding the VELDE opening message produces ≥3 chips with no hardcoded string match on the whole sentence.
+- [ ] Feeding the KRACHT opening message produces ≥3 chips with no hardcoded string match on the whole sentence.
 - [ ] The no-match state is reached by *arithmetic on the real catalog*, not a flag.
 - [ ] The agent names the blocking constraint and quantifies the trade-off.
 - [ ] Dropping a chip is one call and is undoable; the dropped chip survives in state.
@@ -267,7 +267,7 @@ renders `specs: {label,value}[]` **generically** — it never knows what an ingr
 the trade-off stated as a choice.
 
 **DoD**
-- [ ] Product card renders VELDE specs (`material`, `fit`, `made in`) and KRACHT specs (`eiwit per portie`, `smaak`, `dosering`) with **no schema-specific code** — two schemas, two languages, one renderer.
+- [ ] Product card renders VELDE specs (`material`, `fit`, `made in`) and KRACHT specs (`protein per serving`, `flavour`, `servings`) with **no schema-specific code** — two schemas, one renderer.
 - [ ] `no-match` looks designed, not apologetic. A reviewer should stop and read it.
 - [ ] Every block survives a 40-character unbroken word and a 3-line title at 375px.
 - [ ] `labelCase: upper-tracked` visibly changes label treatment across all 7.
@@ -341,9 +341,9 @@ Returns a `MerchantTokens` draft. Must degrade to sensible defaults on any failu
 - [ ] Extractor returns *something usable* for a store we did not build. **Test it on 3 real webshops.**
 - [ ] Every failure path (timeout, 403, no JSON-LD, Cloudflare) returns a default draft plus an honest "we couldn't read this — here's a starting point" state. Never a crash, never a spinner that never ends.
 - [ ] Extractor results for `velde`/`kracht` are cached/seeded so the live demo never depends on a network round-trip.
-- [ ] **T8 owns both paths firing on real data, and they are different paths.** `bun bench transcript packages/agent/src/brain/catalog.velde.json` passes: VELDE's three chips intersect to **empty**, and exactly one chip's removal yields a non-empty result. `catalog.kracht.json` passes the **opposite** assertion: KRACHT's opening message intersects to a **non-empty** set of 2–4 products, so the Dutch demo has a genuine happy path. Fix the **catalog**, never the brain and never the opening message.
+- [ ] **T8 owns both paths firing on real data, and they are different paths.** `bun bench transcript packages/agent/src/brain/catalog.kracht.json` passes: KRACHT's three chips intersect to **empty**, and exactly one chip's removal yields a non-empty result. `catalog.velde.json` passes the **opposite** assertion: VELDE's opening message intersects to a **non-empty** set of 2–4 products, so the demo has a genuine happy path. Fix the **catalog**, never the brain and never the opening message.
 
-  **Why they differ.** The brief says *"take them from there to the point where they can confidently act on a product"* and only then *"somewhere in the flow, show us at least one moment where things do not go smoothly."* An agent whose first answer on every brand is "nothing matches" never demonstrates the thing it is for, and reads as a broken retriever rather than designed recovery. One brand must complete the journey. The obstacle sits on **VELDE**, in English — the graded four seconds belong in the language we can fully control, while Dutch carries the storefront realism where the copy is short and formulaic.
+  **Why they differ.** The brief says *"take them from there to the point where they can confidently act on a product"* and only then *"somewhere in the flow, show us at least one moment where things do not go smoothly."* An agent whose first answer on every brand is "nothing matches" never demonstrates the thing it is for, and reads as a broken retriever rather than designed recovery. One brand must complete the journey. The obstacle sits on **KRACHT**, whose three constraints (no sweeteners · lactose-free · under €30) collide most plausibly across a real supplements catalog; VELDE resolves happily.
 
 **QA (independent).** `node tools/ingest.js https://velde.../sitemap.xml` prints 30+ normalised products. Point the extractor at 3 real stores and at `https://example.com` — four sane results, zero crashes.
 

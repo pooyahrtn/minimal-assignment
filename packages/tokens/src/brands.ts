@@ -10,12 +10,15 @@ import type { MerchantTokens, Voice } from './merchant'
  */
 
 /**
- * Amsterdam minimal apparel. The CTA is black — measured 16.5:1 on this surface, which is the
- * EASIEST case in the space, not a stress case. The clamp's real binding case (a pale accent
- * near 4.5:1) ships in T11's third brand, which is why T11 is required rather than stretch.
+ * Amsterdam minimal apparel. The accent is a deep ink-blue rather than the black a real
+ * minimal-lux store would ship: a near-black accent measures 16.5:1 here and derives to roughly
+ * `textPrimary`, which makes the config page's accent control look inert on brand A and computes
+ * a 1.0:1 focus ring on its own CTA. Ink-blue keeps the restrained read and leaves the control
+ * visibly doing something. The clamp's real binding case (a pale accent near 4.5:1) ships in
+ * T11's third brand, which is why T11 is required rather than stretch.
  */
 export const VELDE: MerchantTokens = {
-  accent: '#1C1B19',
+  accent: '#2C3E5C',
   surface: '#FBFAF8',
   fontDisplay: {
     family: 'Inter Tight',
@@ -43,7 +46,7 @@ export const VELDE_VOICE: Voice = {
   tone: 'clipped',
 }
 
-/** Dutch sports nutrition. Loud ground, acid signal, weight instead of tracking. */
+/** Dutch-market sports nutrition. Loud ground, acid signal, weight instead of tracking. */
 export const KRACHT: MerchantTokens = {
   accent: '#C6F441',
   surface: '#121212',
@@ -65,10 +68,10 @@ export const KRACHT: MerchantTokens = {
   launcher: { style: 'pill', position: 'bottom-right' },
 }
 
-/** A sports nutrition store personifies, and it does so in Dutch. */
+/** A sports nutrition store personifies: a coach, not an interface. */
 export const KRACHT_VOICE: Voice = {
   name: 'Joep',
   avatar: { kind: 'illustration', src: '/brand/kracht/joep.svg' },
-  greeting: 'Waar train je voor? Zeg wat je zoekt, dan filter ik mee.',
+  greeting: "What are you training for? Tell me what you need and I'll filter as we go.",
   tone: 'warm',
 }
