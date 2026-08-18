@@ -1,5 +1,6 @@
 import type { DerivedTokens } from '@maximal/tokens'
 import { configUrl, loadConfig } from './config'
+import { converse } from './converse'
 import { MxAgent, TAG } from './widget'
 
 /**
@@ -50,10 +51,13 @@ async function boot(): Promise<void> {
   injectFonts(config.tokens.fonts)
 
   if (customElements.get(TAG) === undefined) customElements.define(TAG, MxAgent)
+  const agent = new MxAgent(config)
+  // Wired before mount so the first thing a shopper types cannot outrun the listener.
+  converse(agent, config)
   const body = await bodyReady()
   // LAST child of <body> on purpose: the launcher's z-index is already at the 32-bit ceiling, so
   // paint order is what breaks the tie against a cookie banner sitting at the same number.
-  body.append(new MxAgent(config))
+  body.append(agent)
 }
 
 boot().catch((error: unknown) => {

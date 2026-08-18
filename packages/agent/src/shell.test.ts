@@ -1,8 +1,12 @@
 import { describe, expect, test } from 'bun:test'
+import { loadCatalog } from './brain/catalog'
+import { createBrain, step } from './brain/fsm'
 import type { CacheStore } from './config'
+import { reply } from './converse'
 import { configUrl, isConfigResponse, readCache, str, writeCache } from './config'
 import { cornerCss } from './css'
 import { FALLBACK } from './fallback'
+import type { Block } from './types'
 
 /**
  * The pure half of the shell. DOM behaviour — focus trap, 375px layout, shadow isolation — is
@@ -15,6 +19,8 @@ import { FALLBACK } from './fallback'
 
 const velde = FALLBACK.velde
 if (velde === undefined) throw new Error('fixture missing: FALLBACK.velde')
+const kracht = FALLBACK.kracht
+if (kracht === undefined) throw new Error('fixture missing: FALLBACK.kracht')
 
 function fakeStore(): CacheStore & { data: Map<string, string> } {
   const data = new Map<string, string>()
@@ -121,5 +127,63 @@ describe('merchant copy', () => {
   test('a missing key renders as the key, never as "undefined"', () => {
     expect(str(velde.strings, 'composer.send')).toBe('Send')
     expect(str(velde.strings, 'nope.missing')).toBe('nope.missing')
+  })
+})
+
+/**
+ * The graded turn, end to end without a DOM: the shopper's sentence in, the merchant's own words
+ * out, with the blocking constraint and its cost computed from the REAL catalog. `reply` is the
+ * only piece between the brain and `push()`, so this fails if the template stops interpolating,
+ * if the obstacle stops naming a number, or if dropping the chip stops rescuing anything.
+ */
+function said(blocks: Block[]): string[] {
+  return blocks.flatMap((block) => (block.kind === 'text' ? [block.text] : []))
+}
+
+const KRACHT_OPENING =
+  "I'm after a protein shake with no sweeteners, lactose-free, and ideally under €30."
+const VELDE_OPENING =
+  'I need a jacket I can wear to the office and on the bike. Black, nothing shiny, and ideally under €250.'
+
+describe('the obstacle sentence', () => {
+  test('names the blocking constraint, quantifies it, and resolves when the chip is dropped', async () => {
+    const catalog = await loadCatalog('packages/agent/src/brain/catalog.kracht.json')
+    expect(catalog.length).toBeGreaterThan(0)
+
+    const opening = step(createBrain(catalog), { type: 'message', text: KRACHT_OPENING })
+    const sentence = said(reply(opening.blocks, opening.state, kracht.strings)).join(' ')
+    expect(sentence.length).toBeGreaterThan(0)
+    // The blocking chip's own label, and the real price of the nearest product — neither is a
+    // literal anywhere in the payload; both are interpolated into the template.
+    expect(sentence).toContain('under €30')
+    expect(sentence).toContain('€49')
+    expect(sentence).not.toContain('{')
+
+    const dropped = step(opening.state, { type: 'drop-chip', id: 'chip-price' })
+    const lines = said(reply(dropped.blocks, dropped.state, kracht.strings))
+    expect(lines.length).toBeGreaterThan(1)
+    expect(lines.some((line) => line.includes('Isolate'))).toBe(true)
+
+    const restored = step(dropped.state, { type: 'restore-chip', id: 'chip-price' })
+    expect(said(reply(restored.blocks, restored.state, kracht.strings)).join(' ')).toContain(
+      'under €30',
+    )
+  })
+
+  test('the brand that resolves happily says so, in its own voice', async () => {
+    const catalog = await loadCatalog('packages/agent/src/brain/catalog.velde.json')
+    const opening = step(createBrain(catalog), { type: 'message', text: VELDE_OPENING })
+    const lines = said(reply(opening.blocks, opening.state, velde.strings))
+    expect(lines.length).toBeGreaterThan(1)
+    expect(lines[0]).toBe('Matches:')
+    expect(lines.filter((line) => line.includes('€245')).length).toBeGreaterThan(0)
+    expect(lines.join(' ')).not.toContain('except')
+  })
+
+  test('a fallback with no catalog answers honestly instead of silently', () => {
+    const opening = step(createBrain([]), { type: 'message', text: KRACHT_OPENING })
+    const lines = said(reply(opening.blocks, opening.state, kracht.strings))
+    expect(lines.length).toBe(1)
+    expect(lines[0]).toBe(kracht.strings['catalog.offline'])
   })
 })

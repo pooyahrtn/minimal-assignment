@@ -48,7 +48,8 @@ export function str(strings: Record<string, string>, key: string): string {
   return strings[key] ?? key
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+/** Exported so the conversation wire narrows a `CustomEvent.detail` with the same guard. */
+export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }
 

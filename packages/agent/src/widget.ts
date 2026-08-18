@@ -203,20 +203,34 @@ export class MxAgent extends HTMLElement {
     const chip = target.closest('.chip')
     if (!(chip instanceof HTMLElement)) return
     const id = chip.dataset.chipId
-    if (id === undefined || chip.dataset.state !== 'dropped') return
-    // A restored chip stops being a button, so the element holding focus is about to disappear.
-    // Only a keyboard user was focused on it; a mouse user must not get the keyboard opened.
+    const state = chip.dataset.state
+    if (id === undefined || (state !== 'dropped' && state !== 'active')) return
+    const next: Chip['state'] = state === 'dropped' ? 'active' : 'dropped'
+    // The row is replaced wholesale, so the element holding focus is about to disappear. Only a
+    // keyboard user was focused on it; a mouse user must not get the keyboard opened.
     const hadFocus = this.shadow.activeElement === chip
+    // Applied here as well as in the brain: dropping the LAST active chip leaves the brain with
+    // nothing to recommend and no chip row to send back, and the tap must still be visible.
     this.push({
       kind: 'chips-update',
-      chips: this.chips.map(
-        (entry): Chip => (entry.id === id ? { ...entry, state: 'active' } : entry),
-      ),
+      chips: this.chips.map((entry): Chip => (entry.id === id ? { ...entry, state: next } : entry)),
     })
-    if (hadFocus) this.input.focus()
     this.dispatchEvent(
-      new CustomEvent('mx-chip-restore', { detail: { id }, bubbles: true, composed: true }),
+      new CustomEvent(next === 'active' ? 'mx-chip-restore' : 'mx-chip-drop', {
+        detail: { id },
+        bubbles: true,
+        composed: true,
+      }),
     )
+    // After the dispatch, because whatever answered it has redrawn the row underneath us.
+    if (hadFocus) this.focusChip(id)
+  }
+
+  /** Keeps a keyboard user on the chip they just toggled instead of dumping them in the composer. */
+  private focusChip(id: string): void {
+    const chip = this.chipRow.querySelector(`[data-chip-id="${id}"]`)
+    if (chip instanceof HTMLElement) chip.focus()
+    else this.input.focus()
   }
 
   private onKeydown(event: KeyboardEvent): void {

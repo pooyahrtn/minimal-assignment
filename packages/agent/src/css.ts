@@ -220,6 +220,8 @@ export function styles(tokens: DerivedTokens): string {
     font: inherit;
     font-size: var(--mx-text-xs);
     line-height: var(--mx-line-height);
+    text-align: start;
+    cursor: pointer;
   }
   /* The row is the brief AND the receipt: a dropped chip stays visible and restorable rather than
      being evicted. [ENGINEERING §2.10] */
@@ -227,7 +229,6 @@ export function styles(tokens: DerivedTokens): string {
     text-decoration: line-through;
     color: var(--mx-text-muted);
     background: var(--mx-surface-sunken);
-    cursor: pointer;
   }
 
   .messages {

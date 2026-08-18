@@ -38,8 +38,8 @@ export function renderText(text: string, from: 'agent' | 'shopper'): HTMLElement
 }
 
 /**
- * The standing brief. A dropped chip renders struck through and stays in the row as a button, so
- * one tap puts it back; an active chip is a plain span because there is nothing to press.
+ * The standing brief. Every chip is a one-tap toggle: an active chip drops, a dropped chip renders
+ * struck through, stays in the row, and puts itself back. Nothing is ever evicted.
  */
 export function renderChips(chips: Chip[], strings: Record<string, string>): HTMLElement {
   const row = document.createElement('div')
@@ -52,18 +52,16 @@ export function renderChips(chips: Chip[], strings: Record<string, string>): HTM
   row.append(legend)
 
   for (const chip of chips) {
-    const element = document.createElement(chip.state === 'dropped' ? 'button' : 'span')
+    // Both states are buttons: a chip is dropped by tapping it and restored by tapping it again,
+    // so the affordance and the aria-label are the only things that differ. [ENGINEERING §2.10]
+    const element = document.createElement('button')
+    element.type = 'button'
     element.className = 'chip'
     element.dataset.state = chip.state
     element.dataset.chipId = chip.id
     element.textContent = chip.label
-    if (element instanceof HTMLButtonElement) {
-      element.type = 'button'
-      element.setAttribute(
-        'aria-label',
-        str(strings, 'chips.restore').replace('{label}', chip.label),
-      )
-    }
+    const action = chip.state === 'dropped' ? 'chips.restore' : 'chips.drop'
+    element.setAttribute('aria-label', str(strings, action).replace('{label}', chip.label))
     row.append(element)
   }
   return row
