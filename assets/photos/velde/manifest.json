@@ -24,6 +24,18 @@
     "dominant": "#222126"
   },
   {
+    "file": "knitwear-05.jpg",
+    "alt": "Black wool vest, sleeveless, on hanger",
+    "category": "knitwear",
+    "dominant": "#3E3E3E"
+  },
+  {
+    "file": "knitwear-06.jpg",
+    "alt": "Black knit tunic dress with tan cuffs, on form",
+    "category": "knitwear",
+    "dominant": "#100807"
+  },
+  {
     "file": "leather-01.jpg",
     "alt": "Black leather shoulder tote",
     "category": "leather",
@@ -64,6 +76,24 @@
     "alt": "Sand canvas and leather flap tote",
     "category": "leather",
     "dominant": "#998668"
+  },
+  {
+    "file": "leather-08.jpg",
+    "alt": "Pair of cream leather elbow-length gloves",
+    "category": "leather",
+    "dominant": "#E7E3D5"
+  },
+  {
+    "file": "leather-09.jpg",
+    "alt": "Tan leather belt, coiled",
+    "category": "leather",
+    "dominant": "#B0937F"
+  },
+  {
+    "file": "leather-10.jpg",
+    "alt": "Black leather cropped jacket, back",
+    "category": "leather",
+    "dominant": "#191917"
   },
   {
     "file": "outerwear-01.jpg",
@@ -118,5 +148,29 @@
     "alt": "Black leather belted coat, flat lay, back",
     "category": "outerwear",
     "dominant": "#3E3D3B"
+  },
+  {
+    "file": "outerwear-10.jpg",
+    "alt": "Grey herringbone wool coat with button-trim detail, front",
+    "category": "outerwear",
+    "dominant": "#727577"
+  },
+  {
+    "file": "outerwear-11.jpg",
+    "alt": "Black wool double-breasted coat, embroidered collar detail",
+    "category": "outerwear",
+    "dominant": "#10100F"
+  },
+  {
+    "file": "outerwear-12.jpg",
+    "alt": "Navy wool blazer, flat lay, front",
+    "category": "outerwear",
+    "dominant": "#131215"
+  },
+  {
+    "file": "outerwear-13.jpg",
+    "alt": "Navy wool swing coat with plaid lining, front",
+    "category": "outerwear",
+    "dominant": "#0A0A14"
   }
 ]
