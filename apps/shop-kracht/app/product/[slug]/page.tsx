@@ -342,7 +342,10 @@ export default async function ProductPage({ params }: PageProps) {
       )}
 
       {/* Sticky buy bar — the thing every Dutch webshop puts on a phone PDP. */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-ink-raised/95 px-4 py-3 backdrop-blur md:hidden">
+      <div
+        data-buybar
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-ink-raised/95 px-4 py-3 backdrop-blur md:hidden"
+      >
         <div className="flex items-center gap-3">
           <div className="min-w-0">
             <p className="truncate text-sm font-bold">

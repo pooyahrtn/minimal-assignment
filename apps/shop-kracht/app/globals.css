@@ -76,3 +76,12 @@ html.vat-excl [data-vat-set="excl"] {
 dialog::backdrop {
   background: rgb(0 0 0 / 0.6);
 }
+
+/* The buy bar is fixed to the bottom on phones, so the footer needs to end above it or its last
+   line sits underneath. Scoped with :has() to the one template that renders the bar, rather than
+   padding every page's footer for a bar that is not there. */
+@media (max-width: 767px) {
+  body:has([data-buybar]) footer {
+    padding-bottom: 6rem;
+  }
+}
