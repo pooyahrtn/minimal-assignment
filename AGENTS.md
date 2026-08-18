@@ -9,10 +9,11 @@ A decision is anything the task description did not already settle: a suggestion
 approach you rejected, a value you picked, a corner you cut on purpose, a contract you had to
 interpret. If you found yourself choosing, log it.
 
-One row, three columns:
+One bullet, appended under the matching topic heading in `DECISIONS-LOG.md`:
 
-| Proposed | Done instead | Why |
-|---|---|---|
+`- **What we did** ← what was proposed · why (the number, clause or section) [session]`
+
+Reversing an earlier decision? Leave its bullet, prefix `~~⊗~~`, and point at the one replacing it.
 
 The *why* is the part with value. Cite the measurement, the licence clause, the doc section, or
 the constraint that decided it — not "cleaner" or "better practice". If a number decided it, put
