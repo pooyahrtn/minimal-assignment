@@ -1,3 +1,4 @@
+import { contrast } from './checks/contrast'
 import { transcriptCheck } from './checks/transcript'
 
 export type CheckResult = {
@@ -19,4 +20,4 @@ export type Check = {
  * H4 viewport-375 + H5 isolation → T9 · H6 budget → T6.
  * Empty is the correct state until T1 lands — and `bun bench` exits non-zero while it is.
  */
-export const checks: Check[] = [transcriptCheck]
+export const checks: Check[] = [transcriptCheck, contrast]
