@@ -55,7 +55,10 @@ function evaluate(current: BrainState): StepResult {
     return { state: { ...current, state: 'clarify' }, blocks: [prompt] }
   }
 
-  const results = intersect(active, current.catalog)
+  // Cheapest first. The obstacle sentence has just quoted the closest price, so leading the list
+  // with anything dearer reads as ignoring what was said one line earlier — and on the happy path
+  // a shopper who named a budget is scanning by price anyway.
+  const results = intersect(active, current.catalog).sort((a, b) => a.price - b.price)
   if (results.length > 0) {
     const cards: Block[] = results.map((product) => ({
       kind: 'product-card',

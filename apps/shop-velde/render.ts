@@ -194,6 +194,7 @@ ${page.sticky ?? ''}
 ${cartDrawer()}
 ${cookieBanner()}
 <script src="/assets/velde.js" defer></script>
+<script src="http://localhost:4003/v1/agent.js" data-shop="velde" async></script>
 </body>
 </html>`
 

@@ -137,6 +137,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <main>{children}</main>
         <Footer />
         <CookieBar />
+        <script src="http://localhost:4003/v1/agent.js" data-shop="kracht" async />
       </body>
     </html>
   )
