@@ -1,0 +1,29 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.9/schema.json",
+  "root": false,
+  "extends": "//",
+  "linter": {
+    "rules": {
+      "style": {
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "patterns": [
+              {
+                "group": [
+                  "**/apps/**",
+                  "apps/*",
+                  "@maximal/platform",
+                  "@maximal/platform/**",
+                  "@maximal/shop-*",
+                  "@maximal/shop-*/**"
+                ],
+                "message": "packages/agent is shipped software that happens to share this repo: a merchant's browser loads it, our apps never ship with it. Zero imports from apps/ [ENGINEERING §1.3]. Move the shared thing into packages/, or send it through /v1/config."
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

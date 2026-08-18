@@ -1,0 +1,85 @@
+# DECISIONS-LOG.md
+
+Appended to as we go, per PRINCIPLES §12. One line per override: what was proposed, what was
+done, why. `DECISIONS.md` gets distilled from this at the end — never reconstructed.
+
+---
+
+## 2026-08-18 — planning session
+
+| Proposed | Done instead | Why |
+|---|---|---|
+| PRINCIPLES §4: start from Shopify Dawn's rendered CSS | Dawn not shipped. KLYFT from Next.js Commerce (MIT). MARENNE structure derived, CSS regenerated. | Dawn's `LICENSE.md` is MIT **plus a field-of-use clause**: rights "may only be exercised to develop themes that integrate or interoperate with Shopify software or services… All other uses of the Software are strictly prohibited." A storefront on our own domain is not a Shopify theme. Verified at github.com/Shopify/dawn/blob/main/LICENSE.md. |
+| PRINCIPLES §4: 6 pages per storefront (home, listing, PDP, cart, about, shipping) | 3 templates per storefront: home+listing, PDP, cart drawer. Catalog stays 30–40 products. | About/shipping pages are never opened in a 10-minute review. Templates cost hours, catalog *data* costs minutes. Realism budget spent where it is looked at. |
+| PRINCIPLES §6: tier-0 crawl as a live runtime feature | Crawl runs at build time, output committed as a JSON snapshot. Live crawl retained only for the config page's brand extractor. | Same code path, same claim, but the on-stage demo never depends on a foreign server responding. Cloudflare blocking a datacenter IP during a presentation is a coin flip we don't need to take. |
+| PRINCIPLES §9.3: live preview over a *screenshot capture* of the merchant's page | Preview is an iframe of the live storefront with a real shadow root inside it. Screenshot only as a foreign-URL fallback. | Headless Chrome on Vercel (`@sparticuz/chromium`, cold starts, 50MB limit) is hours of infra to obtain a static image. The iframe is less work and a better demo — live and interactive. |
+| PRINCIPLES §11: obstacle flow lands in stage 3 ("Car") | Obstacle lands with the first agent slice, before `product-compare`. | The brief states the happy path is the easy part. Empty-intersection + which-chip-to-drop is ~20 lines and it is the graded moment. |
+| PRINCIPLES §4: build all 7 adversary-table rows | Build 3 on purpose (max-z cookie banner, global reset + Tailwind preflight, sticky 375px ATC bar). Rest are stretch. | Those three are visible surviving. A focus trap that works correctly looks like nothing happened. |
+| PRINCIPLES: 3 Vercel projects on the `releashed.io` apex | 3 Vercel projects on free `*.vercel.app` domains; custom DNS only if slack remains. | Still genuinely cross-origin, so the CORS point survives intact. Brief explicitly says deployment is optional; DNS setup scores nothing. |
+| PRINCIPLES §11: 33h allocated of a 36h window, "buffer will be consumed" | Replanned to ~29h with 6.5h of real slack, and a pre-committed cut order. | 100% utilisation on a solo build starves criterion #1 (how the screens feel) — the one thing weighted above code structure. |
+
+## 2026-08-18 — engineering law + measurement
+
+| Proposed | Done instead | Why |
+|---|---|---|
+| (me) No test framework on a 36h build — `assert`-based self-checks are enough | `bun test` for pure logic + Playwright for anything with a DOM, plus a benchmark suite (`BENCHMARKS.md`) | Pooya overrode. Correct call: with 100% of code AI-written and agents self-reporting success, hand-rolled asserts measure nothing consistently. Playwright was going to be needed anyway for the greyscale cross-brand check and the 375px screenshots. |
+| (me) `noExcessiveCognitiveComplexity` at the usual 40 | Cap 15 | 40 is the number you land on retrofitting a cap onto years of existing code. A repo with zero lines starts tight; loosening later is one config line. |
+| An LLM judge scoring agent output as a merge gate | Judge stays SOFT tier — prints and ranks, never blocks | An uncalibrated judge must not be a blocking gate, and calibrating one needs a human gold set (Cohen's κ vs a human–human baseline) that 36 hours does not buy. |
+| Benchmarks assess the product only | Benchmarks assess the product AND the coding agents, in one suite with one report | The suite's per-task retry count measures the quality of `TASKS.md` as much as the agent — a task needing four attempts is usually an under-specified task. |
+
+## 2026-08-18 — adversarial review of the plan (6-lens workflow, 31 agents)
+
+| Proposed | Done instead | Why |
+|---|---|---|
+| 24 findings raised across 6 review lenses | 1 applied | Each finding was handed to a separate agent whose only job was to refute it, defaulting to "refuted" under uncertainty. The 23 rejections cite line numbers and catch selective quoting — e.g. "chips cannot cross the config API" was refuted because chips never travel over a wire at all. A high rejection rate on a plan doc is the point; the survivor is the one worth the reader's attention. |
+| T4 QA: "replays both opening messages against **both catalogs**" | T4's checker takes a catalog **path argument** and ships against a declared placeholder fixture; T8 owns a new DoD box proving the obstacle fires on the **real** catalog | **The one surviving blocker.** T4's DoD was unsatisfiable in its own worktree: it required arithmetic on a real catalog that T2/T8 produce in parallel. The T4 agent would have invented a 6-product fixture tuned so the obstacle fires, gone green, and the graded moment would have quietly evaporated when the real 35-product catalog turned out to have a non-empty intersection — discovered in T10 rehearsal with no catalog-authoring budget left. Fixing it is T8's job, in the catalog, never in the brain and never in the opening message. |
+| Reviewers proposed a standalone code-standards task and a review-loop task | Rejected as tasks; both already live in `ENGINEERING.md` | Two refuters independently found ENGINEERING.md and showed the concern was already owned there — including the "what I invented" hand-off list and the mechanically-enforced import boundary. A standards *doc* every agent is told to read converts one ambiguity into eleven; a lint *config* does not. Standards belong in `biome.json`, not in prose. |
+| (me) Guardrails as their own task after T0 | Folded into T0 | ENGINEERING §4 requires guardrails before the first line of feature code, and T0 is the only pre-code task. A separate task would land after agents had already started. |
+| (me) A T12 owning the whole benchmark suite | Each HARD check is a DoD box on the task that would break it — H1→T1, H2→T5, H3→T4, H4/H5→T9, H6→T6 | A single late benchmark task is exactly the "failure discovered only at the end" shape the verifiability lens warned about. Only the `bun bench` runner is new work, and it goes in T0. |
+
+## 2026-08-18 — T0 (contracts, guardrails, repo skeleton)
+
+| Proposed | Done instead | Why |
+|---|---|---|
+| TASKS T0: husky running the pre-commit gate | `git config core.hooksPath .githooks` + a 4-line `sh` script (`bun run typecheck` && `biome check --staged`) | Identical gate, one fewer dependency and no `prepare` script. Cost: `core.hooksPath` is local config, so a fresh clone runs one command — on a solo 36h build that is cheaper than the install. |
+| TASKS T0: "Playwright installed" as part of the blocking task | `@playwright/test` is in `devDependencies`; the ~150MB browser download is deferred to T5 (`bunx playwright install chromium`) | Nothing in T0–T4 opens a browser. A download inside the task that blocks all eight others is the wrong place for it. |
+| Biome 1.x (the version most examples assume) | Biome **2.5.9** | `noRestrictedImports` and `noExcessiveCognitiveComplexity` are nursery rules in v1 — a gate on a nursery rule can change under us. Both are stable in v2, which also has nested configs (so the import boundary is scoped to `packages/agent` alone) and `--staged`. |
+| The import boundary as a root-level rule listing `apps/*` | A nested `packages/agent/biome.json` (`"root": false`, `extends: "//"`) with glob **patterns**, blocking `**/apps/**`, `apps/*`, `@maximal/platform`, `@maximal/shop-*` | Biome's `paths` option is exact-match only, so it would miss `../../../apps/platform/...` — the form an agent actually writes. Verified both forms error, and verified the same import outside `packages/agent` does not. |
+| `/v1/config` returns the merchant's raw tokens and the widget derives | It returns **derived** tokens | ENGINEERING §2.1 — the embed script is a binary we cannot recall. A clamp fix has to reach embedded scripts through the config payload, not through a redeploy nobody performs. |
+
+**What I invented in T0** (not specified by the task): `CssVarName` as a closed union so
+`Record<CssVarName, string>` makes a missing or invented custom property a *type* error;
+`Product.image` typed `string | null` rather than optional, so the missing-image case cannot be
+skipped; `Voice.tone` narrowed to `'warm' | 'clipped'` (the two brands PRINCIPLES §4 describes);
+`no-match` carries `alternatives` (the chip row as it would read after the drop) alongside
+`blocking` and `closest`; brand literals and voices live in `packages/tokens/src/brands.ts`.
+
+## 2026-08-18 — re-baseline: who the merchants are, and what the estimates mean
+
+| Proposed | Done instead | Why |
+|---|---|---|
+| PRINCIPLES §4: MARENNE (warm editorial skincare) and KLYFT (Nordic technical outdoor) | **VELDE** (Amsterdam minimal apparel, English) and **KRACHT** (Dutch sports nutrition, Nederlands) | The originals were `TAKE_HOME.md`'s own example sentence — *"something like a warm editorial skincare store and a high-contrast technical outdoor brand"* — handed back to the person who wrote it. Minimal AI (YC S25, Amsterdam) publishes its client list on its homepage: XXL Nutrition, Cloudpillo, Mobiel NL, Matt Sleeps, Girav, Boldking, Upfront, ETQ, Volero, Proforto, Hang Eleven, Boombrush, Plnktn — almost entirely Dutch, with an integration list that is the Dutch stack end to end. VELDE is the ETQ archetype, KRACHT the XXL Nutrition archetype. |
+| Clone two real client storefronts for maximum realism | Model the **category and its conventions**; names, logos and copy are ours | Cloning a client's identity is impersonation, and it is a *weaker* demo: the claim is "the agent adapts to a brand it has never seen", which a copy cannot show. |
+| Both storefronts in English | **VELDE English, KRACHT Dutch** | Mirrors reality — ETQ ships English across ten locales, Proforto is Dutch-only. It also makes locale an axis the agent adapts on, alongside colour, type and personification, which is the differentiator reviewers will not expect. Cost is a second synonym map: data, not code. |
+| Estimates in hours of hands-on work (33h + buffer) | Estimates split into **A** (agent wall-clock) and **R** (human review), totalling ~8h + ~10h | T0 was estimated at 2.5h and landed in 6 minutes. The plan was budgeted against a typing constraint that does not exist on a 100%-agent-written build. The correction is not "everything is faster" — asset and taste work does not compress — it is that the freed budget moves onto the graded surface. Tracked per task in `PROGRESS.md`. |
+| §3 cut order as the plan of record | Cut order demoted to **last resort**; deployment, both obstacles, the third brand and photography quality move back **on** plan | Cutting `product-compare` to save 20 minutes of agent time is not a trade worth making at ~18h planned against a 36h window. |
+| (Pooya) A repeatable process for picking up tasks | `.claude/skills/pickup/SKILL.md` — read contracts → plan → **adversarial plan refutation** → build (Sonnet for mechanical slices) → **adversarial diff review** → gates → status + estimate-accuracy update | Encodes the review discipline that `ENGINEERING §3` and `BENCHMARKS §2` already demand but that nothing enforced per-task. |
+
+## 2026-08-18 — adversarial review of the re-plan (23 findings, applied same session)
+
+| Proposed | Done instead | Why |
+|---|---|---|
+| (me) VELDE's black CTA is "the contrast clamp's hard case" — written as a comment in `brands.ts` | Comment deleted as **false**, and T11 promoted from stretch to **required** | Measured: VELDE accent-on-surface is **16.50:1**, KRACHT **14.65:1** — both clear the 4.5:1 bar by 3.6×. Black-on-paper is the *easiest* case in the space. The old MARENNE sage was **3.23:1**, genuinely below the bar — so the brand swap quietly removed the only place the clamp visibly did anything. T11's pale-yellow brand is now that place. |
+| (me) H2 `brand-divergence` measures cross-brand structure | H2 **normalises ground luminance** and adds a second assertion over computed `padding`/`radius`/`tracking`/`shadow`/`text-transform` | Desaturation removes hue, not luminance. Measured greyscale grounds: VELDE **250** vs KRACHT **25**. A widget that themed `surface` and `accent` and ignored every layout token would have passed the #1 graded benchmark. Worth recording that this was **not** introduced by the brand swap — the old pair was 241 vs 20, the same trick — so the benchmark has been vacuous since it was written. |
+| (me) Locale is "a second synonym map: data, not code" | `ConfigResponse` gains `locale` and a flat `strings` map, **before any desk forks** | Refuted by counting: seven block types carry prose, plus composer/empty/loading states and a *generated* obstacle sentence with a number and a preposition. Only `greeting` could cross the wire. Dutch would have become `if (locale === 'nl')` inside a binary we cannot recall — the exact thing ENGINEERING §2.1 calls the highest-value rule in the doc. Ten lines now, a rewrite after T5. |
+| (me) `focusRing` derived from `accent` | Derived against the surface it lands on, clamped ≥3:1 against both | Measured **1.0:1** for VELDE's focus ring on its own accent-filled CTA. The 4.5:1 clamp covers text pairs only, so a non-text indicator (WCAG 1.4.11) fell straight through the gap. One line in T1, invisible-until-T9 if missed. |
+| (me) `Voice.tone: 'warm' \| 'clipped'`, avatar always present | `tone: string`, `avatar` nullable | The brief's bar is "many configurations, **not just the one you designed it against**". A two-value union is that failure encoded in a type. It also made T11's "one object, typed live in 60 seconds" false — a third brand needed two objects and a hand-drawn SVG. |
+| (me) The obstacle fires on both brands' opening messages | **KRACHT resolves happily, VELDE hits the obstacle** | The brief asks to take a shopper "to the point where they can confidently act on a product" and *then* show one moment that does not go smoothly. Both brands opening with "nothing matches" reads as a broken retriever and never demonstrates the product. Putting the obstacle on the English brand also keeps the four highest-value seconds in the register we fully control. |
+| (me) Slack funds both obstacles, custom DNS, and a live crawl of Minimal's own clients | One obstacle · `*.vercel.app` only · three **unaffiliated** Dutch shops for the extractor | The brief says "pick the one you have something to say about" — shipping both declines the question. DNS was listed as cut #4 and back-on #1 in the same document, quoting the same brief sentence in both directions. And demoing a crawl of the reviewer's own customers, one of which already 403'd us, is the same impersonation logic we used to reject cloning them. |
+| (me) `bun test` satisfies "test runner wired" | Guarded by `bench/no-empty-test-run.sh` | `bun test` exits **0** having collected zero tests — the precise failure ENGINEERING §3.1 forbids and that `bun bench` was built to prevent. An agent writing no test would have gone green. |
+| (me) T0 shipped "exactly ENGINEERING §4, nothing invented" | Biome's `organizeImports` assist turned **off**; `apps/**` added to the typecheck; import-boundary globs extended to package subpaths; `as`-cast grep added to the hook | Four gate defects: §4.9 explicitly rejects import sorting and it was on by default; `tsconfig` covered only `packages/*/src`, so the config page and the KRACHT storefront — the two highest-scoring surfaces — were never typechecked; `@maximal/shop-*/subpath` slipped the boundary rule; and §4.2 claims `noExplicitAny` enforces "never cast with `as`", which it does not (`as Foo` and `as unknown as Foo` both passed clean). |
+
+**Not accepted from the review:** that the Dutch storefront is too risky to read. Titus Ex is a
+Dutch co-founder at an Amsterdam company selling to Dutch merchants; he reads it. The verification
+risk is real but it lives in the *agent's* Dutch register, not the storefront furniture — which is
+why the obstacle moved to VELDE and Dutch kept the short formulaic surface.

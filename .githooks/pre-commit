@@ -1,0 +1,18 @@
+#!/bin/sh
+# The fast local gate: types repo-wide, lint on what is staged. [ENGINEERING §4.6]
+set -e
+bun run typecheck
+./node_modules/.bin/biome check --staged --no-errors-on-unmatched
+
+# ENGINEERING §1.4 "never cast with `as`". Biome's noExplicitAny catches `as any` only, so the
+# rest of the rule is a grep — a NEVER rule must not claim enforcement it does not have.
+# Capture the hits rather than branching on the pipeline: xargs exits 0 when it runs nothing,
+# so `if <pipeline>` fires on every commit that stages no TypeScript at all.
+hits=$(git diff --cached --name-only --diff-filter=ACM -z -- '*.ts' '*.tsx' \
+       | xargs -0 -r grep -nE '\bas\s+(unknown|any|string|number|boolean|[A-Z][A-Za-z0-9_]*)\b' \
+       || true)
+if [ -n "$hits" ]; then
+  echo "$hits" >&2
+  echo "error: type assertion found. Narrow it, add a runtime guard, or fix the type. [ENGINEERING §1.4]" >&2
+  exit 1
+fi
