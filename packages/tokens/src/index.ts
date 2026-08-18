@@ -1,4 +1,5 @@
 export { KRACHT, KRACHT_VOICE, VELDE, VELDE_VOICE } from './brands'
+export { AA_GUARANTEED_PAIRS, derive } from './derive'
 export type { CssVarName, CssVars, DerivedTokens } from './derived'
 export type {
   Corner,
