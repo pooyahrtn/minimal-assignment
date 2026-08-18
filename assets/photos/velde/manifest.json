@@ -1,0 +1,194 @@
+[
+  {
+    "file": "outerwear-01.jpg",
+    "alt": "Navy MA-1 bomber jacket, flat lay, front",
+    "category": "outerwear",
+    "dominant": "#605A56"
+  },
+  {
+    "file": "outerwear-02.jpg",
+    "alt": "Waxed cotton field jacket with corduroy collar, flat lay",
+    "category": "outerwear",
+    "dominant": "#696B6E"
+  },
+  {
+    "file": "outerwear-03.jpg",
+    "alt": "Navy wool jacket with leather shoulder panels, on hanger",
+    "category": "outerwear",
+    "dominant": "#A29BA5"
+  },
+  {
+    "file": "outerwear-04.jpg",
+    "alt": "Khaki cotton safari jacket, front, on white ground",
+    "category": "outerwear",
+    "dominant": "#A29B8F"
+  },
+  {
+    "file": "outerwear-05.jpg",
+    "alt": "Navy wool pea coat, six-button, on hanger",
+    "category": "outerwear",
+    "dominant": "#5C5F69"
+  },
+  {
+    "file": "outerwear-06.jpg",
+    "alt": "Blue wool-blend tailored jacket, on hanger",
+    "category": "outerwear",
+    "dominant": "#68728C"
+  },
+  {
+    "file": "outerwear-07.jpg",
+    "alt": "Distressed black canvas work jacket with hood",
+    "category": "outerwear",
+    "dominant": "#6C6A6B"
+  },
+  {
+    "file": "outerwear-08.jpg",
+    "alt": "Grey donegal tweed jacket, on hanger",
+    "category": "outerwear",
+    "dominant": "#937E7E"
+  },
+  {
+    "file": "outerwear-09.jpg",
+    "alt": "Harris tweed jacket on mannequin with shirt and tie",
+    "category": "outerwear",
+    "dominant": "#786E5E"
+  },
+  {
+    "file": "outerwear-10.jpg",
+    "alt": "Beige cotton travel jacket with mustard lining, on hanger",
+    "category": "outerwear",
+    "dominant": "#A69987"
+  },
+  {
+    "file": "knitwear-01.jpg",
+    "alt": "Cream cowl-neck cashmere sweater, worn, studio shot",
+    "category": "knitwear",
+    "dominant": "#D5D2D5"
+  },
+  {
+    "file": "knitwear-02.jpg",
+    "alt": "Brown Icelandic lopapeysa sweater with yoke pattern, flat lay",
+    "category": "knitwear",
+    "dominant": "#817C76"
+  },
+  {
+    "file": "knitwear-03.jpg",
+    "alt": "Grey fair isle patterned sweater, flat lay on stone",
+    "category": "knitwear",
+    "dominant": "#918D89"
+  },
+  {
+    "file": "knitwear-04.jpg",
+    "alt": "Hand-knit striped wool beanie, flat",
+    "category": "knitwear",
+    "dominant": "#83545C"
+  },
+  {
+    "file": "knitwear-05.jpg",
+    "alt": "White tipped-collar knit polo shirt, flat lay",
+    "category": "knitwear",
+    "dominant": "#817773"
+  },
+  {
+    "file": "knitwear-06.jpg",
+    "alt": "Black cable-knit boots, studio product shot",
+    "category": "knitwear",
+    "dominant": "#A4A3A6"
+  },
+  {
+    "file": "knitwear-07.jpg",
+    "alt": "Red ribbed turtleneck sweater, folded, flat lay",
+    "category": "knitwear",
+    "dominant": "#CE6679"
+  },
+  {
+    "file": "knitwear-08.jpg",
+    "alt": "Striped knit cowl scarf, folded on bed",
+    "category": "knitwear",
+    "dominant": "#9A9183"
+  },
+  {
+    "file": "knitwear-09.jpg",
+    "alt": "Grey knit shawl with fringe, flat lay on wood floor",
+    "category": "knitwear",
+    "dominant": "#89898C"
+  },
+  {
+    "file": "knitwear-10.jpg",
+    "alt": "Grey marled knit gloves, flat lay",
+    "category": "knitwear",
+    "dominant": "#897F56"
+  },
+  {
+    "file": "leather-01.jpg",
+    "alt": "Black vegan leather biker jacket, worn, studio shot",
+    "category": "leather",
+    "dominant": "#7F7977"
+  },
+  {
+    "file": "leather-02.jpg",
+    "alt": "Black leather Chelsea boot, side profile, studio shot",
+    "category": "leather",
+    "dominant": "#9C6629"
+  },
+  {
+    "file": "leather-03.jpg",
+    "alt": "Tan suede chukka boot, side profile, studio shot",
+    "category": "leather",
+    "dominant": "#C68642"
+  },
+  {
+    "file": "leather-04.jpg",
+    "alt": "Black leather belt, coiled, with silver buckle",
+    "category": "leather",
+    "dominant": "#959595"
+  },
+  {
+    "file": "leather-05.jpg",
+    "alt": "Tan leather full-brogue oxford shoes, pair",
+    "category": "leather",
+    "dominant": "#7D6966"
+  },
+  {
+    "file": "leather-06.jpg",
+    "alt": "Brown leather derby shoe, side profile, studio shot",
+    "category": "leather",
+    "dominant": "#C5C2C0"
+  },
+  {
+    "file": "leather-07.jpg",
+    "alt": "Black leather penny loafers, worn",
+    "category": "leather",
+    "dominant": "#7F7F83"
+  },
+  {
+    "file": "leather-08.jpg",
+    "alt": "Worn black leather biker jacket, studio shot",
+    "category": "leather",
+    "dominant": "#908680"
+  },
+  {
+    "file": "leather-09.jpg",
+    "alt": "Grey suede bomber jacket, on hanger",
+    "category": "leather",
+    "dominant": "#B0AEAE"
+  },
+  {
+    "file": "leather-10.jpg",
+    "alt": "Brown leather bifold wallet, studio shot",
+    "category": "leather",
+    "dominant": "#69605E"
+  },
+  {
+    "file": "leather-11.jpg",
+    "alt": "Black and brown leather card holder, flat lay",
+    "category": "leather",
+    "dominant": "#342B2C"
+  },
+  {
+    "file": "leather-12.jpg",
+    "alt": "Black leather Chelsea boots, pair, studio product shot",
+    "category": "leather",
+    "dominant": "#BBBCBA"
+  }
+]

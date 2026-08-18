@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #121212;
+  --color-ink-raised: #191919;
+  --color-ink-card: #1e1e1e;
+  --color-ink-sunk: #0c0c0c;
+  --color-line: #2e2e2e;
+  --color-signal: #c6f441;
+  --color-signal-dim: #9dc22f;
+  --color-mute: #a1a1a1;
+  --color-flag: #ff4d3d;
+
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 12px 28px -12px rgb(0 0 0 / 0.7);
+  --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.4), 0 24px 48px -18px rgb(0 0 0 / 0.85);
+}
+
+html {
+  background-color: var(--color-ink);
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--color-ink);
+  color: #f5f5f5;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/*
+ * Prices are rendered twice — incl. and excl. BTW — and the toggle swaps a class on <html>.
+ * No hydration flash, and the excl. price is in the markup for a business customer who has
+ * JavaScript switched off entirely.
+ */
+[data-vat="excl"] {
+  display: none;
+}
+
+html.vat-excl [data-vat="excl"] {
+  display: inline;
+}
+
+html.vat-excl [data-vat="incl"] {
+  display: none;
+}
+
+.vat-option {
+  border-radius: 9999px;
+  padding: 0.25rem 0.75rem;
+  color: var(--color-mute);
+}
+
+.vat-option:hover {
+  color: #fff;
+}
+
+html:not(.vat-excl) [data-vat-set="incl"],
+html.vat-excl [data-vat-set="excl"] {
+  background: var(--color-signal);
+  color: var(--color-ink);
+}
+
+::selection {
+  background: var(--color-signal);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-signal);
+  outline-offset: 2px;
+}
+
+dialog::backdrop {
+  background: rgb(0 0 0 / 0.6);
+}
