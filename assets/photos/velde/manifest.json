@@ -1,194 +1,122 @@
 [
   {
-    "file": "outerwear-01.jpg",
-    "alt": "Navy MA-1 bomber jacket, flat lay, front",
-    "category": "outerwear",
-    "dominant": "#605A56"
-  },
-  {
-    "file": "outerwear-02.jpg",
-    "alt": "Waxed cotton field jacket with corduroy collar, flat lay",
-    "category": "outerwear",
-    "dominant": "#696B6E"
-  },
-  {
-    "file": "outerwear-03.jpg",
-    "alt": "Navy wool jacket with leather shoulder panels, on hanger",
-    "category": "outerwear",
-    "dominant": "#A29BA5"
-  },
-  {
-    "file": "outerwear-04.jpg",
-    "alt": "Khaki cotton safari jacket, front, on white ground",
-    "category": "outerwear",
-    "dominant": "#A29B8F"
-  },
-  {
-    "file": "outerwear-05.jpg",
-    "alt": "Navy wool pea coat, six-button, on hanger",
-    "category": "outerwear",
-    "dominant": "#5C5F69"
-  },
-  {
-    "file": "outerwear-06.jpg",
-    "alt": "Blue wool-blend tailored jacket, on hanger",
-    "category": "outerwear",
-    "dominant": "#68728C"
-  },
-  {
-    "file": "outerwear-07.jpg",
-    "alt": "Distressed black canvas work jacket with hood",
-    "category": "outerwear",
-    "dominant": "#6C6A6B"
-  },
-  {
-    "file": "outerwear-08.jpg",
-    "alt": "Grey donegal tweed jacket, on hanger",
-    "category": "outerwear",
-    "dominant": "#937E7E"
-  },
-  {
-    "file": "outerwear-09.jpg",
-    "alt": "Harris tweed jacket on mannequin with shirt and tie",
-    "category": "outerwear",
-    "dominant": "#786E5E"
-  },
-  {
-    "file": "outerwear-10.jpg",
-    "alt": "Beige cotton travel jacket with mustard lining, on hanger",
-    "category": "outerwear",
-    "dominant": "#A69987"
-  },
-  {
     "file": "knitwear-01.jpg",
-    "alt": "Cream cowl-neck cashmere sweater, worn, studio shot",
+    "alt": "Long ecru knitted evening gloves, pair",
     "category": "knitwear",
-    "dominant": "#D5D2D5"
+    "dominant": "#E3DFD6"
   },
   {
     "file": "knitwear-02.jpg",
-    "alt": "Brown Icelandic lopapeysa sweater with yoke pattern, flat lay",
+    "alt": "Taupe wool V-neck sweater, flat lay",
     "category": "knitwear",
-    "dominant": "#817C76"
+    "dominant": "#7E7063"
   },
   {
     "file": "knitwear-03.jpg",
-    "alt": "Grey fair isle patterned sweater, flat lay on stone",
+    "alt": "Black wool button cardigan, flat lay",
     "category": "knitwear",
-    "dominant": "#918D89"
+    "dominant": "#232227"
   },
   {
     "file": "knitwear-04.jpg",
-    "alt": "Hand-knit striped wool beanie, flat",
+    "alt": "Black wool cardigan with ribbed cuffs, flat lay",
     "category": "knitwear",
-    "dominant": "#83545C"
-  },
-  {
-    "file": "knitwear-05.jpg",
-    "alt": "White tipped-collar knit polo shirt, flat lay",
-    "category": "knitwear",
-    "dominant": "#817773"
-  },
-  {
-    "file": "knitwear-06.jpg",
-    "alt": "Black cable-knit boots, studio product shot",
-    "category": "knitwear",
-    "dominant": "#A4A3A6"
-  },
-  {
-    "file": "knitwear-07.jpg",
-    "alt": "Red ribbed turtleneck sweater, folded, flat lay",
-    "category": "knitwear",
-    "dominant": "#CE6679"
-  },
-  {
-    "file": "knitwear-08.jpg",
-    "alt": "Striped knit cowl scarf, folded on bed",
-    "category": "knitwear",
-    "dominant": "#9A9183"
-  },
-  {
-    "file": "knitwear-09.jpg",
-    "alt": "Grey knit shawl with fringe, flat lay on wood floor",
-    "category": "knitwear",
-    "dominant": "#89898C"
-  },
-  {
-    "file": "knitwear-10.jpg",
-    "alt": "Grey marled knit gloves, flat lay",
-    "category": "knitwear",
-    "dominant": "#897F56"
+    "dominant": "#222126"
   },
   {
     "file": "leather-01.jpg",
-    "alt": "Black vegan leather biker jacket, worn, studio shot",
+    "alt": "Black leather shoulder tote",
     "category": "leather",
-    "dominant": "#7F7977"
+    "dominant": "#434445"
   },
   {
     "file": "leather-02.jpg",
-    "alt": "Black leather Chelsea boot, side profile, studio shot",
+    "alt": "Tan leather shoulder bag",
     "category": "leather",
-    "dominant": "#9C6629"
+    "dominant": "#E4BE8B"
   },
   {
     "file": "leather-03.jpg",
-    "alt": "Tan suede chukka boot, side profile, studio shot",
+    "alt": "Black suede knee-high boots, pair",
     "category": "leather",
-    "dominant": "#C68642"
+    "dominant": "#2C2C2B"
   },
   {
     "file": "leather-04.jpg",
-    "alt": "Black leather belt, coiled, with silver buckle",
+    "alt": "Black textured leather frame bag",
     "category": "leather",
-    "dominant": "#959595"
+    "dominant": "#262624"
   },
   {
     "file": "leather-05.jpg",
-    "alt": "Tan leather full-brogue oxford shoes, pair",
+    "alt": "Black leather lace-up boots, pair, three-quarter",
     "category": "leather",
-    "dominant": "#7D6966"
+    "dominant": "#54504B"
   },
   {
     "file": "leather-06.jpg",
-    "alt": "Brown leather derby shoe, side profile, studio shot",
+    "alt": "Black woven leather belt, coiled",
     "category": "leather",
-    "dominant": "#C5C2C0"
+    "dominant": "#504F4D"
   },
   {
     "file": "leather-07.jpg",
-    "alt": "Black leather penny loafers, worn",
+    "alt": "Sand canvas and leather flap tote",
     "category": "leather",
-    "dominant": "#7F7F83"
+    "dominant": "#998668"
   },
   {
-    "file": "leather-08.jpg",
-    "alt": "Worn black leather biker jacket, studio shot",
-    "category": "leather",
-    "dominant": "#908680"
+    "file": "outerwear-01.jpg",
+    "alt": "Single-breasted camel wool blazer, flat lay, front",
+    "category": "outerwear",
+    "dominant": "#A18C71"
   },
   {
-    "file": "leather-09.jpg",
-    "alt": "Grey suede bomber jacket, on hanger",
-    "category": "leather",
-    "dominant": "#B0AEAE"
+    "file": "outerwear-02.jpg",
+    "alt": "Ecru cotton long coat, front, on form",
+    "category": "outerwear",
+    "dominant": "#CCC3AA"
   },
   {
-    "file": "leather-10.jpg",
-    "alt": "Brown leather bifold wallet, studio shot",
-    "category": "leather",
-    "dominant": "#69605E"
+    "file": "outerwear-03.jpg",
+    "alt": "Black wool double-breasted overcoat, flat lay, front",
+    "category": "outerwear",
+    "dominant": "#1F1F25"
   },
   {
-    "file": "leather-11.jpg",
-    "alt": "Black and brown leather card holder, flat lay",
-    "category": "leather",
-    "dominant": "#342B2C"
+    "file": "outerwear-04.jpg",
+    "alt": "Black wool cape with stand collar, flat lay",
+    "category": "outerwear",
+    "dominant": "#2A2B31"
   },
   {
-    "file": "leather-12.jpg",
-    "alt": "Black leather Chelsea boots, pair, studio product shot",
-    "category": "leather",
-    "dominant": "#BBBCBA"
+    "file": "outerwear-05.jpg",
+    "alt": "Navy wool overcoat, flat lay, front",
+    "category": "outerwear",
+    "dominant": "#2F3339"
+  },
+  {
+    "file": "outerwear-06.jpg",
+    "alt": "Black wool pea coat, flat lay, front",
+    "category": "outerwear",
+    "dominant": "#1F201D"
+  },
+  {
+    "file": "outerwear-07.jpg",
+    "alt": "Grey leather car coat, front",
+    "category": "outerwear",
+    "dominant": "#65615C"
+  },
+  {
+    "file": "outerwear-08.jpg",
+    "alt": "Taupe wool blazer, flat lay, front",
+    "category": "outerwear",
+    "dominant": "#8E7F78"
+  },
+  {
+    "file": "outerwear-09.jpg",
+    "alt": "Black leather belted coat, flat lay, back",
+    "category": "outerwear",
+    "dominant": "#3E3D3B"
   }
 ]
