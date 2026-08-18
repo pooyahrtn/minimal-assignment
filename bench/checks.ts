@@ -1,3 +1,5 @@
+import { transcriptCheck } from './checks/transcript'
+
 export type CheckResult = {
   /** How many cases were actually examined. Zero is a failure, never a pass. [ENGINEERING §3.1] */
   count: number
@@ -17,4 +19,4 @@ export type Check = {
  * H4 viewport-375 + H5 isolation → T9 · H6 budget → T6.
  * Empty is the correct state until T1 lands — and `bun bench` exits non-zero while it is.
  */
-export const checks: Check[] = []
+export const checks: Check[] = [transcriptCheck]
