@@ -65,6 +65,15 @@
     inputs — accent choice, scale, density — and must never truncate a *record* of what the shopper
     did. The constraint-chip row is both the brief and the receipt; a dropped chip stays visible
     rather than being evicted. [PRINCIPLES §8]
+11. **Fewest concepts wins.** Count the nouns a reviewer has to hold in their head to follow a
+    change — a new type, a new file, a new state, a new config key, a new lifecycle, a new word for
+    an existing thing are each one concept. Prefer the version with fewer, even when it costs a few
+    more lines. Two names for one idea (`shopKey` and `shopId`, `brief` and `chip state`) is a
+    concept added for free and it is the most common way AI-written code becomes unreviewable.
+    Concretely: reuse the type that exists rather than defining its near-twin; put the branch in the
+    function every caller already routes through rather than adding a layer; extend a value's range
+    before adding a flag beside it. This is the rule the cognitive-complexity cap (§4.4) is a
+    mechanical proxy for — the cap measures one function, this measures the diff.
 
 ---
 

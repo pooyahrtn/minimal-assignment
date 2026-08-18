@@ -51,6 +51,8 @@ T0 contracts  (blocks everything, ~1h, do alone)
    +-- T4 agent brain        ---- +-- T6 platform API ----/
    +-- T5 message renderers  ---/   |
    +-- T8 ingest + extractor ------/
+                                    |
+                                    +-- T12 e2e critical flows (after T5)
 ```
 
 Truly parallel after T0: **T1, T2, T3, T4, T8**. T5 needs T3's style primitives.
@@ -72,6 +74,7 @@ T7 needs T6 + a running storefront. T9/T10 are last.
 | T9 | Hostile-page hardening + polish pass | 45m | 60m | T3, T5, T2 | no |
 | T10 | DECISIONS.md, log, demo rehearsal | 20m draft | **90m** | all | no |
 | T11 | Third brand (stretch / live-extend prep) | 10m | 10m | T1, T6 | yes |
+| T12 | E2E critical-flow suite (Playwright) | 40m | 30m | T2 · T3+T4 wired · T5 for the card flows | no |
 
 **Total: ~8h A + ~10h R ≈ 18h of the 36h window — provisional, one measured data point.**
 The bolded R values are the graded surfaces. Note what "the remaining 18h" actually costs: A
@@ -404,6 +407,43 @@ pill radius, generous scale, no personification). Ten lines, no new code.
 
 ---
 
+## T12 — E2E critical-flow suite
+**Requested by Pooya mid-session, not derived from the brief.** `@playwright/test` is already pinned
+and ENGINEERING §4.7 already routes anything with a DOM to it, so this costs a suite, not a
+dependency. `e2e/`, specs named **`*.spec.ts` and never `*.test.ts`** — `bun run test` collects
+`*.test.ts` through `git ls-files` and would hand Playwright specs to `bun test`.
+
+**Scope.** Two projects, `mobile` (375x812) and `desktop` (1440x900). A `webServer` block boots both
+storefronts so the suite is one command. Selectors are roles, text and JSON-LD only: **a spec may
+never add a `data-testid` to storefront markup** — the storefront freeze [ENGINEERING §1.1] is the
+thing being demonstrated, and a test hook is an edit.
+
+*Store, per shop:* home → listing card → PDP (title, price, JSON-LD present) → add to cart → badge
+increments → drawer opens holding the line item. Out-of-stock cannot add. Sale PDP shows a struck
+price. The missing-image product still renders. At 375px the sticky ATC bar is visible and does not
+cover the footer. Cookie dismissal survives a reload. KRACHT only: the Excl./Incl. VAT toggle
+changes the rendered price.
+
+*Agent, per brand:* one `<script>` tag → launcher appears → nothing paints before tokens resolve →
+open → send the verbatim PRINCIPLES §8 opening message → the chip row shows >=3 chips → KRACHT
+reaches the obstacle and the sentence names the blocking constraint and a number → drop the chip →
+results appear → restore it → the chip returns struck-through-then-active. VELDE resolves happily.
+Keyboard: Tab to launcher, Enter, Tab inside the panel, Esc closes, focus returns.
+
+**DoD**
+- [ ] Every spec asserts rendered state, never "did not throw".
+- [ ] Zero storefront source edits to make the suite pass. `git log apps/shop-*` proves it.
+- [ ] `bunx playwright install chromium` is documented as a setup step — the repo has never run it.
+- [ ] Specs that depend on a T5 renderer are not written yet, and their absence is stated, not stubbed.
+
+**QA (independent).** `bun run test:e2e` from a clean clone after the two documented installs.
+
+**Not in scope.** H4 (`viewport-375`) and H5 (`isolation`) — `bench/checks.ts` assigns both to **T9**
+and they belong in the bench registry BENCHMARKS.md governs, not in a second runner. The full
+`no-match` card flow, which needs T5.
+
+---
+
 ## 3. Cut order, decided in advance
 
 **The re-baseline puts every previous cut candidate back on the table.** At ~18h of planned work
@@ -415,7 +455,8 @@ making. The list below is now an *order of last resort*, not a plan:
 3. Stretch adversaries — focus-trap modal, junk scripts, third-party bubble (T2)
 4. `releashed.io` custom DNS (ship on `*.vercel.app`)
 5. Third brand (T11)
-6. NL refinement field (T7) — **last resort only.** It is a differentiator; losing it costs real points.
+6. T12's desktop project (keep `mobile` — 375px is never cut)
+7. NL refinement field (T7) — **last resort only.** It is a differentiator; losing it costs real points.
 
 **Never cut:** the obstacle flow, the two-brand proof, 375px, DECISIONS.md.
 

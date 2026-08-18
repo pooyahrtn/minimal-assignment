@@ -6,6 +6,7 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "moduleDetection": "force",
+    "jsx": "preserve",
     "strict": true,
     "noFallthroughCasesInSwitch": true,
     "verbatimModuleSyntax": true,
