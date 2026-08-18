@@ -1,0 +1,212 @@
+[
+  {
+    "id": "sh-01",
+    "title": "Classic Whey Chocolate",
+    "url": "https://example.test/products/sh-01",
+    "image": null,
+    "price": 19.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      { "label": "Protein per serving", "value": "24g" },
+      { "label": "Servings", "value": "30" }
+    ],
+    "tags": ["protein-shake"]
+  },
+  {
+    "id": "sh-02",
+    "title": "Classic Whey Vanilla",
+    "url": "https://example.test/products/sh-02",
+    "image": null,
+    "price": 19.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      { "label": "Protein per serving", "value": "24g" },
+      { "label": "Servings", "value": "30" }
+    ],
+    "tags": ["protein-shake"]
+  },
+  {
+    "id": "sh-03",
+    "title": "Salted Caramel Whey",
+    "url": "https://example.test/products/sh-03",
+    "image": null,
+    "price": 21.0,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      { "label": "Protein per serving", "value": "22g" },
+      { "label": "Servings", "value": "25" }
+    ],
+    "tags": ["protein-shake"]
+  },
+  {
+    "id": "sh-04",
+    "title": "Budget Whey Blend",
+    "url": "https://example.test/products/sh-04",
+    "image": null,
+    "price": 16.5,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      { "label": "Protein per serving", "value": "18g" },
+      { "label": "Servings", "value": "40" }
+    ],
+    "tags": ["protein-shake"]
+  },
+  {
+    "id": "sh-05",
+    "title": "Strawberry Whey Isolate",
+    "url": "https://example.test/products/sh-05",
+    "image": null,
+    "price": 27.5,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      { "label": "Protein per serving", "value": "27g" },
+      { "label": "Servings", "value": "28" }
+    ],
+    "tags": ["protein-shake", "lactose-free"]
+  },
+  {
+    "id": "sh-06",
+    "title": "Stevia-Free Whey Blend",
+    "url": "https://example.test/products/sh-06",
+    "image": null,
+    "price": 24.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      { "label": "Protein per serving", "value": "23g" },
+      { "label": "Servings", "value": "30" }
+    ],
+    "tags": ["protein-shake", "no-sweeteners"]
+  },
+  {
+    "id": "sh-07",
+    "title": "Clean Label Plant Vanilla",
+    "url": "https://example.test/products/sh-07",
+    "image": null,
+    "price": 34.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      { "label": "Protein per serving", "value": "20g" },
+      { "label": "Servings", "value": "20" }
+    ],
+    "tags": ["protein-shake", "no-sweeteners", "lactose-free"]
+  },
+  {
+    "id": "sh-08",
+    "title": "Unsweetened Whey Isolate",
+    "url": "https://example.test/products/sh-08",
+    "image": null,
+    "price": 36.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      { "label": "Protein per serving", "value": "26g" },
+      { "label": "Servings", "value": "25" }
+    ],
+    "tags": ["protein-shake", "no-sweeteners", "lactose-free"]
+  },
+  {
+    "id": "sh-09",
+    "title": "Organic Pea Protein Unsweetened",
+    "url": "https://example.test/products/sh-09",
+    "image": null,
+    "price": 42.0,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      { "label": "Protein per serving", "value": "19g" },
+      { "label": "Servings", "value": "20" }
+    ],
+    "tags": ["protein-shake", "no-sweeteners", "lactose-free"]
+  },
+  {
+    "id": "jk-01",
+    "title": "Tailored Wool Overcoat",
+    "url": "https://example.test/products/jk-01",
+    "image": null,
+    "price": 220.0,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      { "label": "Material", "value": "Wool blend" },
+      { "label": "Fit", "value": "Tailored" }
+    ],
+    "tags": ["jacket", "office", "black", "matte"]
+  },
+  {
+    "id": "jk-02",
+    "title": "Performance Softshell Commuter",
+    "url": "https://example.test/products/jk-02",
+    "image": null,
+    "price": 189.0,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      { "label": "Material", "value": "Recycled softshell" },
+      { "label": "Fit", "value": "Regular" }
+    ],
+    "tags": ["jacket", "office", "bike", "black", "matte"]
+  },
+  {
+    "id": "jk-03",
+    "title": "Glossy Packable Rain Shell",
+    "url": "https://example.test/products/jk-03",
+    "image": null,
+    "price": 95.0,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      { "label": "Material", "value": "PU-coated nylon" },
+      { "label": "Fit", "value": "Packable" }
+    ],
+    "tags": ["jacket", "bike", "black"]
+  },
+  {
+    "id": "jk-04",
+    "title": "Navy Blazer",
+    "url": "https://example.test/products/jk-04",
+    "image": null,
+    "price": 175.0,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      { "label": "Material", "value": "Cotton twill" },
+      { "label": "Fit", "value": "Tailored" }
+    ],
+    "tags": ["jacket", "office", "matte"]
+  },
+  {
+    "id": "jk-05",
+    "title": "Premium Leather Jacket",
+    "url": "https://example.test/products/jk-05",
+    "image": null,
+    "price": 310.0,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      { "label": "Material", "value": "Full-grain leather" },
+      { "label": "Fit", "value": "Slim" }
+    ],
+    "tags": ["jacket", "black", "matte"]
+  },
+  {
+    "id": "jk-06",
+    "title": "All-Weather Trench",
+    "url": "https://example.test/products/jk-06",
+    "image": null,
+    "price": 240.0,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      { "label": "Material", "value": "Waxed cotton" },
+      { "label": "Fit", "value": "Relaxed" }
+    ],
+    "tags": ["jacket", "office", "bike", "matte"]
+  }
+]
