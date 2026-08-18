@@ -12,6 +12,12 @@ export type Check = {
   /** HARD blocks the run; SOFT prints and ranks, never blocks. [BENCHMARKS §1, §2] */
   tier: 'HARD' | 'SOFT'
   run: (args: string[]) => Promise<CheckResult>
+  /**
+   * Optional: regenerates this check's gold file(s) from a live run. Only ever invoked by the
+   * explicit, bare `bun bench --accept` (BENCHMARKS §4.3) — never by `run`, never automatically.
+   * A check with nothing to regenerate simply omits this.
+   */
+  accept?: () => Promise<{ detail: string }>
 }
 
 /**

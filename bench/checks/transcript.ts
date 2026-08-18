@@ -8,20 +8,32 @@ import { findObstacle } from '../../packages/agent/src/brain/obstacle'
 import { intersect } from '../../packages/agent/src/brain/retrieve'
 import type { Block, Product } from '../../packages/agent/src/types'
 
-// H3 (BENCHMARKS §1) is specced as byte-exact golden transcripts under bench/gold/. Both real
-// catalogs (catalog.velde.json / catalog.kracht.json) are T8's work and do not exist yet, so gold
-// comparison is deferred — pinning bytes against today's fixture.json would guarantee a failure
-// that could only be "fixed" by editing a gold file, which BENCHMARKS §4.1 forbids. This check
-// instead asserts the properties a gold transcript would encode: chips parsed from prose (not a
-// sentence match), obstacle arithmetic, and reversibility — against whatever catalog is passed.
+// H3 (BENCHMARKS §1) is specced as "byte-exact match, or a diff". Gold comparison was originally
+// deferred here — the real catalogs (catalog.velde.json / catalog.kracht.json) were T8's work and
+// did not exist yet, so pinning bytes against a hand-written fixture would have guaranteed a
+// failure fixable only by editing a gold file, which BENCHMARKS §4.1 forbids. Both real catalogs
+// have since landed (T8), so gold comparison is now live: when the catalog under test resolves to
+// a known brand (GOLD_BRANDS below) and that brand's gold file exists, the matching case's block
+// sequence is compared against it and a mismatch throws with a readable diff (see `compareToGold`).
 //
-// "Exactly one chip rescues" and "2-4 products" are T8 claims about the REAL catalogs
-// (TASKS.md T8 DoD box 6), not T4 guarantees about a placeholder fixture — T4's own text only
-// promises the algorithm *returns* a single removal, not that the catalog is unambiguous. So
-// those two bounds are opt-in via --expect=empty-unique / --expect=non-empty; the always-on
-// checks are the weaker, structurally-true claims: the brain names one blocking chip, dropping it
-// genuinely rescues, the cost is real, and the rescuer count is reported (never thrown on) so an
-// ambiguous catalog is visible without failing the run.
+// The comparison itself is STRUCTURAL (deep-equality on the parsed block arrays), not a byte
+// comparison of the file on disk — see `compareToGold`'s own comment for why that still satisfies
+// "byte-exact match, or a diff" in substance: it catches the same drift (a changed string, a
+// changed order, an added/removed block) without a formatting subprocess in the comparison path.
+// Byte-exactness of the gold FILE is `--accept`'s job (`writeGold`), where it belongs.
+//
+// This sits ALONGSIDE the structural checks below, not instead of them — BENCHMARKS §1 wants
+// both: gold catches silent behaviour drift (a parallel agent touching the FSM), the structural
+// checks catch a broken catalog (gold only compares the exact fixed opening messages; it says
+// nothing about a catalog that changed shape). "Exactly one chip rescues" and "2-4 products" stay
+// opt-in via --expect=empty-unique / --expect=non-empty for the same reason as before: those are
+// T8 claims about the real catalogs, not T4 guarantees about an arbitrary one.
+//
+// COVERAGE LIMIT (see hand-off): gold only pins two fixed opening messages against two catalogs.
+// A behaviour change invisible in those two transcripts is unpinned — e.g. reversing the
+// recommendation sort does NOT fail gold, because VELDE's two matching products are tied at €245
+// and a stable sort leaves tied output identical either way. A tie in the pinned data hides an
+// ordering change; this check cannot see past its own fixtures.
 
 // Verbatim, PRINCIPLES §8.
 const KRACHT_MESSAGE =
@@ -42,6 +54,111 @@ const CASES: MessageCase[] = [
   { label: 'kracht opening (protein shake)', message: KRACHT_MESSAGE, perturbed: KRACHT_PERTURBED },
   { label: 'velde opening (jacket)', message: VELDE_MESSAGE, perturbed: VELDE_PERTURBED },
 ]
+
+// Which real catalog a gold file pins, and which of CASES it was generated from. Matched by
+// filename, not a hardcoded brand check in `brain/` — this table lives in bench/, which T4's
+// "no velde/kracht in brain/" rule does not reach.
+type GoldBrand = { name: string; catalogPath: string; goldPath: string; caseLabel: string }
+
+const GOLD_BRANDS: GoldBrand[] = [
+  {
+    name: 'velde',
+    catalogPath: 'packages/agent/src/brain/catalog.velde.json',
+    goldPath: 'bench/gold/velde.json',
+    caseLabel: 'velde opening (jacket)',
+  },
+  {
+    name: 'kracht',
+    catalogPath: 'packages/agent/src/brain/catalog.kracht.json',
+    goldPath: 'bench/gold/kracht.json',
+    caseLabel: 'kracht opening (protein shake)',
+  },
+]
+
+function detectBrand(catalogPath: string): GoldBrand | undefined {
+  return GOLD_BRANDS.find((b) => catalogPath.endsWith(`catalog.${b.name}.json`))
+}
+
+const BIOME_BIN = `${import.meta.dir}/../../node_modules/.bin/biome`
+
+/** Canonical formatting for gold files is "whatever Biome's own formatter does" — reusing the
+ * project's one formatter instead of hand-rolling a JSON pretty-printer that has to match it. */
+async function formatWithBiome(path: string): Promise<void> {
+  const proc = Bun.spawn([BIOME_BIN, 'format', '--write', path], { stdout: 'pipe', stderr: 'pipe' })
+  const exitCode = await proc.exited
+  if (exitCode !== 0) {
+    const stderr = await new Response(proc.stderr).text()
+    throw new Error(`biome format --write failed on ${path}: ${stderr.trim()}`)
+  }
+}
+
+async function writeFormattedJson(path: string, blocks: Block[]): Promise<void> {
+  await Bun.write(path, `${JSON.stringify(blocks, null, 2)}\n`)
+  await formatWithBiome(path)
+}
+
+function parseBlockArray(text: string, source: string): unknown[] {
+  const data: unknown = JSON.parse(text)
+  if (!Array.isArray(data)) throw new Error(`${source} is not a JSON array`)
+  return data
+}
+
+function blockText(value: unknown): string {
+  return value === undefined ? '<no block at this index>' : JSON.stringify(value, null, 2)
+}
+
+/**
+ * Structural gold comparison — deep-equality on the parsed block arrays, not a byte comparison of
+ * files on disk. This catches the same drift a byte comparison would (a changed string, a changed
+ * order, an added/removed block) without needing a canonicalizing subprocess and scratch file in
+ * the comparison path: both `expected[i]` (parsed from the gold file) and `actual[i]` (fresh off
+ * the FSM) trace back to the same `JSON.stringify(blocks, null, 2)` shape, so `JSON.stringify`
+ * equality on the parsed values is exact, not approximate. Byte-exactness of the FILE is
+ * `--accept`'s concern (`writeGold`), not this one's.
+ *
+ * On mismatch, prints the full expected-vs-actual for the first differing block to the console (so
+ * a human reviewing a failing run sees the real diff, not just "mismatch"), then throws a one-line
+ * error naming the index — kept short because it also lands in the report.md table cell.
+ */
+async function compareToGold(brand: GoldBrand, blocks: Block[]): Promise<void> {
+  const expected = parseBlockArray(await Bun.file(brand.goldPath).text(), brand.goldPath)
+  const actual: unknown[] = blocks
+  const max = Math.max(expected.length, actual.length)
+  for (let i = 0; i < max; i++) {
+    if (JSON.stringify(expected[i]) === JSON.stringify(actual[i])) continue
+    console.error(
+      `\n[${brand.caseLabel}] gold mismatch against ${brand.goldPath}\n` +
+        `expected ${expected.length} block(s), got ${actual.length}. First differing block: index ${i}\n` +
+        `--- expected[${i}] ---\n${blockText(expected[i])}\n` +
+        `--- actual[${i}] ---\n${blockText(actual[i])}\n`,
+    )
+    throw new Error(
+      `[${brand.caseLabel}] gold mismatch against ${brand.goldPath} at block ${i} (expected ${expected.length} block(s), got ${actual.length}) — diff printed above`,
+    )
+  }
+}
+
+function countChangedBlocks(prev: unknown[], next: unknown[]): number {
+  const max = Math.max(prev.length, next.length)
+  let changed = 0
+  for (let i = 0; i < max; i++) {
+    if (JSON.stringify(prev[i]) !== JSON.stringify(next[i])) changed++
+  }
+  return changed
+}
+
+/** The only place a gold file is ever written. Called only from an explicit `--accept` path
+ * (BENCHMARKS §4.3 rule 3) — never from the comparison branch above. */
+async function writeGold(brand: GoldBrand, blocks: Block[]): Promise<string> {
+  const existed = await Bun.file(brand.goldPath).exists()
+  const previousBlocks = existed
+    ? parseBlockArray(await Bun.file(brand.goldPath).text(), brand.goldPath)
+    : []
+  await writeFormattedJson(brand.goldPath, blocks)
+  const changed = countChangedBlocks(previousBlocks, blocks)
+  const verb = existed ? 'rewrote' : 'created'
+  return `${verb} ${brand.goldPath}: ${blocks.length} block(s), ${changed} changed from the previous ${previousBlocks.length}`
+}
 
 type Outcome = 'empty' | 'non-empty' | 'degenerate'
 type Expect = 'empty' | 'empty-unique' | 'non-empty' | null
@@ -221,7 +338,10 @@ function evaluateNonEmpty(
   return { outcome: 'non-empty', dropId: active[0]?.id, matchCount: full.length }
 }
 
-async function runCase(caseDef: MessageCase, catalog: Product[]): Promise<CaseVerdict> {
+async function runCase(
+  caseDef: MessageCase,
+  catalog: Product[],
+): Promise<{ verdict: CaseVerdict; blocks: Block[] }> {
   const chips = parseChips(caseDef.message)
   assertChipCount(caseDef.label, chips)
   assertPerturbationRobust(caseDef.label, caseDef.message, caseDef.perturbed)
@@ -243,19 +363,21 @@ async function runCase(caseDef: MessageCase, catalog: Product[]): Promise<CaseVe
   }
   assertReversible(caseDef.label, result.state, verdict.dropId)
 
-  return verdict
+  return { verdict, blocks: result.blocks }
 }
 
-function parseArgs(args: string[]): { catalogPath: string; expect: Expect } {
+function parseArgs(args: string[]): { catalogPath: string; expect: Expect; accept: boolean } {
   let catalogPath = 'packages/agent/src/brain/fixture.json'
   let expect: Expect = null
+  let accept = false
   for (const arg of args) {
     if (arg === '--expect=empty') expect = 'empty'
     else if (arg === '--expect=empty-unique') expect = 'empty-unique'
     else if (arg === '--expect=non-empty') expect = 'non-empty'
+    else if (arg === '--accept') accept = true
     else if (!arg.startsWith('--')) catalogPath = arg
   }
-  return { catalogPath, expect }
+  return { catalogPath, expect, accept }
 }
 
 function satisfiesExpect(expect: Expect, verdict: CaseVerdict): boolean {
@@ -278,16 +400,26 @@ function summarize(verdicts: Record<string, CaseVerdict>): string {
     .join('; ')
 }
 
+/**
+ * `--accept` and `--expect` on the same command line: `--expect` still has to pass before
+ * anything is written — a run that fails its own structural/expect bar never gets to regenerate
+ * gold, so `--accept` cannot be used to launder a broken run into new gold. `--accept` only
+ * changes what happens with the gold file itself: skip the byte-exact compare, write instead.
+ */
 export const transcriptCheck: Check = {
   name: 'transcript',
   tier: 'HARD',
   run: async (args) => {
-    const { catalogPath, expect } = parseArgs(args)
+    const { catalogPath, expect, accept } = parseArgs(args)
     const catalog = await loadCatalog(catalogPath)
+    const brand = detectBrand(catalogPath)
 
     const verdicts: Record<string, CaseVerdict> = {}
+    const blocksByLabel = new Map<string, Block[]>()
     for (const caseDef of CASES) {
-      verdicts[caseDef.label] = await runCase(caseDef, catalog)
+      const { verdict, blocks } = await runCase(caseDef, catalog)
+      verdicts[caseDef.label] = verdict
+      blocksByLabel.set(caseDef.label, blocks)
     }
 
     if (expect && !Object.values(verdicts).some((v) => satisfiesExpect(expect, v))) {
@@ -296,7 +428,30 @@ export const transcriptCheck: Check = {
       )
     }
 
-    const detail = `${CASES.length} opening-message cases against ${catalogPath}: ${summarize(verdicts)}${expect ? ` (--expect=${expect} satisfied)` : ''}`
+    let goldNote = ''
+    if (accept) {
+      goldNote = brand
+        ? ` — ${await writeGold(brand, blocksByLabel.get(brand.caseLabel) ?? [])}`
+        : ' — --accept: no gold mapping for this catalog path, nothing written'
+    } else if (brand && (await Bun.file(brand.goldPath).exists())) {
+      await compareToGold(brand, blocksByLabel.get(brand.caseLabel) ?? [])
+      goldNote = ` — matches gold ${brand.goldPath}`
+    }
+
+    const detail = `${CASES.length} opening-message cases against ${catalogPath}: ${summarize(verdicts)}${expect ? ` (--expect=${expect} satisfied)` : ''}${goldNote}`
     return { count: CASES.length, detail }
+  },
+  /** The bare `bun bench --accept` path (BENCHMARKS §4.3): regenerates gold for both brands in
+   * one deliberate, human-run pass, each against its own opening message. */
+  accept: async () => {
+    const summaries: string[] = []
+    for (const brand of GOLD_BRANDS) {
+      const caseDef = CASES.find((c) => c.label === brand.caseLabel)
+      if (!caseDef) throw new Error(`no CASES entry for brand ${brand.name}`)
+      const catalog = await loadCatalog(brand.catalogPath)
+      const { blocks } = await runCase(caseDef, catalog)
+      summaries.push(`${brand.name}: ${await writeGold(brand, blocks)}`)
+    }
+    return { detail: summaries.join(' | ') }
   },
 }
