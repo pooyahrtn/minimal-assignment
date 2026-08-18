@@ -1,0 +1,130 @@
+[
+  {
+    "kind": "chips-update",
+    "chips": [
+      {
+        "id": "chip-protein-shake",
+        "label": "protein shake",
+        "state": "active",
+        "kind": {
+          "type": "tag",
+          "tag": "protein-shake"
+        }
+      },
+      {
+        "id": "chip-no-sweeteners",
+        "label": "no sweeteners",
+        "state": "active",
+        "kind": {
+          "type": "tag",
+          "tag": "no-sweeteners"
+        }
+      },
+      {
+        "id": "chip-lactose-free",
+        "label": "lactose-free",
+        "state": "active",
+        "kind": {
+          "type": "tag",
+          "tag": "lactose-free"
+        }
+      },
+      {
+        "id": "chip-price",
+        "label": "under €30",
+        "state": "active",
+        "kind": {
+          "type": "price-max",
+          "max": 30
+        }
+      }
+    ]
+  },
+  {
+    "kind": "no-match",
+    "blocking": {
+      "id": "chip-price",
+      "label": "under €30",
+      "state": "active",
+      "kind": {
+        "type": "price-max",
+        "max": 30
+      }
+    },
+    "closest": [
+      {
+        "product": {
+          "id": "pure-whey-isolate-1kg",
+          "title": "KRACHT Pure Whey Isolate 1 kg — Unflavoured",
+          "url": "http://localhost:4002/product/pure-whey-isolate-1kg",
+          "image": null,
+          "price": 49,
+          "currency": "EUR",
+          "inStock": true,
+          "specs": [
+            {
+              "label": "Protein per serving",
+              "value": "28 g"
+            },
+            {
+              "label": "Flavour",
+              "value": "Unflavoured"
+            },
+            {
+              "label": "Size",
+              "value": "1 kg"
+            },
+            {
+              "label": "Servings",
+              "value": "33"
+            },
+            {
+              "label": "Diet",
+              "value": "lactose-free, no sweeteners"
+            }
+          ],
+          "tags": ["protein-shake", "protein", "lactose-free", "no-sweeteners"]
+        },
+        "gap": "€49.00, €19.00 over"
+      }
+    ],
+    "alternatives": [
+      {
+        "id": "chip-protein-shake",
+        "label": "protein shake",
+        "state": "active",
+        "kind": {
+          "type": "tag",
+          "tag": "protein-shake"
+        }
+      },
+      {
+        "id": "chip-no-sweeteners",
+        "label": "no sweeteners",
+        "state": "active",
+        "kind": {
+          "type": "tag",
+          "tag": "no-sweeteners"
+        }
+      },
+      {
+        "id": "chip-lactose-free",
+        "label": "lactose-free",
+        "state": "active",
+        "kind": {
+          "type": "tag",
+          "tag": "lactose-free"
+        }
+      },
+      {
+        "id": "chip-price",
+        "label": "under €30",
+        "state": "dropped",
+        "kind": {
+          "type": "price-max",
+          "max": 30
+        }
+      }
+    ]
+  }
+]

@@ -1,0 +1,125 @@
+[
+  {
+    "kind": "chips-update",
+    "chips": [
+      {
+        "id": "chip-jacket",
+        "label": "jacket",
+        "state": "active",
+        "kind": {
+          "type": "tag",
+          "tag": "jacket"
+        }
+      },
+      {
+        "id": "chip-office",
+        "label": "office-ready",
+        "state": "active",
+        "kind": {
+          "type": "tag",
+          "tag": "office"
+        }
+      },
+      {
+        "id": "chip-bike",
+        "label": "bike-ready",
+        "state": "active",
+        "kind": {
+          "type": "tag",
+          "tag": "bike"
+        }
+      },
+      {
+        "id": "chip-black",
+        "label": "black",
+        "state": "active",
+        "kind": {
+          "type": "tag",
+          "tag": "black"
+        }
+      },
+      {
+        "id": "chip-matte",
+        "label": "matte finish",
+        "state": "active",
+        "kind": {
+          "type": "tag",
+          "tag": "matte"
+        }
+      },
+      {
+        "id": "chip-price",
+        "label": "under €250",
+        "state": "active",
+        "kind": {
+          "type": "price-max",
+          "max": 250
+        }
+      }
+    ]
+  },
+  {
+    "kind": "product-card",
+    "product": {
+      "id": "dijk-chore-jacket",
+      "title": "Dijk Chore Jacket",
+      "url": "http://localhost:4001/products/dijk-chore-jacket",
+      "image": "http://localhost:4001/photos/outerwear-04.jpg",
+      "price": 245,
+      "currency": "EUR",
+      "inStock": true,
+      "specs": [
+        {
+          "label": "Material",
+          "value": "100% garment-dyed cotton twill, 11oz"
+        },
+        {
+          "label": "Fit",
+          "value": "Boxy"
+        },
+        {
+          "label": "Made in",
+          "value": "Portugal"
+        },
+        {
+          "label": "Care",
+          "value": "Machine wash 30°. Line dry. Expect it to fade."
+        }
+      ],
+      "tags": ["jacket", "black", "matte", "office", "bike", "outerwear"]
+    },
+    "reason": "Matches jacket, office-ready, bike-ready, black, matte finish, under €250"
+  },
+  {
+    "kind": "product-card",
+    "product": {
+      "id": "sluis-anorak",
+      "title": "Sluis Anorak",
+      "url": "http://localhost:4001/products/sluis-anorak",
+      "image": "http://localhost:4001/photos/outerwear-08.jpg",
+      "price": 245,
+      "currency": "EUR",
+      "inStock": true,
+      "specs": [
+        {
+          "label": "Material",
+          "value": "Recycled polyester, bonded three-layer"
+        },
+        {
+          "label": "Fit",
+          "value": "Relaxed"
+        },
+        {
+          "label": "Made in",
+          "value": "Vietnam"
+        },
+        {
+          "label": "Care",
+          "value": "Machine wash 30°. Do not tumble dry."
+        }
+      ],
+      "tags": ["jacket", "black", "matte", "office", "bike", "outerwear"]
+    },
+    "reason": "Matches jacket, office-ready, bike-ready, black, matte finish, under €250"
+  }
+]

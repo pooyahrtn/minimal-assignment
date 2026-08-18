@@ -1,0 +1,898 @@
+[
+  {
+    "id": "kade-waxed-parka",
+    "title": "Kade Waxed Parka",
+    "url": "http://localhost:4001/products/kade-waxed-parka",
+    "image": "http://localhost:4001/photos/outerwear-01.jpg",
+    "price": 495,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Material",
+        "value": "8oz waxed cotton, cotton twill lining"
+      },
+      {
+        "label": "Fit",
+        "value": "Regular, hits mid-thigh"
+      },
+      {
+        "label": "Made in",
+        "value": "Portugal"
+      },
+      {
+        "label": "Care",
+        "value": "Sponge clean. Rewax once a year. Never machine wash."
+      }
+    ],
+    "tags": ["jacket", "matte", "outerwear", "charcoal"]
+  },
+  {
+    "id": "noord-wool-overcoat",
+    "title": "Noord Wool Overcoat",
+    "url": "http://localhost:4001/products/noord-wool-overcoat",
+    "image": "http://localhost:4001/photos/outerwear-02.jpg",
+    "price": 545,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Material",
+        "value": "80% virgin wool, 20% polyamide melton, 640g"
+      },
+      {
+        "label": "Fit",
+        "value": "Relaxed, knee length"
+      },
+      {
+        "label": "Made in",
+        "value": "Portugal"
+      },
+      {
+        "label": "Care",
+        "value": "Dry clean only. Brush after wear."
+      }
+    ],
+    "tags": ["jacket", "black", "matte", "outerwear"]
+  },
+  {
+    "id": "veer-shell-jacket",
+    "title": "Veer Shell Jacket",
+    "url": "http://localhost:4001/products/veer-shell-jacket",
+    "image": "http://localhost:4001/photos/outerwear-03.jpg",
+    "price": 320,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Material",
+        "value": "100% recycled nylon, 10k/10k membrane"
+      },
+      {
+        "label": "Fit",
+        "value": "Regular"
+      },
+      {
+        "label": "Made in",
+        "value": "Vietnam"
+      },
+      {
+        "label": "Care",
+        "value": "Machine wash 30°. Tumble dry low to reactivate the DWR."
+      }
+    ],
+    "tags": ["jacket", "black", "outerwear"]
+  },
+  {
+    "id": "dijk-chore-jacket",
+    "title": "Dijk Chore Jacket",
+    "url": "http://localhost:4001/products/dijk-chore-jacket",
+    "image": "http://localhost:4001/photos/outerwear-04.jpg",
+    "price": 245,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Material",
+        "value": "100% garment-dyed cotton twill, 11oz"
+      },
+      {
+        "label": "Fit",
+        "value": "Boxy"
+      },
+      {
+        "label": "Made in",
+        "value": "Portugal"
+      },
+      {
+        "label": "Care",
+        "value": "Machine wash 30°. Line dry. Expect it to fade."
+      }
+    ],
+    "tags": ["jacket", "black", "matte", "office", "bike", "outerwear"]
+  },
+  {
+    "id": "spui-quilted-liner",
+    "title": "Spui Quilted Liner",
+    "url": "http://localhost:4001/products/spui-quilted-liner",
+    "image": "http://localhost:4001/photos/outerwear-05.jpg",
+    "price": 285,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Recycled polyamide shell, recycled polyester wadding"
+      },
+      {
+        "label": "Fit",
+        "value": "Slim, hip length"
+      },
+      {
+        "label": "Made in",
+        "value": "Vietnam"
+      },
+      {
+        "label": "Care",
+        "value": "Machine wash 30°. Do not iron."
+      }
+    ],
+    "tags": ["jacket", "outerwear", "ecru"]
+  },
+  {
+    "id": "ij-trench",
+    "title": "IJ Trench",
+    "url": "http://localhost:4001/products/ij-trench",
+    "image": "http://localhost:4001/photos/outerwear-06.jpg",
+    "price": 425,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Material",
+        "value": "100% cotton gabardine, water-repellent finish"
+      },
+      {
+        "label": "Fit",
+        "value": "Relaxed, below the knee"
+      },
+      {
+        "label": "Made in",
+        "value": "Portugal"
+      },
+      {
+        "label": "Care",
+        "value": "Dry clean only."
+      }
+    ],
+    "tags": ["jacket", "outerwear", "stone"]
+  },
+  {
+    "id": "vecht-field-jacket",
+    "title": "Vecht Field Jacket",
+    "url": "http://localhost:4001/products/vecht-field-jacket",
+    "image": "http://localhost:4001/photos/outerwear-07.jpg",
+    "price": 350,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Material",
+        "value": "100% organic cotton ripstop, 7oz"
+      },
+      {
+        "label": "Fit",
+        "value": "Regular"
+      },
+      {
+        "label": "Made in",
+        "value": "Portugal"
+      },
+      {
+        "label": "Care",
+        "value": "Machine wash 30°. Line dry."
+      }
+    ],
+    "tags": ["jacket", "matte", "outerwear", "olive"]
+  },
+  {
+    "id": "sluis-anorak",
+    "title": "Sluis Anorak",
+    "url": "http://localhost:4001/products/sluis-anorak",
+    "image": "http://localhost:4001/photos/outerwear-08.jpg",
+    "price": 245,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Recycled polyester, bonded three-layer"
+      },
+      {
+        "label": "Fit",
+        "value": "Relaxed"
+      },
+      {
+        "label": "Made in",
+        "value": "Vietnam"
+      },
+      {
+        "label": "Care",
+        "value": "Machine wash 30°. Do not tumble dry."
+      }
+    ],
+    "tags": ["jacket", "black", "matte", "office", "bike", "outerwear"]
+  },
+  {
+    "id": "havik-bomber",
+    "title": "Havik Bomber",
+    "url": "http://localhost:4001/products/havik-bomber",
+    "image": "http://localhost:4001/photos/outerwear-09.jpg",
+    "price": 295,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Material",
+        "value": "62% wool, 38% polyamide, rib trim in merino"
+      },
+      {
+        "label": "Fit",
+        "value": "Boxy, cropped"
+      },
+      {
+        "label": "Made in",
+        "value": "Portugal"
+      },
+      {
+        "label": "Care",
+        "value": "Dry clean only."
+      }
+    ],
+    "tags": ["jacket", "matte", "outerwear", "charcoal"]
+  },
+  {
+    "id": "wal-overshirt",
+    "title": "Wal Overshirt",
+    "url": "http://localhost:4001/products/wal-overshirt",
+    "image": "http://localhost:4001/photos/outerwear-10.jpg",
+    "price": 195,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Material",
+        "value": "100% brushed cotton, 9oz"
+      },
+      {
+        "label": "Fit",
+        "value": "Regular"
+      },
+      {
+        "label": "Made in",
+        "value": "Portugal"
+      },
+      {
+        "label": "Care",
+        "value": "Machine wash 30°. Warm iron."
+      }
+    ],
+    "tags": ["jacket", "matte", "outerwear", "ecru"]
+  },
+  {
+    "id": "doorn-rain-coat",
+    "title": "Doorn Rain Coat",
+    "url": "http://localhost:4001/products/doorn-rain-coat",
+    "image": "http://localhost:4001/photos/outerwear-01.jpg",
+    "price": 165,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Recycled polyester with PU coating"
+      },
+      {
+        "label": "Fit",
+        "value": "Relaxed"
+      },
+      {
+        "label": "Made in",
+        "value": "Vietnam"
+      },
+      {
+        "label": "Care",
+        "value": "Machine wash 30°. Do not iron. Do not dry clean."
+      }
+    ],
+    "tags": ["jacket", "outerwear", "navy"]
+  },
+  {
+    "id": "merino-crew",
+    "title": "Merino Crew",
+    "url": "http://localhost:4001/products/merino-crew",
+    "image": "http://localhost:4001/photos/knitwear-01.jpg",
+    "price": 165,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Material",
+        "value": "100% extrafine merino wool, 18.5 micron"
+      },
+      {
+        "label": "Fit",
+        "value": "Slim"
+      },
+      {
+        "label": "Made in",
+        "value": "Italy"
+      },
+      {
+        "label": "Care",
+        "value": "Hand wash cold. Dry flat. Do not wring."
+      }
+    ],
+    "tags": ["black", "matte", "knitwear"]
+  },
+  {
+    "id": "kern-cable-knit",
+    "title": "Kern Cable Knit",
+    "url": "http://localhost:4001/products/kern-cable-knit",
+    "image": "http://localhost:4001/photos/knitwear-02.jpg",
+    "price": 225,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Material",
+        "value": "100% lambswool, undyed"
+      },
+      {
+        "label": "Fit",
+        "value": "Relaxed"
+      },
+      {
+        "label": "Made in",
+        "value": "Scotland"
+      },
+      {
+        "label": "Care",
+        "value": "Hand wash cold. Dry flat."
+      }
+    ],
+    "tags": ["matte", "knitwear", "ecru"]
+  },
+  {
+    "id": "bree-half-zip",
+    "title": "Bree Half-Zip",
+    "url": "http://localhost:4001/products/bree-half-zip",
+    "image": "http://localhost:4001/photos/knitwear-03.jpg",
+    "price": 195,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Material",
+        "value": "100% merino wool, milled finish"
+      },
+      {
+        "label": "Fit",
+        "value": "Regular"
+      },
+      {
+        "label": "Made in",
+        "value": "Italy"
+      },
+      {
+        "label": "Care",
+        "value": "Hand wash cold. Dry flat."
+      }
+    ],
+    "tags": ["matte", "knitwear", "charcoal"]
+  },
+  {
+    "id": "loof-mock-neck",
+    "title": "Loof Mock Neck",
+    "url": "http://localhost:4001/products/loof-mock-neck",
+    "image": "http://localhost:4001/photos/knitwear-04.jpg",
+    "price": 185,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Material",
+        "value": "100% extrafine merino wool"
+      },
+      {
+        "label": "Fit",
+        "value": "Slim"
+      },
+      {
+        "label": "Made in",
+        "value": "Italy"
+      },
+      {
+        "label": "Care",
+        "value": "Hand wash cold. Dry flat."
+      }
+    ],
+    "tags": ["matte", "knitwear", "navy"]
+  },
+  {
+    "id": "stil-fine-gauge-crew",
+    "title": "Stil Fine-Gauge Crew",
+    "url": "http://localhost:4001/products/stil-fine-gauge-crew",
+    "image": "http://localhost:4001/photos/knitwear-05.jpg",
+    "price": 155,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Material",
+        "value": "100% long-staple cotton"
+      },
+      {
+        "label": "Fit",
+        "value": "Slim"
+      },
+      {
+        "label": "Made in",
+        "value": "Portugal"
+      },
+      {
+        "label": "Care",
+        "value": "Machine wash 30° on wool cycle. Dry flat."
+      }
+    ],
+    "tags": ["matte", "knitwear", "stone"]
+  },
+  {
+    "id": "wold-chunky-rollneck",
+    "title": "Wold Chunky Rollneck",
+    "url": "http://localhost:4001/products/wold-chunky-rollneck",
+    "image": "http://localhost:4001/photos/knitwear-06.jpg",
+    "price": 245,
+    "currency": "EUR",
+    "inStock": false,
+    "specs": [
+      {
+        "label": "Material",
+        "value": "100% virgin wool, 3-gauge"
+      },
+      {
+        "label": "Fit",
+        "value": "Relaxed"
+      },
+      {
+        "label": "Made in",
+        "value": "Scotland"
+      },
+      {
+        "label": "Care",
+        "value": "Hand wash cold. Dry flat. Store folded."
+      }
+    ],
+    "tags": ["matte", "knitwear", "charcoal"]
+  },
+  {
+    "id": "vlas-linen-knit",
+    "title": "Vlas Linen Knit",
+    "url": "http://localhost:4001/products/vlas-linen-knit",
+    "image": "http://localhost:4001/photos/knitwear-07.jpg",
+    "price": 175,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Material",
+        "value": "85% European linen, 15% cotton"
+      },
+      {
+        "label": "Fit",
+        "value": "Relaxed"
+      },
+      {
+        "label": "Made in",
+        "value": "Portugal"
+      },
+      {
+        "label": "Care",
+        "value": "Machine wash 30°. Dry flat. Do not bleach."
+      }
+    ],
+    "tags": ["matte", "knitwear", "ecru"]
+  },
+  {
+    "id": "kaap-cardigan",
+    "title": "Kaap Cardigan",
+    "url": "http://localhost:4001/products/kaap-cardigan",
+    "image": "http://localhost:4001/photos/knitwear-08.jpg",
+    "price": 260,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Material",
+        "value": "90% lambswool, 10% cashmere, brushed"
+      },
+      {
+        "label": "Fit",
+        "value": "Relaxed, hits the hip"
+      },
+      {
+        "label": "Made in",
+        "value": "Scotland"
+      },
+      {
+        "label": "Care",
+        "value": "Hand wash cold. Dry flat."
+      }
+    ],
+    "tags": ["black", "matte", "knitwear"]
+  },
+  {
+    "id": "nes-knit-polo",
+    "title": "Nes Knit Polo",
+    "url": "http://localhost:4001/products/nes-knit-polo",
+    "image": null,
+    "price": 180,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Material",
+        "value": "100% mercerised cotton"
+      },
+      {
+        "label": "Fit",
+        "value": "Slim"
+      },
+      {
+        "label": "Made in",
+        "value": "Portugal"
+      },
+      {
+        "label": "Care",
+        "value": "Machine wash 30° on wool cycle. Dry flat."
+      }
+    ],
+    "tags": ["matte", "knitwear", "navy"]
+  },
+  {
+    "id": "zand-waffle-knit",
+    "title": "Zand Waffle Knit",
+    "url": "http://localhost:4001/products/zand-waffle-knit",
+    "image": "http://localhost:4001/photos/knitwear-09.jpg",
+    "price": 145,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Material",
+        "value": "60% cotton, 40% merino wool"
+      },
+      {
+        "label": "Fit",
+        "value": "Regular"
+      },
+      {
+        "label": "Made in",
+        "value": "Portugal"
+      },
+      {
+        "label": "Care",
+        "value": "Hand wash cold. Dry flat."
+      }
+    ],
+    "tags": ["matte", "knitwear", "stone"]
+  },
+  {
+    "id": "grid-rib-scarf",
+    "title": "Grid Rib Scarf",
+    "url": "http://localhost:4001/products/grid-rib-scarf",
+    "image": "http://localhost:4001/photos/knitwear-10.jpg",
+    "price": 120,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Material",
+        "value": "100% merino wool"
+      },
+      {
+        "label": "Fit",
+        "value": "200 × 30 cm"
+      },
+      {
+        "label": "Made in",
+        "value": "Italy"
+      },
+      {
+        "label": "Care",
+        "value": "Hand wash cold. Dry flat."
+      }
+    ],
+    "tags": ["matte", "knitwear", "charcoal"]
+  },
+  {
+    "id": "merino-beanie",
+    "title": "Merino Beanie",
+    "url": "http://localhost:4001/products/merino-beanie",
+    "image": "http://localhost:4001/photos/knitwear-01.jpg",
+    "price": 95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Material",
+        "value": "100% extrafine merino wool"
+      },
+      {
+        "label": "Fit",
+        "value": "One size"
+      },
+      {
+        "label": "Made in",
+        "value": "Italy"
+      },
+      {
+        "label": "Care",
+        "value": "Hand wash cold. Dry flat."
+      }
+    ],
+    "tags": ["black", "matte", "knitwear"]
+  },
+  {
+    "id": "boucle-crew",
+    "title": "Bouclé Crew",
+    "url": "http://localhost:4001/products/boucle-crew",
+    "image": "http://localhost:4001/photos/knitwear-02.jpg",
+    "price": 210,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Material",
+        "value": "70% wool, 20% alpaca, 10% polyamide"
+      },
+      {
+        "label": "Fit",
+        "value": "Relaxed"
+      },
+      {
+        "label": "Made in",
+        "value": "Italy"
+      },
+      {
+        "label": "Care",
+        "value": "Hand wash cold. Dry flat."
+      }
+    ],
+    "tags": ["matte", "knitwear", "ecru"]
+  },
+  {
+    "id": "kraal-leather-jacket",
+    "title": "Kraal Leather Jacket",
+    "url": "http://localhost:4001/products/kraal-leather-jacket",
+    "image": "http://localhost:4001/photos/leather-01.jpg",
+    "price": 650,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Full-grain vegetable-tanned calfskin, 1.2mm"
+      },
+      {
+        "label": "Fit",
+        "value": "Slim, cropped at the hip"
+      },
+      {
+        "label": "Made in",
+        "value": "Italy"
+      },
+      {
+        "label": "Care",
+        "value": "Wipe with a dry cloth. Condition yearly. Never machine wash."
+      }
+    ],
+    "tags": ["black", "matte", "leather"]
+  },
+  {
+    "id": "kade-leather-bomber",
+    "title": "Kade Leather Bomber",
+    "url": "http://localhost:4001/products/kade-leather-bomber",
+    "image": "http://localhost:4001/photos/leather-02.jpg",
+    "price": 595,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Full-grain lambskin, 0.9mm, merino rib trim"
+      },
+      {
+        "label": "Fit",
+        "value": "Regular"
+      },
+      {
+        "label": "Made in",
+        "value": "Italy"
+      },
+      {
+        "label": "Care",
+        "value": "Wipe with a dry cloth. Condition yearly."
+      }
+    ],
+    "tags": ["black", "matte", "leather"]
+  },
+  {
+    "id": "veld-leather-tote",
+    "title": "Veld Leather Tote",
+    "url": "http://localhost:4001/products/veld-leather-tote",
+    "image": "http://localhost:4001/photos/leather-03.jpg",
+    "price": 395,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Full-grain vegetable-tanned leather, 2mm"
+      },
+      {
+        "label": "Fit",
+        "value": "38 × 34 × 12 cm, fits a 15\" laptop"
+      },
+      {
+        "label": "Made in",
+        "value": "Italy"
+      },
+      {
+        "label": "Care",
+        "value": "Wipe with a dry cloth. Condition twice a year."
+      }
+    ],
+    "tags": ["black", "matte", "leather"]
+  },
+  {
+    "id": "haven-weekend-holdall",
+    "title": "Haven Weekend Holdall",
+    "url": "http://localhost:4001/products/haven-weekend-holdall",
+    "image": "http://localhost:4001/photos/leather-04.jpg",
+    "price": 545,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Full-grain vegetable-tanned leather, cotton canvas lining"
+      },
+      {
+        "label": "Fit",
+        "value": "55 × 30 × 25 cm, 40L"
+      },
+      {
+        "label": "Made in",
+        "value": "Italy"
+      },
+      {
+        "label": "Care",
+        "value": "Wipe with a dry cloth. Condition twice a year."
+      }
+    ],
+    "tags": ["matte", "leather", "charcoal"]
+  },
+  {
+    "id": "riem-belt",
+    "title": "Riem Belt",
+    "url": "http://localhost:4001/products/riem-belt",
+    "image": "http://localhost:4001/photos/leather-05.jpg",
+    "price": 120,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Bridle leather, 3.5mm, brushed steel buckle"
+      },
+      {
+        "label": "Fit",
+        "value": "30mm wide, sizes 80–105"
+      },
+      {
+        "label": "Made in",
+        "value": "Italy"
+      },
+      {
+        "label": "Care",
+        "value": "Wipe with a dry cloth. Condition yearly."
+      }
+    ],
+    "tags": ["black", "matte", "leather"]
+  },
+  {
+    "id": "kaart-card-holder",
+    "title": "Kaart Card Holder",
+    "url": "http://localhost:4001/products/kaart-card-holder",
+    "image": "http://localhost:4001/photos/leather-06.jpg",
+    "price": 95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Full-grain vegetable-tanned leather, 1.4mm"
+      },
+      {
+        "label": "Fit",
+        "value": "10 × 7 cm, holds 8 cards"
+      },
+      {
+        "label": "Made in",
+        "value": "Italy"
+      },
+      {
+        "label": "Care",
+        "value": "Wipe with a dry cloth."
+      }
+    ],
+    "tags": ["black", "matte", "leather"]
+  },
+  {
+    "id": "winter-leather-gloves",
+    "title": "Winter Leather Gloves",
+    "url": "http://localhost:4001/products/winter-leather-gloves",
+    "image": "http://localhost:4001/photos/leather-07.jpg",
+    "price": 145,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Hairsheep leather, 100% cashmere lining"
+      },
+      {
+        "label": "Fit",
+        "value": "Sizes 7.5–10"
+      },
+      {
+        "label": "Made in",
+        "value": "Italy"
+      },
+      {
+        "label": "Care",
+        "value": "Wipe with a dry cloth. Do not soak."
+      }
+    ],
+    "tags": ["black", "matte", "leather"]
+  },
+  {
+    "id": "damrak-derby",
+    "title": "Damrak Derby",
+    "url": "http://localhost:4001/products/damrak-derby",
+    "image": "http://localhost:4001/photos/leather-08.jpg",
+    "price": 320,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Material",
+        "value": "Full-grain box calf upper, leather sole"
+      },
+      {
+        "label": "Fit",
+        "value": "True to size, EU 39–46"
+      },
+      {
+        "label": "Made in",
+        "value": "Portugal"
+      },
+      {
+        "label": "Care",
+        "value": "Brush after wear. Use trees. Resole when the sole thins."
+      }
+    ],
+    "tags": ["black", "matte", "leather"]
+  }
+]

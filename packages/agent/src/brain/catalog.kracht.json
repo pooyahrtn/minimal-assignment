@@ -1,0 +1,994 @@
+[
+  {
+    "id": "whey-classic-1kg-chocolate",
+    "title": "KRACHT Whey Classic 1 kg — Chocolate fudge",
+    "url": "http://localhost:4002/product/whey-classic-1kg-chocolate",
+    "image": "http://localhost:4002/photos/protein-01.jpg",
+    "price": 29.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Protein per serving",
+        "value": "24 g"
+      },
+      {
+        "label": "Flavour",
+        "value": "Chocolate fudge"
+      },
+      {
+        "label": "Size",
+        "value": "1 kg"
+      },
+      {
+        "label": "Servings",
+        "value": "33"
+      }
+    ],
+    "tags": ["protein-shake", "protein"]
+  },
+  {
+    "id": "whey-classic-1kg-vanilla",
+    "title": "KRACHT Whey Classic 1 kg — Vanilla cream",
+    "url": "http://localhost:4002/product/whey-classic-1kg-vanilla",
+    "image": "http://localhost:4002/photos/protein-02.jpg",
+    "price": 29.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Protein per serving",
+        "value": "24 g"
+      },
+      {
+        "label": "Flavour",
+        "value": "Vanilla cream"
+      },
+      {
+        "label": "Size",
+        "value": "1 kg"
+      },
+      {
+        "label": "Servings",
+        "value": "33"
+      }
+    ],
+    "tags": ["protein-shake", "protein"]
+  },
+  {
+    "id": "whey-classic-1kg-strawberry",
+    "title": "KRACHT Whey Classic 1 kg — Strawberry",
+    "url": "http://localhost:4002/product/whey-classic-1kg-strawberry",
+    "image": "http://localhost:4002/photos/protein-03.jpg",
+    "price": 29.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Protein per serving",
+        "value": "24 g"
+      },
+      {
+        "label": "Flavour",
+        "value": "Strawberry"
+      },
+      {
+        "label": "Size",
+        "value": "1 kg"
+      },
+      {
+        "label": "Servings",
+        "value": "33"
+      }
+    ],
+    "tags": ["protein-shake", "protein"]
+  },
+  {
+    "id": "whey-classic-1kg-banana",
+    "title": "KRACHT Whey Classic 1 kg — Banana custard",
+    "url": "http://localhost:4002/product/whey-classic-1kg-banana",
+    "image": "http://localhost:4002/photos/protein-06.jpg",
+    "price": 29.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Protein per serving",
+        "value": "24 g"
+      },
+      {
+        "label": "Flavour",
+        "value": "Banana custard"
+      },
+      {
+        "label": "Size",
+        "value": "1 kg"
+      },
+      {
+        "label": "Servings",
+        "value": "33"
+      }
+    ],
+    "tags": ["protein-shake", "protein"]
+  },
+  {
+    "id": "whey-classic-2kg-chocolate",
+    "title": "KRACHT Whey Classic 2 kg — Chocolate fudge",
+    "url": "http://localhost:4002/product/whey-classic-2kg-chocolate",
+    "image": "http://localhost:4002/photos/protein-01.jpg",
+    "price": 54.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Protein per serving",
+        "value": "24 g"
+      },
+      {
+        "label": "Flavour",
+        "value": "Chocolate fudge"
+      },
+      {
+        "label": "Size",
+        "value": "2 kg"
+      },
+      {
+        "label": "Servings",
+        "value": "66"
+      }
+    ],
+    "tags": ["protein-shake", "protein"]
+  },
+  {
+    "id": "whey-classic-2kg-vanilla",
+    "title": "KRACHT Whey Classic 2 kg — Vanilla cream",
+    "url": "http://localhost:4002/product/whey-classic-2kg-vanilla",
+    "image": "http://localhost:4002/photos/protein-02.jpg",
+    "price": 54.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Protein per serving",
+        "value": "24 g"
+      },
+      {
+        "label": "Flavour",
+        "value": "Vanilla cream"
+      },
+      {
+        "label": "Size",
+        "value": "2 kg"
+      },
+      {
+        "label": "Servings",
+        "value": "66"
+      }
+    ],
+    "tags": ["protein-shake", "protein"]
+  },
+  {
+    "id": "whey-classic-3kg-chocolate",
+    "title": "KRACHT Whey Classic bulk 3 kg — Chocolate fudge",
+    "url": "http://localhost:4002/product/whey-classic-3kg-chocolate",
+    "image": "http://localhost:4002/photos/protein-01.jpg",
+    "price": 78.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Protein per serving",
+        "value": "24 g"
+      },
+      {
+        "label": "Flavour",
+        "value": "Chocolate fudge"
+      },
+      {
+        "label": "Size",
+        "value": "3 kg"
+      },
+      {
+        "label": "Servings",
+        "value": "100"
+      }
+    ],
+    "tags": ["protein-shake", "protein"]
+  },
+  {
+    "id": "whey-starter-500g-chocolate",
+    "title": "KRACHT Whey Starter 500 g — White chocolate",
+    "url": "http://localhost:4002/product/whey-starter-500g-chocolate",
+    "image": "http://localhost:4002/photos/protein-13.jpg",
+    "price": 19.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Protein per serving",
+        "value": "22 g"
+      },
+      {
+        "label": "Flavour",
+        "value": "White chocolate"
+      },
+      {
+        "label": "Size",
+        "value": "500 g"
+      },
+      {
+        "label": "Servings",
+        "value": "16"
+      },
+      {
+        "label": "Diet",
+        "value": "halal"
+      }
+    ],
+    "tags": ["protein-shake", "protein", "halal"]
+  },
+  {
+    "id": "whey-starter-500g-cookies",
+    "title": "KRACHT Whey Starter 500 g — Cookies & cream",
+    "url": "http://localhost:4002/product/whey-starter-500g-cookies",
+    "image": "http://localhost:4002/photos/protein-04.jpg",
+    "price": 21.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Protein per serving",
+        "value": "22 g"
+      },
+      {
+        "label": "Flavour",
+        "value": "Cookies & cream"
+      },
+      {
+        "label": "Size",
+        "value": "500 g"
+      },
+      {
+        "label": "Servings",
+        "value": "16"
+      },
+      {
+        "label": "Diet",
+        "value": "halal"
+      }
+    ],
+    "tags": ["protein-shake", "protein", "halal"]
+  },
+  {
+    "id": "whey-isolate-900g-chocolate",
+    "title": "KRACHT Whey Isolate 900 g — Mint chocolate",
+    "url": "http://localhost:4002/product/whey-isolate-900g-chocolate",
+    "image": "http://localhost:4002/photos/protein-10.jpg",
+    "price": 44.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Protein per serving",
+        "value": "27 g"
+      },
+      {
+        "label": "Flavour",
+        "value": "Mint chocolate"
+      },
+      {
+        "label": "Size",
+        "value": "900 g"
+      },
+      {
+        "label": "Servings",
+        "value": "30"
+      },
+      {
+        "label": "Diet",
+        "value": "lactose-free"
+      }
+    ],
+    "tags": ["protein-shake", "protein", "lactose-free"]
+  },
+  {
+    "id": "whey-isolate-900g-vanilla",
+    "title": "KRACHT Whey Isolate 900 g — Cappuccino",
+    "url": "http://localhost:4002/product/whey-isolate-900g-vanilla",
+    "image": "http://localhost:4002/photos/protein-08.jpg",
+    "price": 44.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Protein per serving",
+        "value": "27 g"
+      },
+      {
+        "label": "Flavour",
+        "value": "Cappuccino"
+      },
+      {
+        "label": "Size",
+        "value": "900 g"
+      },
+      {
+        "label": "Servings",
+        "value": "30"
+      },
+      {
+        "label": "Diet",
+        "value": "lactose-free"
+      }
+    ],
+    "tags": ["protein-shake", "protein", "lactose-free"]
+  },
+  {
+    "id": "whey-isolate-1800g-chocolate",
+    "title": "KRACHT Whey Isolate bulk 1,8 kg — Mint chocolate",
+    "url": "http://localhost:4002/product/whey-isolate-1800g-chocolate",
+    "image": "http://localhost:4002/photos/protein-10.jpg",
+    "price": 79,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Protein per serving",
+        "value": "27 g"
+      },
+      {
+        "label": "Flavour",
+        "value": "Mint chocolate"
+      },
+      {
+        "label": "Size",
+        "value": "1,8 kg"
+      },
+      {
+        "label": "Servings",
+        "value": "60"
+      },
+      {
+        "label": "Diet",
+        "value": "lactose-free"
+      }
+    ],
+    "tags": ["protein-shake", "protein", "lactose-free"]
+  },
+  {
+    "id": "pure-whey-isolate-1kg",
+    "title": "KRACHT Pure Whey Isolate 1 kg — Unflavoured",
+    "url": "http://localhost:4002/product/pure-whey-isolate-1kg",
+    "image": null,
+    "price": 49,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Protein per serving",
+        "value": "28 g"
+      },
+      {
+        "label": "Flavour",
+        "value": "Unflavoured"
+      },
+      {
+        "label": "Size",
+        "value": "1 kg"
+      },
+      {
+        "label": "Servings",
+        "value": "33"
+      },
+      {
+        "label": "Diet",
+        "value": "lactose-free, no sweeteners"
+      }
+    ],
+    "tags": ["protein-shake", "protein", "lactose-free", "no-sweeteners"]
+  },
+  {
+    "id": "pure-whey-concentrate-1kg",
+    "title": "KRACHT Pure Whey Concentrate 1 kg — Unflavoured",
+    "url": "http://localhost:4002/product/pure-whey-concentrate-1kg",
+    "image": null,
+    "price": 39.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Protein per serving",
+        "value": "24 g"
+      },
+      {
+        "label": "Flavour",
+        "value": "Unflavoured"
+      },
+      {
+        "label": "Size",
+        "value": "1 kg"
+      },
+      {
+        "label": "Servings",
+        "value": "33"
+      },
+      {
+        "label": "Diet",
+        "value": "no sweeteners"
+      }
+    ],
+    "tags": ["protein-shake", "protein", "no-sweeteners"]
+  },
+  {
+    "id": "vegan-protein-900g-chocolate",
+    "title": "KRACHT Vegan Protein 900 g — Chocolate hazelnut",
+    "url": "http://localhost:4002/product/vegan-protein-900g-chocolate",
+    "image": "http://localhost:4002/photos/protein-11.jpg",
+    "price": 34.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Protein per serving",
+        "value": "22 g"
+      },
+      {
+        "label": "Flavour",
+        "value": "Chocolate hazelnut"
+      },
+      {
+        "label": "Size",
+        "value": "900 g"
+      },
+      {
+        "label": "Servings",
+        "value": "30"
+      },
+      {
+        "label": "Diet",
+        "value": "vegan, lactose-free"
+      }
+    ],
+    "tags": ["protein-shake", "protein", "vegan", "lactose-free"]
+  },
+  {
+    "id": "vegan-protein-900g-vanilla-chai",
+    "title": "KRACHT Vegan Protein 900 g — Coconut chai",
+    "url": "http://localhost:4002/product/vegan-protein-900g-vanilla-chai",
+    "image": "http://localhost:4002/photos/protein-14.jpg",
+    "price": 34.95,
+    "currency": "EUR",
+    "inStock": false,
+    "specs": [
+      {
+        "label": "Protein per serving",
+        "value": "22 g"
+      },
+      {
+        "label": "Flavour",
+        "value": "Coconut chai"
+      },
+      {
+        "label": "Size",
+        "value": "900 g"
+      },
+      {
+        "label": "Servings",
+        "value": "30"
+      },
+      {
+        "label": "Diet",
+        "value": "vegan, lactose-free"
+      }
+    ],
+    "tags": ["protein-shake", "protein", "vegan", "lactose-free"]
+  },
+  {
+    "id": "casein-1kg-chocolate",
+    "title": "KRACHT Casein Night 1 kg — Peanut butter",
+    "url": "http://localhost:4002/product/casein-1kg-chocolate",
+    "image": "http://localhost:4002/photos/protein-05.jpg",
+    "price": 39.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Protein per serving",
+        "value": "25 g"
+      },
+      {
+        "label": "Flavour",
+        "value": "Peanut butter"
+      },
+      {
+        "label": "Size",
+        "value": "1 kg"
+      },
+      {
+        "label": "Servings",
+        "value": "33"
+      }
+    ],
+    "tags": ["protein-shake", "protein"]
+  },
+  {
+    "id": "clear-whey-500g-mango",
+    "title": "KRACHT Clear Whey 500 g — Mango passionfruit",
+    "url": "http://localhost:4002/product/clear-whey-500g-mango",
+    "image": "http://localhost:4002/photos/protein-09.jpg",
+    "price": 32.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Protein per serving",
+        "value": "20 g"
+      },
+      {
+        "label": "Flavour",
+        "value": "Mango passionfruit"
+      },
+      {
+        "label": "Size",
+        "value": "500 g"
+      },
+      {
+        "label": "Servings",
+        "value": "20"
+      },
+      {
+        "label": "Diet",
+        "value": "lactose-free, halal"
+      }
+    ],
+    "tags": ["protein-shake", "protein", "lactose-free", "halal"]
+  },
+  {
+    "id": "creatine-monohydrate-300g",
+    "title": "KRACHT Creatine Monohydrate 300 g — Unflavoured",
+    "url": "http://localhost:4002/product/creatine-monohydrate-300g",
+    "image": "http://localhost:4002/photos/creatine-01.jpg",
+    "price": 14.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Flavour",
+        "value": "Unflavoured"
+      },
+      {
+        "label": "Size",
+        "value": "300 g"
+      },
+      {
+        "label": "Servings",
+        "value": "100"
+      },
+      {
+        "label": "Diet",
+        "value": "vegan, lactose-free, halal"
+      }
+    ],
+    "tags": ["creatine", "vegan", "lactose-free", "halal"]
+  },
+  {
+    "id": "creatine-monohydrate-500g",
+    "title": "KRACHT Creatine Monohydrate 500 g — Unflavoured",
+    "url": "http://localhost:4002/product/creatine-monohydrate-500g",
+    "image": "http://localhost:4002/photos/creatine-01.jpg",
+    "price": 19.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Flavour",
+        "value": "Unflavoured"
+      },
+      {
+        "label": "Size",
+        "value": "500 g"
+      },
+      {
+        "label": "Servings",
+        "value": "166"
+      },
+      {
+        "label": "Diet",
+        "value": "vegan, lactose-free, halal"
+      }
+    ],
+    "tags": ["creatine", "vegan", "lactose-free", "halal"]
+  },
+  {
+    "id": "creatine-monohydrate-1kg",
+    "title": "KRACHT Creatine Monohydrate bulk 1 kg — Unflavoured",
+    "url": "http://localhost:4002/product/creatine-monohydrate-1kg",
+    "image": "http://localhost:4002/photos/creatine-01.jpg",
+    "price": 32.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Flavour",
+        "value": "Unflavoured"
+      },
+      {
+        "label": "Size",
+        "value": "1 kg"
+      },
+      {
+        "label": "Servings",
+        "value": "333"
+      },
+      {
+        "label": "Diet",
+        "value": "vegan, lactose-free, halal"
+      }
+    ],
+    "tags": ["creatine", "vegan", "lactose-free", "halal"]
+  },
+  {
+    "id": "creapure-creatine-500g",
+    "title": "KRACHT Creapure Creatine 500 g — Unflavoured",
+    "url": "http://localhost:4002/product/creapure-creatine-500g",
+    "image": "http://localhost:4002/photos/creatine-01.jpg",
+    "price": 29.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Flavour",
+        "value": "Unflavoured"
+      },
+      {
+        "label": "Size",
+        "value": "500 g"
+      },
+      {
+        "label": "Servings",
+        "value": "166"
+      },
+      {
+        "label": "Diet",
+        "value": "vegan, lactose-free, halal"
+      }
+    ],
+    "tags": ["creatine", "vegan", "lactose-free", "halal"]
+  },
+  {
+    "id": "creatine-gummies-90",
+    "title": "KRACHT Creatine Gummies 90 gummies — Grape",
+    "url": "http://localhost:4002/product/creatine-gummies-90",
+    "image": "http://localhost:4002/photos/creatine-08.jpg",
+    "price": 21.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Flavour",
+        "value": "Grape"
+      },
+      {
+        "label": "Size",
+        "value": "90 gummies"
+      },
+      {
+        "label": "Servings",
+        "value": "30"
+      },
+      {
+        "label": "Diet",
+        "value": "vegan"
+      }
+    ],
+    "tags": ["creatine", "vegan"]
+  },
+  {
+    "id": "creatine-monohydrate-500g-lemon",
+    "title": "KRACHT Creatine Monohydrate 500 g — Lemon lime",
+    "url": "http://localhost:4002/product/creatine-monohydrate-500g-lemon",
+    "image": "http://localhost:4002/photos/creatine-07.jpg",
+    "price": 22.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Flavour",
+        "value": "Lemon lime"
+      },
+      {
+        "label": "Size",
+        "value": "500 g"
+      },
+      {
+        "label": "Servings",
+        "value": "100"
+      },
+      {
+        "label": "Diet",
+        "value": "vegan, lactose-free, halal"
+      }
+    ],
+    "tags": ["creatine", "vegan", "lactose-free", "halal"]
+  },
+  {
+    "id": "creatine-hcl-caps-180",
+    "title": "KRACHT Creatine HCl caps 180 capsules — Unflavoured",
+    "url": "http://localhost:4002/product/creatine-hcl-caps-180",
+    "image": "http://localhost:4002/photos/creatine-01.jpg",
+    "price": 24.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Flavour",
+        "value": "Unflavoured"
+      },
+      {
+        "label": "Size",
+        "value": "180 capsules"
+      },
+      {
+        "label": "Servings",
+        "value": "45"
+      },
+      {
+        "label": "Diet",
+        "value": "halal"
+      }
+    ],
+    "tags": ["creatine", "halal"]
+  },
+  {
+    "id": "creatine-monohydrate-2kg",
+    "title": "KRACHT Creatine Monohydrate value bag 2 kg — Unflavoured",
+    "url": "http://localhost:4002/product/creatine-monohydrate-2kg",
+    "image": "http://localhost:4002/photos/creatine-01.jpg",
+    "price": 54.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Flavour",
+        "value": "Unflavoured"
+      },
+      {
+        "label": "Size",
+        "value": "2 kg"
+      },
+      {
+        "label": "Servings",
+        "value": "666"
+      },
+      {
+        "label": "Diet",
+        "value": "vegan, lactose-free, halal"
+      }
+    ],
+    "tags": ["creatine", "vegan", "lactose-free", "halal"]
+  },
+  {
+    "id": "pre-workout-shock-blue-raspberry",
+    "title": "KRACHT Pre-Workout Shock 360 g — Blue raspberry blast",
+    "url": "http://localhost:4002/product/pre-workout-shock-blue-raspberry",
+    "image": "http://localhost:4002/photos/preworkout-01.jpg",
+    "price": 34.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Flavour",
+        "value": "Blue raspberry blast"
+      },
+      {
+        "label": "Size",
+        "value": "360 g"
+      },
+      {
+        "label": "Servings",
+        "value": "30"
+      },
+      {
+        "label": "Diet",
+        "value": "vegan"
+      }
+    ],
+    "tags": ["pre-workout", "vegan"]
+  },
+  {
+    "id": "pre-workout-shock-watermelon",
+    "title": "KRACHT Pre-Workout Shock 360 g — Watermelon burst",
+    "url": "http://localhost:4002/product/pre-workout-shock-watermelon",
+    "image": "http://localhost:4002/photos/preworkout-03.jpg",
+    "price": 34.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Flavour",
+        "value": "Watermelon burst"
+      },
+      {
+        "label": "Size",
+        "value": "360 g"
+      },
+      {
+        "label": "Servings",
+        "value": "30"
+      },
+      {
+        "label": "Diet",
+        "value": "vegan"
+      }
+    ],
+    "tags": ["pre-workout", "vegan"]
+  },
+  {
+    "id": "pre-workout-shock-cola",
+    "title": "KRACHT Pre-Workout Shock 360 g — Cola kick",
+    "url": "http://localhost:4002/product/pre-workout-shock-cola",
+    "image": "http://localhost:4002/photos/preworkout-05.jpg",
+    "price": 34.95,
+    "currency": "EUR",
+    "inStock": false,
+    "specs": [
+      {
+        "label": "Flavour",
+        "value": "Cola kick"
+      },
+      {
+        "label": "Size",
+        "value": "360 g"
+      },
+      {
+        "label": "Servings",
+        "value": "30"
+      },
+      {
+        "label": "Diet",
+        "value": "vegan"
+      }
+    ],
+    "tags": ["pre-workout", "vegan"]
+  },
+  {
+    "id": "pump-non-stim-lime",
+    "title": "KRACHT Pump Non-Stim 400 g — Citrus surge",
+    "url": "http://localhost:4002/product/pump-non-stim-lime",
+    "image": "http://localhost:4002/photos/preworkout-11.jpg",
+    "price": 32.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Flavour",
+        "value": "Citrus surge"
+      },
+      {
+        "label": "Size",
+        "value": "400 g"
+      },
+      {
+        "label": "Servings",
+        "value": "25"
+      },
+      {
+        "label": "Diet",
+        "value": "vegan"
+      }
+    ],
+    "tags": ["pre-workout", "vegan"]
+  },
+  {
+    "id": "pure-pre-workout-300g",
+    "title": "KRACHT Pure Pre-Workout 300 g — Unflavoured",
+    "url": "http://localhost:4002/product/pure-pre-workout-300g",
+    "image": null,
+    "price": 34.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Flavour",
+        "value": "Unflavoured"
+      },
+      {
+        "label": "Size",
+        "value": "300 g"
+      },
+      {
+        "label": "Servings",
+        "value": "25"
+      },
+      {
+        "label": "Diet",
+        "value": "vegan, no sweeteners"
+      }
+    ],
+    "tags": ["pre-workout", "vegan", "no-sweeteners"]
+  },
+  {
+    "id": "beta-alanine-300g",
+    "title": "KRACHT Beta-Alanine 300 g — Unflavoured",
+    "url": "http://localhost:4002/product/beta-alanine-300g",
+    "image": null,
+    "price": 19.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Flavour",
+        "value": "Unflavoured"
+      },
+      {
+        "label": "Size",
+        "value": "300 g"
+      },
+      {
+        "label": "Servings",
+        "value": "90"
+      },
+      {
+        "label": "Diet",
+        "value": "vegan, lactose-free, halal"
+      }
+    ],
+    "tags": ["pre-workout", "vegan", "lactose-free", "halal"]
+  },
+  {
+    "id": "citrulline-malate-300g",
+    "title": "KRACHT Citrulline Malate 300 g — Unflavoured",
+    "url": "http://localhost:4002/product/citrulline-malate-300g",
+    "image": null,
+    "price": 22.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Flavour",
+        "value": "Unflavoured"
+      },
+      {
+        "label": "Size",
+        "value": "300 g"
+      },
+      {
+        "label": "Servings",
+        "value": "37"
+      },
+      {
+        "label": "Diet",
+        "value": "vegan, lactose-free, halal"
+      }
+    ],
+    "tags": ["pre-workout", "vegan", "lactose-free", "halal"]
+  },
+  {
+    "id": "pre-workout-lite-mango",
+    "title": "KRACHT Pre-Workout Lite 360 g — Mango ice",
+    "url": "http://localhost:4002/product/pre-workout-lite-mango",
+    "image": null,
+    "price": 32.95,
+    "currency": "EUR",
+    "inStock": true,
+    "specs": [
+      {
+        "label": "Flavour",
+        "value": "Mango ice"
+      },
+      {
+        "label": "Size",
+        "value": "360 g"
+      },
+      {
+        "label": "Servings",
+        "value": "30"
+      },
+      {
+        "label": "Diet",
+        "value": "vegan"
+      }
+    ],
+    "tags": ["pre-workout", "vegan"]
+  }
+]
