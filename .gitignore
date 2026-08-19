@@ -25,3 +25,8 @@ apps/platform/config/shop-*.json
 # the whole repo, on every desk). Biome has `vcs.useIgnoreFile: true`, so ignoring it here is what
 # makes the gate pass rather than a second Biome setting.
 .claude/worktrees/
+
+# Agent tooling artifacts, not part of the submission
+.agents/
+.claude/skills/
+skills-lock.json

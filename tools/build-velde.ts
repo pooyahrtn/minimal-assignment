@@ -27,6 +27,13 @@ const arg = (name: string, fallback: string): string =>
     .slice(1)
     .join('=') ?? fallback
 
+/** Demo deployment: crawl nothing, and drop the sitemap that would invite it. [DECISIONS-LOG → Scope] */
+const noindexRobots = (body: string): string =>
+  `${body
+    .replace(/^Allow: \/$/m, 'Disallow: /')
+    .replace(/^Sitemap:.*$/m, '')
+    .trimEnd()}\n`
+
 const SITE = arg('site', 'http://localhost:4001')
 const PLATFORM = arg('platform', 'http://localhost:4003')
 const OUT = `${import.meta.dir}/../dist/velde`
@@ -65,8 +72,12 @@ await write('sitemap.xml', sitemap())
 // robots.txt is a static file, not a template, so it carries the frozen origin as a literal. It is
 // the third of the three `localhost:400*` occurrences in the storefront and the one the origin
 // exemption cannot reach through an env var. [refuted plan, finding 5]
+//
+// The DEPLOYED copy is not the source copy: this is a take-home demo, not a shop, and it must not
+// end up in a search index. Built here rather than edited in `apps/shop-velde/robots.txt`, which
+// stays frozen and keeps serving `Allow: /` locally so dev and e2e see what T2 shipped.
 const robots = await Bun.file(`${import.meta.dir}/../apps/shop-velde/robots.txt`).text()
-await write('robots.txt', robots.replaceAll('http://localhost:4001', SITE))
+await write('robots.txt', noindexRobots(robots.replaceAll('http://localhost:4001', SITE)))
 
 await cp(`${import.meta.dir}/../apps/shop-velde/assets`, `${OUT}/assets`, { recursive: true })
 

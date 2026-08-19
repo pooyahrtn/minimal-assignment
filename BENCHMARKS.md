@@ -52,8 +52,13 @@ chips than the number that first produces an empty set, and more than one near-m
 **This is the "how good/bad are the agents doing" dashboard.** It never blocks. It produces a
 pass-rate matrix, so a glance tells you which delivered task to open with your own eyes.
 
-One row per task (T0…T11), one column per axis, scored by an LLM judge reading the diff **against
-that task's DoD**:
+**One row per landed task**, one column per axis, scored by an LLM judge reading the diff **against
+that task's DoD**. Not a range: this line read `T0…T11` from the day it was written, which was
+correct exactly until T12 landed, and left `TASKS.md` T10's DoD ("every landed task") and this
+sentence specifying different sets with nothing to reconcile them — so the scorecard's coverage was
+a judgment call that flipped depending on which file you opened first [COMPLAINS #5]. A task that
+lands after the last judging run is a **gap**, named out loud by `bench/checks/scorecard.ts` on
+every run, never a quietly narrower denominator:
 
 | Axis | The question | Why it is on the list |
 |---|---|---|

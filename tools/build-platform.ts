@@ -128,7 +128,13 @@ await Bun.write(`${OUT}/ui/main.js`, repoint(await uiBundle.text()))
 await Bun.write(`${OUT}/vercel.json`, Bun.file(`${ROOT}/vercel.json`))
 
 const shipped: unknown = await Bun.file(`${OUT}/vercel.json`).json()
-const headerRules = isRecord(shipped) && Array.isArray(shipped.headers) ? shipped.headers : []
+const allRules = isRecord(shipped) && Array.isArray(shipped.headers) ? shipped.headers : []
+// Only the `/v1` rules, which is what the error below has always claimed to check. Asserting it
+// over EVERY rule made the file unextendable: the site-wide `x-robots-tag: noindex` rule carries
+// no CORS headers and cannot, and it failed a check whose subject is the API surface.
+const headerRules = allRules.filter(
+  (rule) => isRecord(rule) && typeof rule.source === 'string' && rule.source.startsWith('/v1'),
+)
 for (const { key, value } of CORS) {
   const everywhere = headerRules.every(
     (rule) =>

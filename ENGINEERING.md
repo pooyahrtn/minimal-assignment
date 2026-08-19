@@ -167,10 +167,11 @@ named in §4.8.
    correctness — the benchmark suite measures what is actually graded); no CI (one developer, no
    team to gate; the pre-commit hook and `bun bench` are the gates); no `noUnusedParameters` /
    `noPropertyAccessFromIndexSignature` (noise-to-signal is wrong at this size); no import-sorting
-   assist (Biome format is enough). **Revisit only if a specific failure demands it.**
-
-**OPEN — needs Pooya:** max file length and max function length. Biome cannot enforce either
-natively; a ~15-line `check-size.ts` in pre-commit would. Worth 15 minutes on day one, or not?
+   assist (Biome format is enough); **no max file length or max function length** — Biome cannot
+   enforce either natively, and the caps were left OPEN until Pooya killed the line on 19 Aug:
+   at 88 files a 300-line cap flags ten of them on the day it lands, so it ships as a grandfather
+   list, and no complaint in `COMPLAINS.md` traces to file size — the defects were found by the
+   adversarial rounds, not by length. **Revisit only if a specific failure demands it.**
 
 ---
 

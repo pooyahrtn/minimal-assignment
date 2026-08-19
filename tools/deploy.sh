@@ -48,10 +48,13 @@ deploy() {
   #  - the build command, which dereferences that symlink into real files. Vercel's static collector
   #    cannot follow it: the first deploy died with `ENOENT: mkdir '/vercel/output/static/photos'`.
   bunx vercel project update maximal-kracht --root-directory apps/shop-kracht --framework nextjs
-  #  - robots.txt is a static file Next serves verbatim, so the env-var exemption cannot reach the
-  #    `Sitemap:` line inside it. VELDE's prerenderer rewrites its copy; this is KRACHT's equivalent.
+  #  - robots.txt is a static file Next serves verbatim, so the env-var exemption cannot reach it.
+  #    VELDE's prerenderer rewrites its copy; this is KRACHT's equivalent. The deployed copy is
+  #    noindex: this is a take-home demo, not a shop, and it must not reach a search index. Dropping
+  #    the `Sitemap:` line also removes the localhost origin that sed used to rewrite, so that
+  #    substitution is gone with it. Source stays frozen and still serves `Allow: /` locally.
   bunx vercel project update maximal-kracht --build-command \
-    'rm -rf public/photos && cp -RL ../../assets/photos/kracht public/photos && sed -i "s|http://localhost:4002|$NEXT_PUBLIC_SITE_ORIGIN|g" public/robots.txt && next build'
+    'rm -rf public/photos && cp -RL ../../assets/photos/kracht public/photos && sed -i -e "s|^Allow: /$|Disallow: /|" -e "/^Sitemap:/d" public/robots.txt && next build'
   # Origins travel as env vars so the frozen localhost defaults stay in source [TASKS §0 #11].
   bunx vercel env rm NEXT_PUBLIC_SITE_ORIGIN production --project maximal-kracht --yes 2>/dev/null || true
   bunx vercel env rm NEXT_PUBLIC_PLATFORM_ORIGIN production --project maximal-kracht --yes 2>/dev/null || true
@@ -113,6 +116,8 @@ verify() {
     grep -q localhost <<<"$map" && fail "$site sitemap still points at localhost"
     robots=$(curl -sf "$site/robots.txt") || fail "$site served no robots.txt"
     grep -q localhost <<<"$robots" && fail "$site robots.txt still points at localhost"
+    grep -q '^Disallow: /$' <<<"$robots" || fail "$site robots.txt does not disallow crawling"
+    grep -q '^Sitemap:' <<<"$robots" && fail "$site robots.txt still advertises a sitemap"
   done
 
   echo "— platform: the config PAYLOAD carries no localhost either"

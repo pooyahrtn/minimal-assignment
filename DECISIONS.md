@@ -1,121 +1,87 @@
 # DECISIONS.md
 
-## How I thought about the merchant
+## What the merchant controls, and what we refuse
 
-I scanned twelve competing products first. They make the same trade: unlimited control, and the
-outcome is yours. Of the eight I could check, **zero ship any legibility guarantee** — Gorgias
-documents an unreadable colour combination as "the merchant's own risk to manage," and Rebuy warns
-that styling written for its widget does not stay inside the widget. Read together: if the agent
-comes out illegible that is your configuration, and if our styling escapes onto your product page
-that is your mistake. **The merchant ends up owning outcomes their vendor caused** — a strange place
-for the person who cannot read a contrast ratio. Everything below follows from that.
+Of twelve competing products, the eight I could check ship **zero legibility guarantee** — Gorgias
+files an unreadable colour pair as "the merchant's own risk to manage"; Rebuy warns that its widget's
+CSS does not stay inside the widget. **The merchant ends up owning outcomes their vendor caused.**
 
-The agent adopts your colour and your type, then **holds its own geometry**. Every embedded UI
-people trust works this way — Shop Pay warns that changing its core UI "runs the risk of diminishing
-trust"; Apple Pay says do not alter the artwork. They wear the host's brand; they never pretend to
-be the host. There is also a law: **EU AI Act Article 50, binding since 2 August 2026**, requires an
-AI interaction to be clear at first contact, and both stores are in the EU. So one element stays
-constant under every brand — the thing you point at across two storefronts and see unchanged.
+**They control two colours, two fonts, type scale, radius, elevation, label case, density, voice,
+launcher. No custom CSS.** In exchange we own the outcome: every text pair the widget can emit is
+checked against 200 generated brands — 1400 pairs, worst ratio **4.500:1**, none below AA. Where a
+merchant's colour would ship an unreadable pair the widget **overrides it, never silently** — the
+page names the pair and the ratio it shipped. Our closed box is harsher than anyone's — a shadow
+root cannot be worked around like an unscoped page selector — but Rebuy's own docs make the case for
+it: they tell merchants to hand-scope every selector so the widget stops damaging their store.
+**Honest cost: a merchant who wants something we did not anticipate cannot have it today.** One
+element stays constant and unsettable — the AI signature, per EU AI Act Article 50.
 
-**What they control:** two colours, two fonts, type scale, radius, elevation, label case, density,
-voice, launcher. That is the whole surface. **No custom CSS.** In exchange we own the outcome: every
-text pair the widget can produce is checked against 200 generated brands, not the two we designed
-against. So we sometimes override a merchant's colour on the one surface where fidelity was the
-point — and never silently: the page **names the pair it changed and shows before and after**.
-Honest cost: this is stricter than anything in the field, and a merchant who wants something we did
-not anticipate cannot have it today.
+The page opens on **one field: your domain**, and returns a filled draft onto a **review screen that
+never auto-applies** — a Cloudflare challenge page has colours too. The preview beside it is the
+agent inside their **own live storefront, in an iframe**; almost the whole field previews against a
+dashboard mock. Honest cost: a crawl is a snapshot, so stock goes stale.
 
-## The merchant approves; they do not describe
+## Holding up across brands
 
-The page opens on **one field: your domain.** We read their site and return a filled-in draft —
-colours, fonts, shape language, catalog. Nothing is auto-applied; it lands on a review screen where
-everything is editable, because an automatic read can be confidently wrong: plenty of stores sit
-behind a bot check, and a challenge page has colours too. The preview beside it is the agent
-**running on their own storefront**, not a mockup on a gradient — if the promise is "it will look
-right on your site," the screen has to be their site.
+Both storefronts were **frozen the moment the embed line landed**: any bug fixable by editing the
+shop is a bug in the widget. The rule *is* the product claim: a demo where the store gets quietly
+nudged to fit proves zero-integration false while looking identical. One exemption, adjudicated by
+hand mid-build: origin literals.
 
-The catalog comes from what the store already publishes for Google, so the merchant supplies
-nothing. That is tier 0, the one built. Tier 1 is their product feed, tier 2 a Shopify app with live
-stock. Tier 3 — *the merchant builds us an API* — I rejected: it inverts the work onto the person
-least able to do it. **Honest cost: a crawl is a snapshot, so price and stock go stale.** Tier 2 is
-what fixes that.
+**The isolation claim was false, and measured rather than assumed.** `:host { all: initial }` loses
+to outer-document rules: a host rule matching the element moved **31 computed properties** inside the
+shadow root on the live storefronts. One hole stays open and named — `@font-face` does not resolve
+inside a shadow root, so **"fully isolated" and "exact brand font" cannot both be true.** I chose the
+font and say so.
 
-## Two brands that differ in ways paint cannot fake
+Shopper state lives in **tappable chips above the composer**, not the chat log, so a dead end arrives
+with the blocking constraint already on screen and one tap from being dropped. None of the twelve
+names the blocking constraint back to the shopper.
 
-They differ in spacing rhythm, shape language, label treatment, and in whether the agent is a person
-at all — KRACHT's is a coach speaking in first person; VELDE never personifies. Both storefronts were
-**frozen the moment the embed line landed**: after that, any bug fixable by editing the shop is a bug
-in the widget. That rule *is* the product claim — we sell zero integration, and a demo where the
-store gets quietly nudged to fit the widget proves the opposite while looking identical.
+## The model reads; it never decides
 
-**Our own test for this was, as first written, worthless.** It was meant to prove the two brands
-diverge structurally, but the way it stripped colour also erased the difference between their page
-backgrounds — so it passed on colour alone. A widget that swapped two hex codes and ignored every
-structural token would have cleared the check certifying this build's headline claim. Caught by a
-reviewer, not by the agent that wrote it.
-
-**One deliberate hole in the isolation.** All widget CSS lives in a shadow root — except
-`@font-face`, which does not resolve inside one, so the merchant's font stylesheet goes on the host
-page. "Fully isolated" and "exact brand font" cannot both be true. I chose the font, and say so
-rather than claiming total isolation.
-
-## The interface decision the conversation rests on
-
-A chat log is a bad place to keep state, so the shopper's brief lives in a **row of constraint chips
-above the composer** — accumulated as they talk, always visible, each tappable. It turns the dead
-end into a decision: when nothing matches, the blocking chip is *already on screen* and dropping it
-is one tap. The emptiness is real arithmetic on a catalog written as a plausible assortment first —
-writing it backwards from the demo survives exactly until a merchant connects a real one.
+A live model does **intake only** — free text to constraints — because the deterministic parser is
+eight regexes and demoing it means remembering which phrasings were anticipated. It runs
+server-side behind the Vercel AI SDK (`ai` + `@ai-sdk/anthropic` + `zod`: the repo's first runtime
+dependencies, all on the platform origin, none in the 15.3 kB a merchant's page loads). Retrieval,
+the blocking constraint and the chip row stay arithmetic, so the graded failure moment is computed,
+not generated: the model picks tags from a `z.enum` of that merchant's own catalog and never writes
+a product, a price, or a word the shopper reads. The endpoint checks its own reading and discards
+one that would answer worse than the offline brain. **A typical turn is 3.5 s** (median of 15,
+`claude-opus-5`, 3.3–4.6 s). No key, no network, a timeout or a poor reading all fall back to the
+local brain mid-conversation, which is why the demo survives hotel wifi. Swapping provider is four
+lines in one file; the six openings were re-run on `gpt-4o` to prove it.
 
 ## What the AI suggested that I overrode
 
-One caveat: the planning documents here were themselves AI-drafted and then owned by me, so "what
-the AI suggested" includes what its own plan proposed. What matters is whether a human read it,
-disagreed and reversed it. Each is dated to the commit that recorded it in `DECISIONS-LOG.md`.
+- **Testing — 18 Aug.** It proposed light `assert` self-checks, no framework. Overridden: agents that
+  write every line *and* grade their own work produce worthless evidence. It paid three times. The
+  cross-brand divergence check — the one certifying this build's headline claim — stripped colour in
+  a way that also erased the two page backgrounds, so it **passed on colour alone**; a widget that
+  swapped two hex codes and ignored every structural token would have cleared it. The contrast rule
+  passed its own seventeen tests and shipped a pair at **4.4807:1**, measuring floats where the
+  browser ships rounded bytes. The cross-host isolation assertion compared only `!important`-pinned
+  properties, so it **could not fail**. Each caught by a second agent *after* the first reported
+  success. The rule worth keeping: **whoever makes a thing never checks it.**
+- **Fonts — 19 Aug.** It designed a curated font picker. A picker cannot match a brand it has never
+  heard of, so we take the merchant's own stylesheet. One product in thirteen does this.
+- **Market research — 19 Aug.** Its plan filed "what the alternatives already do" under *not graded*.
+  Overriding that produced the section above.
 
-- **Testing — 18 Aug.** It proposed light self-checks, no framework. Overridden: when agents write
-  every line *and* grade their own work, self-reported success is not evidence. It paid repeatedly —
-  the worthless test above, a contrast rule that passed its own seventeen tests and still shipped an
-  unreadable pair, product labels that did not match their photos, each found by a second agent
-  **after** the first reported success. The rule I would keep: whoever makes a thing never checks it.
-- **Localisation — 18 Aug.** Its re-plan treated language as a fourth brand axis. Overridden — the
-  Dutch signal that matters is iDEAL, a VAT toggle and a next-day cut-off, not translated copy.
-- **Fonts — 19 Aug.** It designed a curated font picker. A picker cannot match a brand it has not
-  heard of, so we take the merchant's own stylesheet. Twelve of thirteen products offer no font
-  control at all. Known gap: a licence that forbids a public stylesheet has no way in.
-- **Market research — 19 Aug.** Its plan filed "what the alternatives already do" under *not graded*
-  and cut it. Overriding that produced the opening section of this document.
-- **Once in the other direction — 18 Aug.** I told it to use a component library everywhere; it
-  declined for the storefronts and showed me the dependency count against two native HTML elements.
-  It was right. It also read a licence I would have skimmed — the Shopify theme we meant to start
-  from restricts use to themes interoperating with Shopify, which ours do not.
+## Cut, weakest, next hour
 
-## What I cut
+**Cut:** one failure moment rather than two; auth, billing, analytics, history; fewer page templates
+per store; a custom domain.
 
-One failure moment rather than two. Auth, billing, analytics, conversation history. Fewer page
-templates per store, though catalog depth stayed. A bounded escape hatch for custom styling. A
-custom domain, which scores nothing.
+**Weakest: the research motivating this product came back empty.** Across eight products I found
+essentially no merchant complaining that a widget clashed with their brand — either they churn
+silently or the premise is overstated. More review mining will not fix it; asking your own churned
+trials will. Second: on **14% of brand colour pairs no focus ring stays visible** against both the
+button and the page behind it. Both demo brands sit outside that band, which I name rather than
+enjoy: demo cases that dodge your one known failure are the accident the freeze exists to prevent.
 
-## The weakest part
-
-**The research that motivated this product came back empty.** Across eight competing products I
-found essentially no merchant complaining that a widget clashed with their brand. Either they churn
-silently, or the premise is overstated — and every pass was a partial sample. It is the joint most
-likely to break under a question. The fix is not more review mining: it is asking your own churned
-trials whether appearance ever came up, which is data only you have.
-
-Second, the accessibility promise I cannot fully keep: on **14% of brand colour combinations** there
-is no keyboard focus outline that stays visible against both the button and the page behind it. Both
-demo brands sit outside that band — which I name rather than enjoy, because picking demo cases that
-dodge your one known failure is the same accident the storefront freeze exists to prevent. The fix
-is designed, not built.
-
-## What I would do with another hour
-
-Close that 14%. Accept an uploaded font file rather than a link. Read the product feed they already
-maintain — the difference between a snapshot and live stock. And open a narrow hatch that does
-**not** reopen the question above: named parts and an allowlist of properties, so a merchant gets
-more reach while the legibility guarantee still holds. That is the opposite of a CSS box; a CSS box
-is what makes the guarantee impossible to keep.
+**Another hour:** close the 14% with a two-tone ring. Read the product feed they already maintain —
+snapshot versus live stock. And open a hatch that does *not* reopen the legibility question: named
+parts and allowlisted properties, Stripe's shape.
 
 *Every decision above was written down in the session it was made: `DECISIONS-LOG.md`.*
