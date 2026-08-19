@@ -113,7 +113,7 @@ actually happened.
 | T12 | ◐ both halves landed | E2E critical-flow suite (Playwright) | 40m | 30m | T2 · T3+T4 wired · **T5 for the card flows** | no |
 | T13 | ⬜ open (cut #0) | Real LLM turn behind the AI SDK | 2h | 45m | T6 (stub is enough) | yes |
 | T14 | ✅ landed | Competitor scan → feature matrix → demo subset | 40m | **30m** | — (reads the built tree) | yes |
-| T15 | ⬜ open | Deploy the three projects on `*.vercel.app` | 40m | 30m | T6 · §0 #11 | no |
+| T15 | ◐ landed | Deploy the three projects on `*.vercel.app` — **box 4 (phone) needs Pooya** | 40m | 30m | T6 · §0 #11 | no |
 
 T12 is `◐` not `✅`: both halves are committed, but its `no-match` card specs are deferred and land
 **with T5**, not later — see T5's DoD.
@@ -313,7 +313,7 @@ the trade-off stated as a choice.
 
 ---
 
-## T6 `🔄 in flight` — Platform API + snippet delivery
+## T6 `✅ landed` — Platform API + snippet delivery
 `apps/platform`.
 
 **Scope.** `GET /v1/config/:shopKey` → `{tokens, voice, catalog}` with permissive CORS.
@@ -665,7 +665,7 @@ contract are not reopened by it.
 
 ---
 
-## T15 `⬜ open` — Deploy the three projects
+## T15 `◐ landed — box 4 open` — Deploy the three projects
 
 **A seam, promoted to a task.** "Deploy for real" has sat in §3's *back ON the plan* list since the
 re-baseline with no row, no DoD and no estimate — which is exactly the shape of the three lines that
