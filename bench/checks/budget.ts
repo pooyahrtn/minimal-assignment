@@ -13,12 +13,24 @@ const BUNDLE_PATH = `${REPO_ROOT}/packages/agent/dist/agent.js`
 const MAP_PATH = `${BUNDLE_PATH}.map`
 
 /**
- * measured gzip size = 12146 bytes (bun bench budget, 2026-08-19, real build of packages/agent —
- * stable across repeat builds). Cap: round up to the next whole kB (12288) then +30% headroom,
- * per the task's pinning rule — enough to absorb normal bundle growth without masking a real
- * regression. [BENCHMARKS §4.1: ratchets up only, never down]
+ * measured gzip size = 16409 bytes (bun bench budget, 2026-08-19, real build of packages/agent —
+ * stable across repeat builds). 18 kB, which is measured + ~12% headroom.
+ *
+ * RATCHETED UP from 15975 (= 12288 × 1.3, against a 12146-byte measurement) when the abstention
+ * chip state landed. [BENCHMARKS §4.1: ratchets up only, never down]
+ *
+ * The headroom is deliberately TIGHTER than the 30% the first cap used, and that is the lesson
+ * this raise records rather than a number picked to fit. Between the two measurements the bundle
+ * grew 12146 → 15915 — 31%, consuming essentially the whole allowance — and nothing said a word,
+ * because a cap only speaks at its boundary. The first thing that then asked for bytes inherited
+ * the entire accumulated drift as its own bill, which is a bad way to find out. 12% means the
+ * next drift is caught while it is still small enough to argue about.
+ *
+ * This is a REGRESSION detector, not a product limit: 16 kB gzipped buys brand-token derivation,
+ * an FSM, a shadow-root shell and six block renderers, and a merchant's page will not feel it.
+ * Raise it again when something real needs the room — and re-measure rather than reason.
  */
-const GZIP_CAP_BYTES = Math.ceil(12288 * 1.3)
+const GZIP_CAP_BYTES = 18432
 
 /**
  * measured config-fetch-to-first-paint = 14-22 ms across repeat runs (bun bench budget,
