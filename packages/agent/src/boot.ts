@@ -21,6 +21,9 @@ const script = document.currentScript
  */
 function injectFonts(fonts: { display: { href: string }; body: { href: string } }): void {
   for (const href of new Set([fonts.display.href, fonts.body.href])) {
+    // An empty href is a real answer, not a missing one: the extractor writes it for a family the
+    // HOST page already resolves — self-hosted or system — so there is nothing for us to fetch.
+    if (href === '') continue
     if (document.querySelector(`link[rel="stylesheet"][href="${href}"]`) !== null) continue
     const link = document.createElement('link')
     link.rel = 'stylesheet'

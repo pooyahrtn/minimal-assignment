@@ -48,9 +48,10 @@ const DEFAULT_TOKENS: MerchantTokens = {
   launcher: { style: 'bubble', position: 'bottom-right' },
 }
 
-const FETCH_TIMEOUT_MS = 8000
+export const FETCH_TIMEOUT_MS = 8000
 const MAX_STYLESHEETS = 3
-const USER_AGENT = 'Mozilla/5.0 (compatible; MaximalBrandBot/1.0; +https://maximal.example/bot)'
+export const USER_AGENT =
+  'Mozilla/5.0 (compatible; MaximalBrandBot/1.0; +https://maximal.example/bot)'
 
 function defaultDraft(note: string): MerchantDraft {
   return { tokens: DEFAULT_TOKENS, logo: null, ok: false, note }
@@ -200,10 +201,43 @@ function extractFontFamilies(css: string): string[] {
   return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([name]) => name)
 }
 
-/** We only ever saw a family NAME, never the actual font file — Google Fonts is a guess that
- * works for the huge share of stores that use it, and is honestly wrong for a licensed/self-hosted
- * face. ponytail: no font-matching service wired up; upgrade if a demo store trips on it. */
-function fontChoiceFor(family: string, weight: number): FontChoice {
+/**
+ * The families the PAGE ITSELF pulls from Google Fonts, lowercased. Read off the request URLs in
+ * the markup rather than the stylesheet it returns: the served CSS only ever says `font-family:
+ * 'Inter'` inside an `@font-face`, which is indistinguishable from a self-hosted face.
+ *
+ * Both URL shapes, because both are still in the wild: `css2` repeats `family=` per font, the
+ * older `css` joins them with `|`, and either may carry `:wght@…`/`:400,700` after the name.
+ */
+function googleFontFamilies(source: string): Set<string> {
+  const found = new Set<string>()
+  for (const match of source.matchAll(/fonts\.googleapis\.com\/css2?\?([^"'\s>)]+)/gi)) {
+    for (const param of (match[1] ?? '').replace(/&amp;/g, '&').split('&')) {
+      if (!param.startsWith('family=')) continue
+      for (const name of param.slice('family='.length).split('|')) {
+        const family = decodeURIComponent(name.split(':')[0] ?? '')
+          .replace(/\+/g, ' ')
+          .trim()
+        if (family) found.add(family.toLowerCase())
+      }
+    }
+  }
+  return found
+}
+
+/**
+ * We only ever saw a family NAME, never the font file — so a Google Fonts URL is only minted for a
+ * family the page demonstrably gets from Google. Anything else resolves to an EMPTY href, and that
+ * is the right answer rather than a missing one: the widget runs on the merchant's own page, where
+ * a self-hosted `@font-face` (document-scoped, so it reaches into the shadow root) or an installed
+ * system face already resolves the family by name. Nothing left to load.
+ *
+ * Guessing instead — which this did — mints e.g. `?family=gsmarena` for a face they host
+ * themselves, and that is a 404 stylesheet on every page view plus a font that silently never
+ * arrives. A request that cannot succeed is worse than no request.
+ */
+function fontChoiceFor(family: string, weight: number, google: Set<string>): FontChoice {
+  if (!google.has(family.toLowerCase())) return { family, weight, href: '' }
   const encoded = family.replace(/\s+/g, '+')
   return {
     family,
@@ -274,15 +308,20 @@ function findLogo(base: URL, html: string): string | null {
   return null
 }
 
-function buildTokens(css: string): MerchantTokens {
+/** `html` as well as `css`, because the Google Fonts evidence is the `<link>` in the markup — see
+ *  `googleFontFamilies`. Both are already in hand at the one call site. */
+function buildTokens(css: string, html: string): MerchantTokens {
   const vars = extractCssVarColors(css)
   const accent = pickAccent(vars, css)
   const surface = pickSurface(vars)
   const families = extractFontFamilies(css)
+  const google = googleFontFamilies(`${html}\n${css}`)
   const displayFamily = families[0]
   const bodyFamily = families[1] ?? families[0]
-  const fontDisplay = displayFamily ? fontChoiceFor(displayFamily, 600) : DEFAULT_TOKENS.fontDisplay
-  const fontBody = bodyFamily ? fontChoiceFor(bodyFamily, 400) : DEFAULT_TOKENS.fontBody
+  const fontDisplay = displayFamily
+    ? fontChoiceFor(displayFamily, 600, google)
+    : DEFAULT_TOKENS.fontDisplay
+  const fontBody = bodyFamily ? fontChoiceFor(bodyFamily, 400, google) : DEFAULT_TOKENS.fontBody
   const radius = dominantRadiusStep(extractRadiiPx(css))
   return { ...DEFAULT_TOKENS, accent, surface, fontDisplay, fontBody, radius }
 }
@@ -331,7 +370,7 @@ export async function extractMerchantTokens(url: string): Promise<MerchantDraft>
   }
 
   const css = await collectCss(base, html)
-  const tokens = buildTokens(css)
+  const tokens = buildTokens(css, html)
   const logo = findLogo(base, html)
   return { tokens, logo, ok: true, note: `Extracted from ${url}.` }
 }

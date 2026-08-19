@@ -1,5 +1,5 @@
 import type { Density, Elevation, LabelCase } from '../../../tokens/src/merchant'
-import type { Chip } from '../types'
+import type { Chip, Product } from '../types'
 
 /**
  * What a chip constrains: a tag a product must carry, or a price ceiling. [ENGINEERING §6]
@@ -40,9 +40,37 @@ const SYNONYMS: SynonymEntry[] = [
   { pattern: /nothing shiny|not shiny|no shine|\bmatte\b/i, tag: 'matte', label: 'matte finish' },
 ]
 
-/** Price constraints come out by regex, never a table entry. */
+/**
+ * Catalog tags a shopper names with the tag's own word — matched and labelled verbatim, so they
+ * cost one word each instead of a table row (the widget has ~600 B of gzip headroom, and 14 rows
+ * do not fit in it). A `-` in a tag matches a space or nothing too, so `pre-workout` also answers
+ * to "pre workout" and "preworkout". The colours are `catalog.velde.json`'s own, which is what
+ * makes "rather have navy" a constraint instead of noise.
+ *
+ * `protein` is deliberately absent even though it is all over `catalog.kracht.json`: it selects
+ * the identical product set as `protein-shake`, and `offerableTags` in `apps/platform/chat.ts`
+ * breaks that tie by asking `parserKnowsTag` — teaching the parser both names would hand the slot
+ * to the vaguer one and put two chips on one constraint.
+ */
+const PLAIN_TAGS =
+  'vegan halal creatine pre-workout navy camel olive charcoal stone sand tan ecru knitwear leather'
+
+/**
+ * Words that flip the tag they precede from "add this" to "drop this". Deliberately tiny and
+ * positional: this is a fixed-vocabulary parser, so "a few words before the tag" is the whole
+ * theory of negation. `negatedAt` masks every other match out of that window first, which is what
+ * keeps the `no` in "no sweeteners, lactose-free" from cancelling `lactose-free`.
+ */
+const NEGATORS = /\b(?:no|not|without|forget|rather than|instead of)\b/i
+
+/**
+ * Price constraints come out by regex, never a table entry. The trigger word carries the meaning,
+ * so the currency marker is optional (`under €30`, `under EUR30`, `under 30 euros`, `max 30`) —
+ * but a bare number alone is never a budget, and the unit lookahead keeps "1 kg" and "24 g
+ * protein" out of it.
+ */
 const PRICE_PATTERN =
-  /(?:under|below|less than|max(?:imum)?)\s*€\s*(\d+(?:\.\d+)?)|€\s*(\d+(?:\.\d+)?)\s*(?:or less|max)/i
+  /(?:under|below|less than|max(?:imum)?|up to)\s*(?:€|eur(?:os?)?)?\s*(\d+(?:\.\d+)?)(?!\s*(?:k?g|ml|servings?)\b)|€\s*(\d+(?:\.\d+)?)\s*(?:or less|max)/i
 
 /** The ceiling itself, not a chip: `chipsFrom` below is the one place a chip is built. */
 function parsePriceMax(text: string): number | undefined {
@@ -101,13 +129,74 @@ export function chipsFrom(constraints: { tags: string[]; maxPrice?: number }): P
  * header is that mistake, already made once.
  */
 export function parserKnowsTag(tag: string): boolean {
-  return SYNONYMS.some((entry) => entry.tag === tag)
+  return SYNONYMS.some((entry) => entry.tag === tag) || PLAIN_TAGS.split(' ').includes(tag)
 }
 
-/** Free text → constraint chips. Exported cleanly, free of any agent/FSM state. */
-export function parseChips(text: string): ParsedChip[] {
-  const tags = SYNONYMS.filter((entry) => entry.pattern.test(text)).map((entry) => entry.tag)
-  return chipsFrom({ tags, maxPrice: parsePriceMax(text) })
+type Hit = { tag: string; start: number; end: number }
+
+/**
+ * Every vocabulary entry that fires on this sentence, with WHERE it fired — the position is what
+ * the negation pass needs. `allowed`, when given, is the catalog's own tag set: a tag the shop
+ * does not sell is not part of that shop's vocabulary, which is what stops KRACHT (a protein
+ * store) from chipping "a black jacket for the office". Undefined means "no catalog in hand" —
+ * the whole table, as before.
+ */
+function findHits(text: string, allowed?: Set<string>): Hit[] {
+  const hits: Hit[] = []
+  const push = (tag: string, pattern: RegExp): void => {
+    if (allowed !== undefined && !allowed.has(tag)) return
+    const match = pattern.exec(text)
+    if (match !== null) hits.push({ tag, start: match.index, end: match.index + match[0].length })
+  }
+  for (const entry of SYNONYMS) push(entry.tag, entry.pattern)
+  for (const tag of PLAIN_TAGS.split(' ')) {
+    push(tag, new RegExp(`\\b${tag.replace('-', '[- ]?')}\\b`, 'i'))
+  }
+  return hits
+}
+
+/**
+ * Whether a negator sits in the three words immediately BEFORE this match. Before only: English
+ * puts the negation first ("forget black", "without lactose", "instead of navy"), and looking
+ * after it would let "whey protein powder without any of that stuff" cancel the protein shake it
+ * is asking for. `masked` is the sentence with every match blanked out, so the `no` inside "no
+ * sweeteners" cannot also negate the `lactose-free` three words later.
+ */
+function negatedAt(masked: string, hit: Hit): boolean {
+  const words = masked.slice(0, hit.start).split(/\W+/).filter(Boolean).slice(-3)
+  return NEGATORS.test(words.join(' '))
+}
+
+/** What one turn of free text asks for, and what it takes back. */
+export type Intake = {
+  chips: ParsedChip[]
+  /** Chip ids the shopper just cancelled — dropped by `fsm.ts` if they are already in the row. */
+  dropped: string[]
+}
+
+/**
+ * Free text → constraint chips, plus the constraints this turn RETRACTS. Exported cleanly, free
+ * of any agent/FSM state; `catalog` is read-only vocabulary scoping, never retrieval.
+ */
+export function parseIntake(text: string, catalog?: Product[]): Intake {
+  const allowed = catalog === undefined ? undefined : new Set(catalog.flatMap((p) => p.tags))
+  const hits = findHits(text, allowed)
+  let masked = text
+  for (const hit of hits) {
+    masked = masked.slice(0, hit.start) + ' '.repeat(hit.end - hit.start) + masked.slice(hit.end)
+  }
+  const tags: string[] = []
+  const dropped: string[] = []
+  for (const hit of hits) {
+    if (negatedAt(masked, hit)) dropped.push(`chip-${hit.tag}`)
+    else tags.push(hit.tag)
+  }
+  return { chips: chipsFrom({ tags, maxPrice: parsePriceMax(text) }), dropped }
+}
+
+/** The additive half of `parseIntake`, for callers with no chip row to retract from. */
+export function parseChips(text: string, catalog?: Product[]): ParsedChip[] {
+  return parseIntake(text, catalog).chips
 }
 
 /** Which group of MerchantTokens a phrase moves. The config page shows one row per group it
@@ -336,6 +425,70 @@ if (import.meta.main) {
       `phrase '${phrase}' did not reach group '${group}' (got ${JSON.stringify(edits.map((e) => e.group))})`,
     )
   }
+
+  const ids = (chips: ParsedChip[]): string[] => chips.map((c) => c.id)
+  const priceOf = (text: string): number | undefined => {
+    const chip = parseChips(text).find((c) => c.kind.type === 'price-max')
+    return chip?.kind.type === 'price-max' ? chip.kind.max : undefined
+  }
+  for (const [text, expected] of [
+    ['under €30', 30],
+    ['under EUR30', 30],
+    ['under 30 euros', 30],
+    ['max 30', 30],
+    ['below 30', 30],
+    ['up to 30', 30],
+    ['€30 or less', 30],
+    ['1 kg of whey with 24 g protein per serving', undefined],
+    ['a 2 kg tub', undefined],
+  ] as const) {
+    check(priceOf(text) === expected, `price parse of ${JSON.stringify(text)} was ${priceOf(text)}`)
+  }
+
+  // Vocabulary is scoped to the catalog being searched: same sentence, two shops, no leak.
+  const shop = (tags: string[]): Product[] => [
+    {
+      id: 'p',
+      title: 'p',
+      url: '',
+      image: null,
+      price: 1,
+      currency: 'EUR',
+      inStock: true,
+      specs: [],
+      tags,
+    },
+  ]
+  const supplements = shop(['protein-shake', 'lactose-free', 'vegan'])
+  const clothes = shop(['jacket', 'office', 'black', 'navy'])
+  check(
+    parseChips('a black jacket for the office', supplements).length === 0,
+    'clothing vocabulary leaked into a supplement catalog',
+  )
+  check(
+    parseChips('a lactose-free vegan protein shake', clothes).length === 0,
+    'supplement vocabulary leaked into a clothing catalog',
+  )
+
+  // Negation drops the tag it precedes, and only that one.
+  const mindChange = parseIntake('actually forget black, I would rather have navy', clothes)
+  check(
+    ids(mindChange.chips).join(',') === 'chip-navy',
+    `expected only chip-navy, got ${JSON.stringify(ids(mindChange.chips))}`,
+  )
+  check(
+    mindChange.dropped.join(',') === 'chip-black',
+    `expected chip-black dropped, got ${JSON.stringify(mindChange.dropped)}`,
+  )
+  // The opening messages contain negator words INSIDE their own matches; neither may self-cancel.
+  check(
+    parseIntake('a protein shake with no sweeteners, lactose-free').dropped.length === 0,
+    "'no sweeteners' must not negate the 'lactose-free' that follows it",
+  )
+  check(
+    parseIntake('Black, nothing shiny, and ideally under €250').dropped.length === 0,
+    "'nothing shiny' is the matte constraint, not a negation of it",
+  )
 
   check(count > 0, 'self-check made zero assertions')
   console.log(`parse.ts self-check: ${count} assertions passed`)

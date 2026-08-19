@@ -14,10 +14,16 @@ bun run typecheck
 # because that line still starts with the code. Same for an alias clause — `export { x as Y }` and
 # `import { x as y }` match the `as <Capitalised>` arm and contain no cast, and no cast can appear
 # inside one, so dropping the whole line loses no enforcement.
+# The same is true of a NAMESPACE import: `import * as React`, `import type * as React` and
+# `export * as x` all match the `as <Capitalised>` arm, and a cast cannot appear inside one either.
+# Fourteen vendored shadcn components opening with `import type * as React from 'react'` blocked a
+# commit that contained no cast at all, which is the second time this grep has flagged syntax
+# rather than a cast [see the comment lines above]. The arms below now cover `{` and `*`, with an
+# optional `type` between.
 hits=$(git diff --cached --name-only --diff-filter=ACM -z -- '*.ts' '*.tsx' \
        | xargs -0 -r grep -nE '\bas\s+(unknown|any|string|number|boolean|[A-Z][A-Za-z0-9_]*)\b' \
        | grep -vE ':[[:space:]]*(\*|//|/\*)' \
-       | grep -vE ':[[:space:]]*(export|import)[[:space:]]*\{' \
+       | grep -vE ':[[:space:]]*(export|import)[[:space:]]*(type[[:space:]]+)?[{*]' \
        || true)
 if [ -n "$hits" ]; then
   echo "$hits" >&2

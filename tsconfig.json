@@ -9,5 +9,12 @@
     "tools/**/*.ts",
     "e2e/**/*.ts"
   ],
-  "exclude": ["**/node_modules", "**/.next", "**/dist"]
+  "exclude": ["**/node_modules", "**/.next", "**/dist"],
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./apps/platform/ui/*"]
+    }
+  }
 }

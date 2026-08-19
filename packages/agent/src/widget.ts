@@ -299,11 +299,31 @@ export class MxAgent extends HTMLElement {
      */
     if (launcher.width > 0) this.probeX = Math.round(launcher.left + launcher.width / 2)
     const x = this.probeX ?? Math.round(window.innerWidth / 2)
+    /*
+     * A BAR, not a column. Every hit below already contains the bottom edge — that is the point we
+     * probe — so "anchored at the bottom" needs no test of its own; what has to be excluded is the
+     * tall sticky thing that merely reaches down to it. VELDE's PDP wraps its info column in
+     * `position: sticky` and it measures 793px, so the widget lifted the launcher 793px and put it
+     * ABOVE the top of the window at 1280x800 and 1366x768 — two ordinary laptop resolutions on
+     * which the agent was simply unreachable.
+     *
+     * The tallest real bar measured across both storefronts is VELDE's cookie banner at 157px on a
+     * 812px viewport (19%); the columns that broke it are 99%. A quarter of the viewport sits
+     * between the two, and it is the clamp as much as the test: whatever a future storefront pins
+     * down there, the lift returned here cannot exceed 25% of the window, so no page structure can
+     * push the launcher off-screen. Overlapping a bar slightly is recoverable; being off-screen is
+     * not.
+     */
+    const cap = window.innerHeight / 4
     for (const node of document.elementsFromPoint(x, window.innerHeight - 1)) {
       if (node === this || !(node instanceof HTMLElement)) continue
-      const position = window.getComputedStyle(node).position
-      if (position !== 'fixed' && position !== 'sticky') continue
-      return node.getBoundingClientRect().height
+      const style = window.getComputedStyle(node)
+      if (style.position !== 'fixed' && style.position !== 'sticky') continue
+      const height = node.getBoundingClientRect().height
+      // `opacity`, not `display`/`visibility`: neither of those is hit-tested, so they cannot reach
+      // this loop — a banner mid-fade can, and is still laid out at its full height while invisible.
+      if (height > cap || style.opacity === '0') continue
+      return height
     }
     return 0
   }

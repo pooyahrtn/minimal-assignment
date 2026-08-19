@@ -222,7 +222,9 @@ h1 {
 }
 
 .stage-note {
-  margin: var(--mx-space-2) 0 0;
+  /* ABOVE the frame, not below it. Under a full-height storefront the one line that says "this is
+     not your site" sits off-screen, and the merchant reads the frame as their store. */
+  margin: 0 0 var(--mx-space-2);
   color: var(--mx-text-muted);
   font-size: var(--mx-text-sm);
 }

@@ -71,6 +71,45 @@ export function cornerCss(corner: Corner): string {
  * comments, while a comment inside the emitted CSS template literal is shipped bytes on every
  * merchant's page — and H6's gzip cap is the tightest budget in the repo.
  */
+
+/**
+ * THE ELEVATION LADDER — which of the three surface tokens each layer paints, and why the panel
+ * starts one rung up. Here for the same byte reason as the note above.
+ *
+ * `--mx-surface` is not a neutral background: `derive()` emits it verbatim from
+ * `MerchantTokens.surface`, which is the colour the merchant's own storefront paints its page
+ * with. A panel filled with it is byte-identical to the page underneath — measured `#fbfaf8` on
+ * VELDE and `#121212` on KRACHT — so it read as a hole punched in the store rather than a surface
+ * sitting on it. On KRACHT that was literal: the panel's left edge did not exist, and the PDP copy
+ * behind it simply stopped mid-sentence with nothing visible stopping it.
+ *
+ * So the whole widget sits one rung up and uses all three steps as three steps:
+ *
+ * - `--mx-surface-raised` — the panel ground (`.panel`, and the header/chips/composer chrome that
+ *   already painted it; that chrome was the only reason the panel had any body at all before).
+ * - `--mx-surface` — the blocks that sit ON that ground: `.card`/`.compare`/`.nomatch`/`.cta`,
+ *   `.quick-option`, and the `.chip`/`.input` controls that already used it inside the chrome.
+ * - `--mx-surface-sunken` — wells and the agent's own bubble.
+ *
+ * Nothing new is invented and no token is added: the same three steps, re-seated. Two things fall
+ * out of it. The agent bubble stopped being invisible on VELDE, where `sunken` clamps to `#ffffff`
+ * and was sitting on a `#fbfaf8` ground with only `--mx-shadow-1` to outline it. And three focus
+ * rings — `.card-link`, `.cta-link`, `.nomatch-drop`, all of which live inside a block — moved
+ * from `--mx-surface-raised` onto `--mx-surface`, which is the only ground `deriveFocusRing`
+ * actually searches against, so the 3:1 guarantee now covers three rings it did not cover before.
+ * `.quick-option`'s ring moves the other way, off `surface` onto the raised ground; net, the count
+ * of rings landing on their guaranteed ground goes from one to three.
+ *
+ * Body text is unaffected in every case, which is what made the fill free to move at all: all
+ * three surfaces carry the 4.5:1 clamp (`AA_GUARANTEED_PAIRS` pairs both `--mx-text-primary` and
+ * `--mx-text-muted` against `surface`, `raised` AND `sunken`), so no pair in this file changed
+ * from a guaranteed one to an unguaranteed one. H1's `contrast` bench is the check.
+ *
+ * No border on `.panel`, deliberately: `--mx-shadow-2` already IS the brand's chosen edge — a
+ * 0-blur 1px ring on the `hairline` ramp, a real cast shadow on `soft` — and adding a rule would
+ * either double the hairline or bolt one onto a brand that asked for a shadow. Measured both:
+ * a border alone, without the fill step, does not carry KRACHT at all.
+ */
 export function styles(tokens: DerivedTokens): string {
   /*
    * `!important` on the custom properties too, and it is the half the first hardening pass missed.
@@ -253,6 +292,7 @@ export function styles(tokens: DerivedTokens): string {
     font-size: var(--mx-text-sm);
   }
 
+  /* Raised: --mx-surface is the merchant's own page colour. [ladder, JSDoc] */
   .panel {
     display: flex;
     flex-direction: column;
@@ -261,7 +301,7 @@ export function styles(tokens: DerivedTokens): string {
        type scale instead of a number we picked. */
     width: min(92vw, 26em);
     height: min(80vh, 42em);
-    background: var(--mx-surface);
+    background: var(--mx-surface-raised);
     border-radius: var(--mx-radius-lg);
     box-shadow: var(--mx-shadow-2);
   }
@@ -348,7 +388,6 @@ export function styles(tokens: DerivedTokens): string {
     flex-direction: column;
     gap: var(--mx-space-3);
     padding: var(--mx-space-3);
-    background: var(--mx-surface);
   }
   /* A flex item shrinks before its container scrolls. Once the conversation is taller than the
      panel, every block would be squeezed and then clipped by its own overflow — measured at
@@ -439,7 +478,7 @@ export function styles(tokens: DerivedTokens): string {
     padding: var(--mx-space-2) var(--mx-space-3);
     border: 1px solid var(--mx-border);
     border-radius: var(--mx-radius-md);
-    background: var(--mx-surface-raised);
+    background: var(--mx-surface);
     color: var(--mx-text-primary);
     font-family: var(--mx-font-body);
     font-size: var(--mx-text-sm);
@@ -453,10 +492,11 @@ export function styles(tokens: DerivedTokens): string {
     cursor: pointer;
   }
 
+  /* One step DOWN from the panel ground, so a block reads as one. [ladder, JSDoc] */
   .card, .compare, .nomatch, .cta {
     align-self: stretch;
     min-width: 0;
-    background: var(--mx-surface-raised);
+    background: var(--mx-surface);
     border-radius: var(--mx-radius-md);
     box-shadow: var(--mx-shadow-1);
     overflow: hidden;

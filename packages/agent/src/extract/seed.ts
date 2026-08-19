@@ -1,29 +1,48 @@
+import { readabilityReport } from '@maximal/tokens'
 import type { MerchantDraft } from './extract'
 
 /**
- * Cached extractor output for the two demo storefronts, captured by actually running
- * `extractMerchantTokens` against each live store once. The live demo pastes one of these two
- * URLs and must never depend on a network round-trip at that moment, so `extractMerchantTokens`
- * returns this instead of re-fetching when the URL's origin matches. [TASKS T8 DoD box 5]
+ * Cached extractor output for the two demo storefronts, captured once against each live store.
+ * The live demo pastes one of these two URLs and must never depend on a network round-trip at
+ * that moment, so `extractMerchantTokens` returns this instead of re-fetching when the URL's
+ * origin matches. [TASKS T8 DoD box 5]
  *
- * Regenerate by re-running the extractor against the running dev servers and pasting the result
- * back in here — there is no build step that does this automatically, on purpose: it is a
- * snapshot of one crawl, not a live mirror.
+ * The colours are read from the RENDERED page (Playwright, `getComputedStyle`): `surface` is the
+ * computed `background-color` of `<body>`, `accent` the computed `background-color` of the store's
+ * primary action — VELDE's `.button`, KRACHT's `bg-signal` CTA. Everything else is the text
+ * crawler's own output for that URL.
+ *
+ * Why the colours are measured rather than crawled: the crawler reads declared CSS text, and
+ * neither store declares its brand pair in a way `pickAccent`/`pickSurface` can name. VELDE calls
+ * them `--paper`/`--ink` (no `background|surface|bg|base` in either name), so surface fell through
+ * to the #FFFFFF default and accent landed on `--paper` — the page background itself, 1.04:1
+ * against the surface it is painted on. KRACHT is Tailwind utilities with no custom properties at
+ * all, so its BLACK store seeded a white surface. Both tripped the config page's accent-on-surface
+ * guard, which then withholds the embed snippet: the demo opened on a self-inflicted alarm.
+ * Fixing the crawler's colour heuristics is a separate job; these entries are what the stores
+ * actually paint.
+ *
+ * Regenerate by re-measuring against the running dev servers and pasting the result back in here —
+ * there is no build step that does this automatically, on purpose: it is a snapshot of one crawl,
+ * not a live mirror.
  */
 export const SEED_BY_ORIGIN: Record<string, MerchantDraft> = {
   'http://localhost:4001': {
     tokens: {
-      accent: '#FBFAF8',
-      surface: '#FFFFFF',
+      // #FBFAF8 --paper (body background) · #1C1B19 --ink (.button fill) — measured 16.50:1.
+      accent: '#1C1B19',
+      surface: '#FBFAF8',
       fontDisplay: {
+        // Empty href on purpose: the page paints in Helvetica Neue, which it does NOT load from
+        // Google — the minted URL 404s on every page view. See `fontChoiceFor`.
         family: 'Helvetica Neue',
         weight: 600,
-        href: 'https://fonts.googleapis.com/css2?family=Helvetica+Neue:wght@400;600&display=swap',
+        href: '',
       },
       fontBody: {
         family: 'Helvetica Neue',
         weight: 400,
-        href: 'https://fonts.googleapis.com/css2?family=Helvetica+Neue:wght@400;400&display=swap',
+        href: '',
       },
       scale: 'regular',
       radius: 'md',
@@ -38,8 +57,9 @@ export const SEED_BY_ORIGIN: Record<string, MerchantDraft> = {
   },
   'http://localhost:4002': {
     tokens: {
+      // #121212 body background · #C6F441 the `bg-signal` CTA fill — measured 14.65:1.
       accent: '#C6F441',
-      surface: '#FFFFFF',
+      surface: '#121212',
       fontDisplay: {
         family: 'Inter',
         weight: 600,
@@ -61,4 +81,20 @@ export const SEED_BY_ORIGIN: Record<string, MerchantDraft> = {
     ok: true,
     note: 'Seeded from http://localhost:4002 — cached so the demo never waits on a network fetch.',
   },
+}
+
+/**
+ * Self-check: `bun packages/agent/src/extract/seed.ts`. The one thing a wrong pair here costs is
+ * the embed snippet — the config page refuses to hand one over while accent-on-surface is under
+ * 3:1 — so that is what this asserts, on the same `readabilityReport` row the page guards on.
+ * Import-time cost is zero; this block only runs when the file is executed directly.
+ */
+if (import.meta.main) {
+  for (const [origin, draft] of Object.entries(SEED_BY_ORIGIN)) {
+    const row = readabilityReport(draft.tokens).accentOnSurface
+    const line = `${origin} — accent ${draft.tokens.accent} on surface ${draft.tokens.surface}: ${row.ratio.toFixed(2)}:1 (floor ${row.floor})`
+    if (!row.meets)
+      throw new Error(`${line} — BELOW the floor; the config page withholds the snippet`)
+    console.log(`ok ${line}`)
+  }
 }

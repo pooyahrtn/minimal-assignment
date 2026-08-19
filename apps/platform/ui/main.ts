@@ -77,9 +77,13 @@ let liveKey: string | null = null
 /** Edits made since the last successful publish, so the button can say so rather than lie. */
 let dirtySincePublish = false
 
+/** The framed storefront is a stand-in, not the merchant's own site. Read by the ready handler,
+ *  which is the only place the label is written. */
+let previewForeign = false
+
 const preview = new Preview(frame, () => {
   previewDot.dataset.state = 'live'
-  previewLabel.textContent = 'Live preview'
+  previewLabel.textContent = previewForeign ? 'Live preview — snapshot' : 'Live preview'
   // The detected draft has to reach the widget the moment it can hear us, or "Here's what we
   // found" sits next to a preview still wearing the storefront's own committed brand.
   pushPreview()
@@ -203,16 +207,30 @@ function storefrontFor(url: string | null): { origin: string; foreign: boolean }
       if (url.startsWith(origin)) return { origin, foreign: false }
     }
   }
-  // A store we do not host cannot be framed reliably — most shops send X-Frame-Options, and a
-  // blank pane is a worse answer than an honest one. Preview over a storefront we DO control and
-  // say so, rather than pretending the frame is theirs. [TASKS §0 #4 allows a fallback here]
-  return { origin: STOREFRONTS.velde ?? '', foreign: true }
+  // A store we do not host cannot be framed DIRECTLY — gsmarena answers `frame-ancestors 'self'`
+  // and most shops send X-Frame-Options, so their own origin comes back blank. `/v1/snapshot`
+  // re-serves their page from ours, which is a document we are allowed to frame; it never fails
+  // into a blank pane, so there is no second fallback to keep here. Manual entry has no URL to
+  // snapshot, and only that case still borrows a storefront of ours.
+  if (url === null) return { origin: STOREFRONTS.velde ?? '', foreign: true }
+  return { origin: `/v1/snapshot?url=${encodeURIComponent(url)}`, foreign: true }
 }
 
 function openReview(url: string | null): void {
   // The store being configured is the only state the merchant can see, so it belongs in the URL:
   // a refresh — or a link — replays the selection instead of dumping them back on screen one.
-  history.replaceState(null, '', `?${new URLSearchParams({ store: url ?? 'manual' })}`)
+  //
+  // PUSH, not replace: screen one and screen two are two places, and Back has to be able to
+  // return to the first. `replaceState` collapsed them into one entry, so Back left the site
+  // entirely and a merchant who mistyped their store had no way home short of editing the URL.
+  //
+  // The guard is what makes the push safe to call from all three entry points. `openReview` is
+  // reached on first submit (search differs — push), on load with `?store=` already set
+  // (search matches — no push, or the merchant would need two Backs to leave), and from
+  // `popstate` replaying an entry the browser has already moved to (search matches — no push, or
+  // every Back would mint the entry it was trying to leave and the button would appear dead).
+  const search = `?${new URLSearchParams({ store: url ?? 'manual' })}`
+  if (window.location.search !== search) history.pushState(null, '', search)
   editor = new Editor(draft.tokens)
   editor.onChange(() => {
     render()
@@ -222,8 +240,11 @@ function openReview(url: string | null): void {
   reviewScreen.hidden = false
 
   const target = storefrontFor(url)
+  previewForeign = target.foreign
   stageNote.textContent = target.foreign
-    ? 'We cannot frame a site we do not host, so this is your brand on a storefront we do — the widget and the tokens are the real ones.'
+    ? url === null
+      ? 'No store URL to frame, so this is your brand on a storefront of ours — the widget and the tokens are the real ones.'
+      : 'Your own page, re-served by us so it can be framed: your markup and styles, with your scripts off and links inert. The assistant on it is live.'
     : 'Your storefront, live. The assistant on it is the one your snippet installs.'
   preview.load(target.origin)
   render()
@@ -704,9 +725,52 @@ widthToggle.addEventListener('click', () => {
 // Replayed through the existing handlers rather than a second entry path into `openReview`, so a
 // hand-edited `?store=` still meets the field's own validation and the merchant can see what is
 // being read. Extraction is deterministic for a given URL, so this lands on the same draft.
-const resume = new URLSearchParams(window.location.search).get('store')
-if (resume === 'manual') need('skip-extract', HTMLButtonElement).click()
-else if (resume) {
-  urlInput.value = resume
-  extractForm.requestSubmit()
+/** Replay a `?store=` value through the existing handlers rather than a second entry path into
+ *  `openReview`, so a hand-edited URL still meets the field's own validation and the merchant can
+ *  see what is being read. Extraction is deterministic for a given URL, so this lands on the same
+ *  draft it did the first time — which is what makes Back and Forward cheap. */
+function showStore(store: string): void {
+  if (store === 'manual') need('skip-extract', HTMLButtonElement).click()
+  else {
+    urlInput.value = store
+    extractForm.requestSubmit()
+  }
 }
+
+/** Back out of the editor to screen one. Everything reset here is scoped to the store being
+ *  configured, and would otherwise describe the PREVIOUS store on the next one: a snippet for a
+ *  shop key that is no longer the one on screen, a font the merchant pasted for a different
+ *  brand, and an accent warning they acknowledged for a colour they have since left. */
+function showPaste(): void {
+  reviewScreen.hidden = true
+  pasteScreen.hidden = false
+  editor = null
+  published = null
+  liveKey = null
+  fontSrc = ''
+  fontHref = null
+  dirtySincePublish = false
+  acknowledgedPair = null
+  lastEdits = []
+  unrecognised = false
+  // The preview iframe is deliberately LEFT where it is. `hidden` does not stop an iframe, so
+  // pointing it at `about:blank` here is tempting — but assigning `iframe.src` writes an entry
+  // into the parent's joint session history, which silently destroyed the Forward entry: Back
+  // worked, Forward did nothing, and `popstate` never fired again. A storefront idling behind a
+  // hidden screen costs nothing; `openReview` re-points it on the way back in.
+  urlInput.focus()
+}
+
+// Screen one and screen two are two history entries [openReview], so Back and Forward are just a
+// question of which entry the browser moved to.
+// An empty `?store=` counts as absent, not as a store called "": it fails the field's own
+// validation, so replaying it would submit a form that cannot pass and leave the merchant on a
+// screen that never changes.
+window.addEventListener('popstate', () => {
+  const store = new URLSearchParams(window.location.search).get('store')
+  if (store) showStore(store)
+  else showPaste()
+})
+
+const resume = new URLSearchParams(window.location.search).get('store')
+if (resume) showStore(resume)

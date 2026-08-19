@@ -12,7 +12,11 @@
 
 import { isDeepStrictEqual } from 'node:util'
 import { isConfigResponse, isRecord } from '../../packages/agent/src/config'
-import { extractMerchantTokens } from '../../packages/agent/src/extract/extract'
+import {
+  FETCH_TIMEOUT_MS,
+  USER_AGENT,
+  extractMerchantTokens,
+} from '../../packages/agent/src/extract/extract'
 import type { MerchantDraft } from '../../packages/agent/src/extract/extract'
 import { SEED_BY_ORIGIN } from '../../packages/agent/src/extract/seed'
 
@@ -427,6 +431,121 @@ async function handleExtract(request: Request, url: URL): Promise<Response> {
   }
 }
 
+const MAX_SNAPSHOT_BYTES = 4 * 1024 * 1024
+
+/**
+ * `GET /v1/snapshot?url=` — the merchant's OWN page, framed.
+ *
+ * A direct iframe of a real shop is not available to us: gsmarena answers
+ * `content-security-policy: frame-ancestors 'self'`, most shops send X-Frame-Options, and the
+ * frame comes back blank. `frame-ancestors` constrains who may embed THEIR origin, so the way
+ * round it is not to embed their origin — we fetch the HTML server-side and re-serve it from
+ * ours, which is a document the config page is allowed to frame.
+ *
+ * Deliberately a snapshot, not a proxy. Their scripts are stripped and links are inert, so this
+ * is their markup, their stylesheets, their images, and none of their behaviour. That is the
+ * whole job here: the merchant is judging whether the widget looks right on their page, not
+ * shopping on it. A real proxy would have to rewrite every same-origin request, carry cookies it
+ * has no business carrying, and would still break on anything client-rendered.
+ *
+ * Never fails into a blank pane: a bot wall, a non-HTML answer or a timeout all end at
+ * `snapshotFallback`, which is a plain page carrying the same widget, so the preview keeps working
+ * and the merchant is told why it does not look like their store.
+ */
+function snapshotFallback(origin: string, target: string, why: string): string {
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Preview</title>
+<style>body{margin:0;min-height:100vh;display:grid;place-items:center;font:400 15px/1.5 system-ui,
+sans-serif;color:#555;background:#fafafa;text-align:center;padding:24px}p{max-width:34ch}</style>
+</head><body><p>We could not load <strong>${escapeHtml(target)}</strong> to preview against — ${escapeHtml(why)}.
+The assistant below is still yours, with your brand on it.</p>
+<script src="${origin}/v1/agent.js" data-shop="default" async></script></body></html>`
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`)
+}
+
+/**
+ * Their markup, neutralised. `<base>` is what keeps the relative `/img/logo.png` on a thousand
+ * shops resolving against THEIR origin rather than ours, and it goes in first so a `<base>` of
+ * their own further down the head loses to it. The CSP meta is dropped because theirs would
+ * otherwise refuse our `/v1/agent.js`; the header-borne one is already gone by construction, since
+ * we are the origin serving this document.
+ *
+ * `pointer-events` cannot reach the widget: it is a `<mx-agent>` with a shadow root, and a
+ * light-DOM selector does not cross that boundary. The merchant can therefore click the assistant
+ * and nothing else, which is the correct set of things to be able to click in a preview.
+ */
+function rewriteSnapshot(html: string, target: URL, origin: string): string {
+  const stripped = html
+    .replace(/<script\b[\s\S]*?<\/script\s*>/gi, '')
+    .replace(/<meta\b[^>]*http-equiv\s*=\s*["']?content-security-policy[^>]*>/gi, '')
+  const head = `<base href="${target.href.replace(/"/g, '%22')}"><style>a,button,input,select,textarea,form{pointer-events:none}</style>`
+  const withBase = /<head[^>]*>/i.test(stripped)
+    ? stripped.replace(/<head[^>]*>/i, (tag) => `${tag}${head}`)
+    : `${head}${stripped}`
+  // ABSOLUTE, and that is the whole point of passing `origin` in. The `<base>` above is
+  // document-wide, so a root-relative `/v1/agent.js` resolves against THEIR origin and 404s — the
+  // page then renders perfectly with no assistant on it, which is the one failure this route
+  // exists to avoid. It is also what the widget resolves its config and chat endpoints against.
+  const widget = `<script src="${origin}/v1/agent.js" data-shop="default" async></script>`
+  return /<\/body\s*>/i.test(withBase)
+    ? withBase.replace(/<\/body\s*>/i, `${widget}</body>`)
+    : `${withBase}${widget}`
+}
+
+async function handleSnapshot(_request: Request, url: URL): Promise<Response> {
+  const raw = url.searchParams.get('url') ?? ''
+  const headers = {
+    'content-type': 'text/html; charset=utf-8',
+    // Only OUR config page may frame this. Without it we would have re-served someone's shop as a
+    // document anyone can embed, which is the protection they set `frame-ancestors` for.
+    'content-security-policy': "frame-ancestors 'self'",
+    'cache-control': 'no-store',
+  }
+  const fail = (why: string): Response =>
+    new Response(snapshotFallback(url.origin, raw, why), { headers })
+
+  let target: URL
+  try {
+    target = new URL(raw)
+  } catch {
+    return fail('that is not a valid URL')
+  }
+  // The same SSRF guard `/v1/extract` runs, for the same reason: this route also fetches whatever
+  // a caller pastes. It is the more dangerous of the two, because this one hands the BODY back.
+  if (!isFetchableUrl(target)) return fail('it is not a public http(s) address')
+
+  try {
+    const response = await fetch(target, {
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      headers: { 'user-agent': USER_AGENT },
+      redirect: 'follow',
+    })
+    if (!response.ok) return fail(`their server answered ${response.status}`)
+    // Re-check where we LANDED, not just where we knocked. `isFetchableUrl` above validates the
+    // pasted URL, but `redirect: 'follow'` means a public host can bounce us anywhere: a 302 from
+    // `attacker.example` to `http://10.0.0.5/admin` passes the first guard, and this route hands
+    // the BODY back to the caller, so that is an exfiltration primitive and not just a probe.
+    // Guarding the landing URL is what makes the first guard mean anything.
+    if (!isFetchableUrl(new URL(response.url))) {
+      return fail('it redirected somewhere we are not allowed to follow')
+    }
+    if (!(response.headers.get('content-type') ?? '').includes('text/html')) {
+      return fail('that address is not an HTML page')
+    }
+    const html = (await response.text()).slice(0, MAX_SNAPSHOT_BYTES)
+    // `response.url`, not `target`: a shop that redirects `example.com` to `www.example.com/en`
+    // has to have its relative assets resolved against where it LANDED, not where we knocked.
+    return new Response(rewriteSnapshot(html, new URL(response.url), url.origin), { headers })
+  } catch (error) {
+    console.error('platform: /v1/snapshot could not fetch', raw, error)
+    return fail('their server did not answer in time')
+  }
+}
+
 const MAX_CONFIG_BODY_BYTES = 512 * 1024
 const SHOP_KEY_RE = /^[a-z0-9-]{6,}$/
 // Never overwritten by a generated key, even on the (astronomically unlikely) chance one matches —
@@ -666,6 +785,7 @@ const ROUTES: { method: string; match: (pathname: string) => boolean; handle: Ro
   { method: 'POST', match: (p) => p === '/v1/config', handle: handleConfigPost },
   { method: 'POST', match: (p) => p === '/v1/chat', handle: handleChat },
   { method: 'POST', match: (p) => p === '/v1/extract', handle: handleExtract },
+  { method: 'GET', match: (p) => p === '/v1/snapshot', handle: handleSnapshot },
   {
     method: 'GET',
     match: (p) => p === '/v1/font.css',
@@ -717,6 +837,7 @@ if (import.meta.main) {
   console.log(`  GET  /v1/config/{${[...SHOPS].join(',')}} -> ${CONFIG_DIR}/*.json`)
   console.log(`  POST /v1/config          -> mints a shop key, writes ${CONFIG_DIR}/<key>.json`)
   console.log(`  POST /v1/extract         -> runs the brand extractor on a merchant URL`)
+  console.log(`  GET  /v1/snapshot        -> re-serves a merchant page so it can be framed`)
   console.log(
     `  POST /v1/chat            -> LLM intake, ${process.env.MAXIMAL_LLM === '1' ? `ON (${process.env.MAXIMAL_MODEL ?? 'claude-opus-5'})` : 'OFF — set MAXIMAL_LLM=1 to enable'}`,
   )

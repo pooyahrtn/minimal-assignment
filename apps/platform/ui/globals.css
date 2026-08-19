@@ -1,0 +1,112 @@
+/*
+ * The configuration page's own chrome — shadcn/ui component anatomy, painted by OUR token engine.
+ *
+ * The rule this file exists to keep [TASKS.md §2, T7 DoD box 6]: every colour, radius and spacing
+ * step on this page is a `--mx-*` custom property that `main.tsx` writes onto `:root` from
+ * `derive(MAXIMAL)` — the same engine, the same clamp and the same contrast guarantee the widget
+ * gets. The page about the token system is built by the token system.
+ *
+ * shadcn normally ships its own palette. We do not take it. `@theme inline` is the whole trick:
+ * `inline` makes Tailwind emit the variable REFERENCE into each utility rather than copying a
+ * value, so `bg-background` compiles to `background-color: var(--mx-surface)` and still resolves
+ * at runtime — which means the engine keeps painting the page and the merchant's own accent keeps
+ * driving the preview, while the components are real shadcn.
+ *
+ * What is NOT a token, listed honestly, unchanged from the hand-rolled version this replaced:
+ * page geometry the widget's five-step ramp has no opinion about (rail width, the 375px phone
+ * frame, the topbar height), `999px` on fully-round dots, and the two multiplied headline sizes.
+ * A derived base times an invented multiplier is still an invented size; the widget's ramp tops
+ * out at panel scale and this page has a headline, which the ramp was never asked about.
+ */
+
+@import 'tailwindcss';
+
+/* Tailwind v4 auto-detects sources by walking up from this file and honouring .gitignore. This
+   page is not laid out like a framework app — the components live beside this stylesheet, not
+   under a detected app/ or src/ — so the scan roots are named explicitly. Without this the build
+   still SUCCEEDS and silently emits a stylesheet with no utilities in it, which is the failure
+   mode worth spending two lines to make impossible. `tools/build-platform.ts` asserts the output
+   is non-trivial for the same reason. */
+@source './';
+@source '../../../packages/tokens/src';
+
+@theme inline {
+  /* --- shadcn's surface roles, mapped onto the engine's three-step surface ramp ------------ */
+  --color-background: var(--mx-surface-sunken);
+  --color-foreground: var(--mx-text-primary);
+
+  --color-card: var(--mx-surface);
+  --color-card-foreground: var(--mx-text-primary);
+
+  --color-popover: var(--mx-surface-raised);
+  --color-popover-foreground: var(--mx-text-primary);
+
+  /* The merchant's accent IS the primary. `--mx-text-on-accent` is the engine's black/white flip,
+     so primary-foreground is guaranteed legible on whatever the merchant picked. */
+  --color-primary: var(--mx-accent);
+  --color-primary-foreground: var(--mx-text-on-accent);
+
+  --color-secondary: var(--mx-surface-raised);
+  --color-secondary-foreground: var(--mx-text-primary);
+
+  --color-muted: var(--mx-surface-raised);
+  --color-muted-foreground: var(--mx-text-muted);
+
+  --color-accent: var(--mx-surface-raised);
+  --color-accent-foreground: var(--mx-text-primary);
+
+  --color-border: var(--mx-border);
+  --color-input: var(--mx-border);
+  --color-ring: var(--mx-focus-ring);
+
+  /* Destructive is the one role the engine has no token for: it is a fixed semantic, not part of
+     the merchant's brand, and clamping it to their accent would make a delete button look safe. */
+  --color-destructive: oklch(0.577 0.245 27.325);
+  --color-destructive-foreground: oklch(0.985 0 0);
+
+  /* --- type ------------------------------------------------------------------------------- */
+  --font-sans: var(--mx-font-body);
+  --font-display: var(--mx-font-display);
+
+  --text-xs: var(--mx-text-xs);
+  --text-sm: var(--mx-text-sm);
+  --text-base: var(--mx-text-md);
+  --text-lg: var(--mx-text-lg);
+
+  /* --- radius ----------------------------------------------------------------------------- */
+  --radius-sm: var(--mx-radius-sm);
+  --radius-md: var(--mx-radius-md);
+  --radius-lg: var(--mx-radius-lg);
+  --radius-xl: var(--mx-radius-lg);
+}
+
+:root {
+  color-scheme: light;
+  /* Page geometry the token ramp has no opinion about. Sized to the longest control label plus
+     its value, not to a round number. */
+  --rail-w: 27rem;
+  --phone-w: 375px;
+  --topbar-h: 4.5rem;
+  --hairline: 1px;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    margin: 0;
+    font-size: var(--mx-text-md);
+    line-height: var(--mx-line-height);
+  }
+
+  /* The engine emits label casing as tokens so a brand can ask for tracked caps. shadcn's Label
+     has no opinion about case, so the opinion stays here rather than in every component. */
+  .label-cased {
+    text-transform: var(--mx-label-transform);
+    letter-spacing: var(--mx-label-tracking);
+  }
+}

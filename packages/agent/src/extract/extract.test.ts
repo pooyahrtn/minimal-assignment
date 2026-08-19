@@ -19,6 +19,16 @@ const server = Bun.serve({
     '/favicon.png': () => new Response('', { headers: { 'content-type': 'image/png' } }),
     '/forbidden': () => new Response('nope', { status: 403 }),
     '/api': () => new Response('{}', { headers: { 'content-type': 'application/json' } }),
+    // Same family, declared the two ways that matter: `/ok` self-hosts "Acme Sans" and `/google`
+    // buys it from Google. The href is the only thing that may differ between them.
+    '/google': () =>
+      new Response(
+        `<!doctype html><html><head><style>
+          @import url(https://fonts.googleapis.com/css2?family=Acme+Sans:wght@400;600&display=swap);
+          body{font-family:"Acme Sans",sans-serif}
+        </style></head><body>hello</body></html>`,
+        { headers: { 'content-type': 'text/html' } },
+      ),
     '/no-signal': () =>
       new Response('<!doctype html><html><body>plain</body></html>', {
         headers: { 'content-type': 'text/html' },
@@ -39,7 +49,20 @@ describe('extractMerchantTokens: never throws, always returns a usable draft', (
     expect(draft.tokens.surface).toBe('#F5F5F5')
     expect(draft.tokens.radius).toBe('md') // 8px, the more common of the two declared radii
     expect(draft.tokens.fontDisplay.family).toBe('Acme Sans')
+    // Nothing on the page says this face comes from Google, so no stylesheet is minted for it —
+    // a guessed `?family=Acme+Sans` would 404 on every page view. The family alone is the answer:
+    // the host page already resolves it.
+    expect(draft.tokens.fontDisplay.href).toBe('')
+    expect(draft.tokens.fontBody.href).toBe('')
     expect(draft.logo).toBe(`${server.url}favicon.png`)
+  })
+
+  test('a family the page itself loads from Google Fonts DOES get a stylesheet minted', async () => {
+    const draft = await extractMerchantTokens(`${server.url}google`)
+    expect(draft.tokens.fontDisplay.family).toBe('Acme Sans')
+    expect(draft.tokens.fontDisplay.href).toBe(
+      'https://fonts.googleapis.com/css2?family=Acme+Sans:wght@400;600&display=swap',
+    )
   })
 
   test('403 degrades to a usable default draft with an honest note, never a throw', async () => {
