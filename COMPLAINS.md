@@ -257,3 +257,48 @@ the live storefronts and fixed in the widget.
 - `tools/deploy.sh` sets `PLATFORM_API` but never `ANTHROPIC_API_KEY`, so the deployed demo runs the fallback for this whole feature while every local gate is green — harm: none yet, but T10's rehearsal runs on the deployed links, so the flagship live-LLM moment does not fire on the link that gets rehearsed; risk: nothing in T13's DoD or QA box tests the deployed host, so the gap is invisible to every gate that exists.
 - The "thinking" indicator requirement lived in T9's prose ("it is T13's to fill"), not in T13's Scope or DoD, so the plan dropped it and review had to reinstate it — harm: a review round spent recovering an obligation filed under another task's heading; risk: recurs for any task whose real obligations are scattered into an earlier task's prose.
 - `viewport-375` failed twice mid-session on a chromium launch timeout under machine load and passes on a quiet machine, on this tree and on HEAD alike — harm: a HARD gate was red for reasons unrelated to the diff, and proving that cost a full extra bench run in a throwaway worktree; risk: a flaky HARD check trains everyone to explain away red gates, which is the exact habit that lets a real failure through.
+
+---
+
+## Close-out — README, the live model in production, T15 box 3 — 2026-08-19
+
+**What changed:** `README.md` written (the repo had none), `tools/deploy.sh` wired to carry T13's
+key from the deploying shell, the key and `MAXIMAL_LLM=1` set on `maximal-platform`, production
+redeployed, and T15's cross-origin box closed in a real browser. T10's box 5 tiebreak turned out
+to be unnecessary once the scorecard covered every landed task.
+
+**Complaints**
+- I promoted a **two-hour-old deployment to production** and every function route on
+  `maximal.releashed.io` answered 500 for about three minutes — `POST /v1/extract`, `/v1/font.css`,
+  `POST /v1/chat`, the whole dynamic half. Cause: I ran `vercel ls --prod | tail`, which cut off the
+  newest rows, and took a row from the middle of what survived as "current production". The build I
+  promoted predated `api/platform.ts`'s absolute-URL guard, so it died in `new URL('/v1/chat')` —
+  harm: a live outage on the one artifact the brief lists first, self-inflicted, during a task whose
+  only deploy-related job was an env var; risk: `tail` on a list whose ordering carries the meaning
+  is the same class of error as reading a payload's page instead of the payload [T15 §], and nothing
+  in `deploy.sh` or any doc says "never redeploy by picking a URL out of `ls`".
+- **A 503 that was correct behaviour cost the most time in this session.** Chasing "the model is
+  off in production" I probed the deployed endpoint with a sentence I invented — *vanilla protein
+  shake, no sugar, under 20 euros, vegan* — got a 503, and worked backwards through the deployment,
+  the bundle, the key and the SDK before finding that the model had answered correctly and the
+  `readingIsUseless` guard had discarded it, exactly as designed, because no single chip rescues
+  that set. Harm: ~20 minutes and three probe scripts spent on a non-defect; risk: the endpoint's
+  five failure branches (unknown shop, config unreadable, malformed config, model failure, useless
+  reading) are **all the same bodiless 503 with no discriminating header** except `off`, so from
+  outside the deployment they are indistinguishable — which means the next person to debug this
+  starts where I did. `x-mx-chat: off` proves the discrimination is cheap and already half-built.
+- The check that would have caught the outage in seconds — `bash tools/deploy.sh verify` — exists,
+  is fast, is green, and I ran it **after** the browser work rather than immediately after the
+  redeploy — harm: the outage was found by a curl I ran for another reason; risk: a verify step that
+  is not wired into the thing it verifies gets run when someone remembers, which is the same failure
+  `deploy.sh` was written to end.
+- `bun bench` produced a report I could not commit: the run measured another desk's uncommitted
+  `boot.ts`, so its byte count belongs to no tree in git — harm: the gate ran, was green, and its
+  artifact had to be thrown away; risk: PROGRESS lesson 10 again, one lane down — a benchmark, not a
+  doc, is now the thing a shared tree makes uncommittable.
+- The first `bun bench` invocation sat for **30 minutes at 0.1% CPU with zero output** because it was
+  started as a background command whose stdout pipe nobody drained; re-run with output redirected to
+  a file it finished in about two minutes — harm: half an hour of wall clock on a suite that takes
+  two, and I twice reported it as "still running, it drives real browsers", which was wrong and
+  sounded reasonable; risk: `pgrep -f` matching the waiter's own command line then hid the finish,
+  so the diagnosis was wrong in both directions at once.

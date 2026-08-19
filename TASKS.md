@@ -746,8 +746,15 @@ T6 pinned locally.
       now walks the config page and round-trips mint → read back → install poll, because "three
       live URLs" was read as "the widget mounts" and the platform's own home page 404'd for hours
       under a green check.
-- [ ] **T6's cross-origin box closes for real here**: config fetched from a genuinely different
-      origin, zero CORS errors in a fresh browser console.
+- [x] **T6's cross-origin box closes for real here**: config fetched from a genuinely different
+      origin, zero CORS errors in a fresh browser console. Verified 19 Aug in a real Chrome with
+      console tracking armed BEFORE the load (the first read returned nothing because tracking
+      starts at first call — a reload is what makes the result mean anything): `kracht.` and
+      `velde.releashed.io` each produce **zero console messages of any kind** across load, widget
+      mount, config fetch and a full cross-origin `POST /v1/chat` turn. Preflight checked
+      separately: `OPTIONS /v1/chat` → 204 with `allow-headers: content-type`, which is the header
+      T13 had to add — without it a JSON POST is not CORS-simple and every turn would have fallen
+      back silently with the suite green.
 - [x] The deploy changed **no line under `apps/`** — `git log -p <range> -- apps/` is empty, because
       the §0 #11 widening made every origin an env var. Emptiness proves nothing on its own, so the
       box that carries the weight is `deploy.sh`'s: the live HTML, sitemap, `robots.txt` and every
