@@ -44,6 +44,7 @@ section is the contract.
 | `TASKS.md` | The task graph, each task's scope, DoD and QA box, the cut order. |
 | `BENCHMARKS.md` | The HARD gates and the SOFT agent scorecard. Gold files are human-owned. |
 | `DECISIONS-LOG.md` | This rule's output. Append-only. |
+| `COMPETITORS.md` | T14's matrix, the three buckets, and the ordered demo list T10 rehearses against. |
 | `PROGRESS.md` | Estimate vs actual per task, and what to re-baseline. |
 
 `.claude/skills/pickup/SKILL.md` is the process for picking up a task.
@@ -55,3 +56,11 @@ section is the contract.
   [`ENGINEERING.md` §3].
 - **Never edit a gold file or a threshold to go green.** If you believe one is wrong, say so in
   your hand-off and stop [`BENCHMARKS.md` §4.1].
+
+## Keep the language simple and high level
+
+Explain things for whoever has to live with them, not for the implementer. Lead with what
+they will see, not with the mechanism.
+
+`@font-face` does not resolve inside a shadow root → *"the widget's text shows in the system
+font for a blink on first load, then swaps to yours."*

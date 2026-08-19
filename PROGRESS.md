@@ -20,6 +20,8 @@ Estimates are in two units because nobody types here: **A** = agent wall-clock,
 | T8 ingest + extractor | 45m | **19.4m** | 30m | pending | 0 | Landing gate green first time. Two extractor bugs surfaced only by pointing it at real Dutch sites. |
 | Brain↔shell wire | not estimated | **15m** | — | pending | 0 | Not a task in TASKS.md at all — T3 and T4 were parallel-safe precisely because nothing joined them, and nothing was scheduled to. |
 | Storefront fix pass | not estimated | **32m** | — | pending | 0 | Merchandising + 2 layout defects + photo mapping, all forced before the freeze. |
+| T14 competitor scan | 40m | **~12m** | 30m | pending | 0 | 12 products, 3 families. Two findings moved buckets: URL brand-ingest is table stakes (Intercom has shipped it since Dec 2023), and the no-custom-CSS decision went from taste to evidence (Rebuy's own docs warn merchants to hand-scope selectors). Only 1 of 12 rows was opened directly rather than read through a search summary — the DoD's `unverified` column is doing real work here. |
+| T14 fan-out (14 agents) | 40m | **~14m wall / 1.11M tokens / 463 tool calls** | 30m | pending | 1 | Pilot on one product first, then fan out — the pilot paid for itself: it exposed three missing schema fields (preview target, merchant complaints, vocabulary count) that would have cost a full re-run at 13x the tokens. One script parse error (backticks inside a template literal). Three of five attacks on our own design landed. |
 
 ## Standing lessons
 

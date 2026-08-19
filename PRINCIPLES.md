@@ -11,13 +11,11 @@
 | **KRACHT** | merchant B — Dutch-market sports nutrition, English copy | `kracht.releashed.io` |
 
 **The two merchants are archetypes of Minimal's actual customers, not invented from nothing.**
-Minimal AI (YC S25, Amsterdam) publishes its client list: XXL Nutrition, Cloudpillo, Mobiel NL,
-Matt Sleeps, Girav, Boldking, Upfront, ETQ, Volero, Proforto, Hang Eleven, Boombrush, Plnktn —
-almost entirely Dutch, and its integration list is the Dutch stack end to end (Sendcloud, PostNL,
-MyParcel, Mollie, Picqer, Monta, Bol.com, Lightspeed, Returnless). VELDE is modelled on ETQ
-Amsterdam, KRACHT on XXL Nutrition. Names, logos and copy are ours — we model the *category and
-its conventions*, never the brand itself. Cloning a real client's identity would be both
-impersonation and a worse demo than showing the agent adapt to a category it has never seen.
+Minimal AI (YC S25, Amsterdam) publishes a client list that is almost entirely Dutch — ETQ, XXL
+Nutrition, Girav, Boldking, Proforto — on the Dutch stack end to end (Mollie, Sendcloud, PostNL,
+Lightspeed). VELDE is modelled on ETQ, KRACHT on XXL Nutrition. Names, logos and copy are ours:
+we model the *category*, never the brand. Cloning a real client would be impersonation, and a
+worse demo than showing the agent adapt to a category it has never seen.
 
 Three Vercel projects on one apex. The subdomains are genuinely separate origins, so the config fetch is a real cross-origin request with real CORS — the widget must never assume same-site anything.
 
@@ -32,8 +30,17 @@ In priority order:
 3. **375px.** Not a responsive afterthought — the default development viewport.
 4. **One moment where things do not go smoothly**, handled as product design rather than as an error state.
 5. **DECISIONS.md** — one page, written honestly, including the weakest part.
+6. **Knowing what the alternatives already do.** Not on the brief's list — this one is for the
+   room. *"How is this different from what's already out there?"* gets asked in the demo, and a
+   build that cannot answer it decided everything in a vacuum. Scoped in `TASKS.md` T14.
 
-Not graded: market research, backend sophistication, a real LLM, test coverage, auth.
+Not graded: backend sophistication, a real LLM, test coverage, auth.
+
+~~⊗~~ *a real LLM is still ungraded, but it is now being built anyway — Pooya asked for it as a
+demo affordance, not for marks. See §2 and `TASKS.md` T13.*
+
+~~⊗~~ *"market research" was on that not-graded list until Pooya struck it — the brief does not
+ask for it, the presentation does. See `DECISIONS-LOG.md` → Scope.*
 
 ---
 
@@ -43,7 +50,12 @@ Not graded: market research, backend sophistication, a real LLM, test coverage, 
 - **The token list is a closed contract.** No component invents a colour, radius, spacing value, or font size. If a token is missing, that is a discussion, not a local `#hex`.
 - **The storefronts are frozen after integration.** See §4.
 - **Constrained, not infinite.** The merchant chooses few things; the system derives the rest and clamps them so no configuration can render broken or illegible. Infinite customisation is the failure mode, not the goal.
-- **No live LLM at runtime.** The agent is deterministic. This build gets demoed live in a room.
+- ~~⊗~~ ~~**No live LLM at runtime.** The agent is deterministic.~~ **Reversed — decided, not yet
+  built (`TASKS.md` T13).** The model owns **intake only**: free text → constraints, so a live demo
+  survives phrasings nobody anticipated. It does not own retrieval, the obstacle, or the chip row —
+  those stay the FSM's (§8), so the graded failure moment is still computed. It runs server-side on
+  the platform origin behind the Vercel AI SDK, and any failure falls back to the local brain, so
+  the room demo still works with no key and no network.
 
 ---
 
@@ -76,7 +88,7 @@ Anything is allowed if a real store would already have it *for its own reasons*,
 
 - No container div, no mount point, no `data-agent-*` attribute, no CSS hook, no window global, no reserved z-index, no shared stylesheet, no knowledge that Maximal exists.
 - Pages: home, category listing, product detail, cart, about, shipping & returns. Real copy with a voice. Real photography (stock is fine — placeholder blocks are not).
-- **Do not author the storefront CSS by hand.** Start from a real theme's rendered markup and CSS — Shopify's Dawn is the natural reference since it is what a large share of stores actually run. Check its LICENSE before shipping anything verbatim; derive the structure if the terms are restrictive. "The storefront CSS was not written by me" is a stronger claim than any hand-made polish.
+- **Do not author the storefront CSS by hand.** Start from a real theme's markup and CSS — Shopify's Dawn, since that is what a large share of stores run. Check its LICENSE first; derive the structure if the terms are restrictive. "The storefront CSS was not written by me" beats any hand-made polish.
 - **After the `<script>` tag is added, storefront source is frozen.** Any bug that would be fixed by editing shop CSS is a bug in the widget. Fix it in the widget. This rule is the demo.
 
 **Realism is the test rig, not decoration.** Each element below is an adversary the widget must survive. Build the ones in this table on purpose:
@@ -93,7 +105,7 @@ Anything is allowed if a real store would already have it *for its own reasons*,
 
 This table doubles as a slide for the office session.
 
-**Catalog depth: 30–40 products per store.** Not cosmetic. The no-match moment in §8 is only credible if the shopper could plausibly believe something matched — with eight products "nothing fits" is arithmetic, with thirty-five it is a finding. Include messy realism: one out of stock, one on sale with a strikethrough, one with a missing image, ratings like 4.3 from 11 reviews.
+**Catalog depth: 30–40 products per store.** The no-match moment in §8 only lands if the shopper could believe something matched — with eight products "nothing fits" is arithmetic, with thirty-five it is a finding. Include messy realism: one out of stock, one on sale with a strikethrough, one with a missing image, ratings like 4.3 from 11 reviews.
 
 **Where realism stops.** No checkout, no payments, no auth, no cart persistence beyond `localStorage`. Add-to-cart increments a badge. Those parts test nothing.
 
@@ -114,27 +126,23 @@ compact density, dense grids, flavour swatches, `−25%` flags and struck-throug
 labels stay sentence case. Catalog: protein, creatine, pre-workout — spec fields are
 `protein per serving`, `flavour`, `size`, `servings`, `diet`.
 
-**Both stores ship in English. Localization is explicitly not built** (§10). What stays is the
-*market*, not the language: a Dutch webshop selling in English still shows iDEAL, Klarna and
-Bancontact, still promises `Voor 23:00 besteld, morgen in huis` as a delivery badge, still prices
-around a BTW toggle. ETQ proves it — English across ten locales, iDEAL at checkout. We keep the
-furniture and drop the translation, which is where the market signal actually lives.
+**Both stores ship in English; localization is not built (§10).** What stays is the *market*, not
+the language — ETQ sells in English across ten locales and still shows iDEAL at checkout. The
+Dutch furniture is where the signal lives, and no generic take-home will have it:
 
-**Dutch-market furniture is part of the realism, and it is the detail no generic take-home will
-have.** On KRACHT: an `Excl./Incl. VAT` toggle, `Free shipping over €50`, a next-day cut-off
-badge, iDEAL and pay-later badges, a Kiyoh-style score out of 10 with a review count, a GDPR
-cookie bar. On VELDE: `Free shipping over €150`, `14 days to decide`, iDEAL / Klarna / Bancontact
-/ Apple Pay. Both sets are lifted from what ETQ and Proforto actually render today — the VAT
-toggle and the score-out-of-10 are the two a non-European build never thinks to include.
+- **KRACHT** — `Excl./Incl. VAT` toggle, `Free shipping over €50`, next-day cut-off badge, iDEAL
+  and pay-later badges, a Kiyoh-style score out of 10 with review count, GDPR cookie bar.
+- **VELDE** — `Free shipping over €150`, `14 days to decide`, iDEAL / Klarna / Bancontact / Apple Pay.
 
-**Persona is a token too, and the two brands must prove it — including language.** KRACHT
-personifies, because a sports nutrition store does: the agent is **Joep**, a coach, with an
-illustrated avatar, first person, warm and direct. VELDE does not
-personify, because a minimal-lux store never would: no name, a small mark instead of a face,
-clipped English lines, tracked caps labels. Same component, same code — one is a training buddy,
-the other is a quiet shop assistant that stays out of the way. Reviewers expect colour and type
-to be configurable; **voice and personification** are the axes that show you thought past the
-obvious.
+Both sets are lifted from what ETQ and Proforto render today. The VAT toggle and the
+score-out-of-10 are the two a non-European build never thinks to include.
+
+**Persona is a token too.** KRACHT personifies, as a sports nutrition store would: the agent is
+**Joep**, a coach — illustrated avatar, first person, warm and direct. VELDE does not, as a
+minimal-lux store never would: no name, a small mark instead of a face, clipped lines, tracked
+caps labels. Same component, same code — one is a training buddy, the other stays out of the way.
+Colour and type are the axes reviewers expect to be configurable; **voice and personification**
+are the ones that show you thought past the obvious.
 
 The two catalogs deliberately have **different spec schemas**. The agent's product card must render `{label, value}[]` generically. If the card hardcodes "flavour", it fails.
 
@@ -149,8 +157,10 @@ One line. Nothing else.
 ```
 
 - Single IIFE bundle, no framework assumed on the host page, no CSS file to include.
-- Mounts a **custom element with a shadow root**. All widget CSS lives inside the shadow root. Not an iframe: iframes cost us resize choreography, overlay positioning, and mobile keyboard behaviour at 375px, and they make the agent feel like a pasted-in box rather than part of the store.
-- Known trade-off to own out loud: `@font-face` does not resolve inside a shadow root, so the loader injects the font `<link>` into the host `<head>`. Document this in DECISIONS.md rather than hiding it.
+- Mounts a **custom element with a shadow root** — all widget CSS lives inside it. Not an iframe: iframes cost resize choreography, overlay positioning and mobile keyboard behaviour at 375px, and make the agent feel pasted on rather than part of the store.
+- **One trade-off to own out loud:** the widget's text shows in the system font for a blink on first load, then swaps to the merchant's. Fonts are the one thing a shadow root cannot hold (`@font-face` does not resolve inside one), so the loader puts the font `<link>` on the host page. Say this in DECISIONS.md rather than hiding it.
+  - **Confirmed externally, and it is not a quirk — it is the constraint that shapes this whole surface** [T14]: `@font-face` inside a shadow root still fails to render as of Aug 2024 ([mdn/interactive-examples#887](https://github.com/mdn/interactive-examples/issues/887)), and the documented fix is to register the font outside the shadow DOM. So **"fully isolated" and "exact brand font" cannot both be true.** We choose the font. One `@font-face` rule leaves the boundary by design; nothing else does. Do not claim total isolation on stage — claim *one deliberate, named exception*, which is a better answer anyway because it shows the seam was chosen rather than missed.
+  - **The font is the merchant's own file, not a picker.** The config page accepts a `.woff2` URL — in practice the one their theme already serves. Of thirteen products scanned, twelve have **no font control at all**, and Gorgias at 11 controls and Rebuy at 32 share the identical gap, so vocabulary size never reaches it. This is the cheapest large win available [COMPETITORS §2].
 - Config is fetched at runtime from `/v1/config/:shopKey` and cached in `localStorage`; the loader paints nothing until tokens resolve, so there is no unbranded flash.
 - Defensive resets inside the shadow root anyway (`all: initial` on the host, explicit `font-size`/`line-height`), because inherited properties still cross the boundary.
 
@@ -165,13 +175,13 @@ Both demo storefronts must publish, exactly as a real Shopify or WooCommerce sto
 - `/sitemap.xml`, with product URLs
 - `schema.org/Product` JSON-LD on every product detail page — `name`, `description`, `image`, `sku`, `offers.price`, `offers.availability`, plus `additionalProperty` entries for the brand-specific specs
 
-This is not a convenience for us. It is what every real store already emits, because Google requires it for rich results. Building against it means we integrate with the open web, and Shopify happens to be on it.
+Every real store already emits this, because Google requires it for rich results. We integrate with the open web; Shopify happens to be on it.
 
-**Consequences worth naming out loud:**
+**What that buys:**
 
-- **One paste, two payloads.** The same crawl that reads their CSS for fonts, colours, and radii reads their JSON-LD for products. Brand and catalog arrive from a single URL. For a non-technical merchant, onboarding is one input.
+- **One paste, two payloads.** The same crawl reads their CSS for brand and their JSON-LD for products. For a non-technical merchant, onboarding is one input.
 - **We can demo against a store we did not build.** Point the ingester at any real webshop, live, and watch the agent come up wearing their brand with their products. A shared demo API can never do this.
-- **The two shops never talk to each other.** No common assortment service. Each owns its own catalog in its own shape; normalisation happens on our side at ingest. That normalisation layer is the thing being demonstrated.
+- **The two shops never talk to each other.** No common assortment service — each owns its catalog in its own shape, normalisation happens on our side at ingest. That layer is the thing being demonstrated.
 
 **Normalised product shape after ingest:**
 
@@ -217,7 +227,17 @@ This is not a convenience for us. It is what every real store already emits, bec
 
 **Derived, never merchant-set:** `textOnAccent` (contrast-flipped black/white), `surfaceRaised`, `surfaceSunken`, `border`, `textPrimary`, `textMuted`, `focusRing`, `overlayScrim`. All derivation in OKLCH with a hard AA contrast clamp.
 
-**`focusRing` is derived against the surface it lands on, not against `accent` alone, and is clamped ≥3:1 (WCAG 1.4.11) against *both* `accent` and `surface`.** Measured reason: VELDE's accent is near-black, so a focus ring derived from `accent` sitting on an accent-filled CTA computes **1.0:1** — an invisible focus indicator on the primary button of brand A. The clamp covers text pairs at 4.5:1; a non-text indicator needs its own rule or it falls through the gap. A merchant who picks a pale yellow accent gets readable buttons whether they understand why or not.
+**The clamp is shown, not silently applied** [T14]. When derivation moves a colour to hold 4.5:1,
+the config page names the adjusted pair and shows before/after. Reason: of eight products scanned,
+**zero** ship any contrast guarantee — Gorgias leaves "an illegible or clashing color combination…
+the merchant's own risk to manage" — so this is our one unclaimed position, and a guarantee nobody
+can see is engineering hygiene rather than a product. Stripe ships exactly this idea as a named,
+inspectable variable (`accessibleColorOnColorPrimary`); a silent override is the version a merchant
+discovers later and reads as us ignoring their brand. **The floor itself stays hard and blanket** —
+relaxing it to task-critical pairs only would invalidate H1's 1400-pair result for a saving we do
+not need.
+
+**`focusRing` is clamped ≥3:1 (WCAG 1.4.11) against *both* `accent` and `surface`, not against `accent` alone.** Measured reason: VELDE's accent is near-black, so a ring derived from `accent` sitting on an accent-filled CTA computes **1.0:1** — an invisible focus indicator on brand A's primary button. The 4.5:1 text clamp does not catch it; a non-text indicator needs its own rule or it falls through the gap.
 
 **The rule that makes this work:** components reference derived tokens only. `accent` itself appears in exactly two places — primary CTA fill and focus ring.
 
@@ -227,14 +247,16 @@ This is not a convenience for us. It is what every real store already emits, bec
 
 ## 8. The agent
 
-Deterministic finite state machine. No model call.
+Deterministic finite state machine. Everything below is computed, never generated — retrieval is a
+filter, the obstacle is arithmetic. A live model sits in front of it for **intake only** (§2, T13);
+if it is absent or fails, the FSM parses the message itself and the flow is unchanged.
 
 **States:** `idle → intake → clarify → recommend → compare → obstacle → resolve → act`
 
 **Message protocol** — typed blocks, each with its own renderer:
 `text` · `quick-replies` · `chips-update` · `product-card` · `product-compare` · `no-match` · `cta`
 
-**Constraint chips.** A persistent, editable row holding the shopper's accumulated brief — `no sweeteners` · `lactose-free` · `under €30`. This is the spine of the whole interaction. It makes state visible, it wraps cleanly at 375px, it handles the mind-change case, and it turns the no-match moment into a decision instead of a dead end.
+**Constraint chips.** A persistent, editable row holding the shopper's accumulated brief — `no sweeteners` · `lactose-free` · `under €30`. The spine of the interaction: state is visible, it wraps at 375px, it handles a change of mind, and it turns the no-match moment into a decision instead of a dead end.
 
 **Opening messages** (shopper-written, open-ended, two-plus constraints):
 
@@ -259,10 +281,23 @@ The dropped chip stays visible, struck through, restorable in one tap. That sing
 
 The merchant is often non-technical and always precious about their brand. Resolve that with layers, not with a settings list.
 
+**The goal is not mimicry — it is a respectful guest** [T14, and this reverses the framing inherited
+from the brief]. Every embedded UI anyone trusts adopts the host's colour and type and then **locks
+its own geometry**: Shop Pay ("Changes to this core UX/UI runs the risk of diminishing trust"),
+Apple Pay ("Don't alter the artwork in any way"), Disqus, Intercom. And **EU AI Act Article 50 has
+been binding since 2 August 2026** — AI interaction must be "clear and distinguishable… at the latest
+at the time of the first interaction", and a widget engineered to *disappear* into the host page is
+the case least likely to qualify for the "obvious to a reasonably well-informed person" exemption.
+
+So: **one small, constant signature that sits outside the token system and is never merchant-set.**
+It is not a watermark and not a disclaimer banner — it is the piece of the widget that stays ours
+under every brand, and it is the visible proof of criterion #1, because it is the thing you can
+point at across two storefronts and see unchanged.
+
 1. **Paste your store URL.** We fetch it, extract palette, font stack, dominant radius, logo, spacing rhythm.
 2. **"Here's what we found."** A review screen, everything editable, nothing assumed correct. This is the trust moment — show the merchant we looked at *their* site.
-3. **Live preview beside the controls, rendered in a real shadow root over a capture of their actual page.** Not a generic phone frame on a gradient. Seeing the agent sitting on their own storefront is the screen that wins this take-home.
-4. **A natural-language refinement field** — *"warmer, less rounded, more compact"* — that visibly mutates the tokens on the left. AI as an accelerator on top of direct manipulation, never as a replacement for it. Chat-only configuration removes direct manipulation and leaves nothing to look at.
+3. **Live preview beside the controls, in a real shadow root over their actual page.** Not a generic phone frame on a gradient. The agent sitting on their own storefront is the screen that wins this take-home.
+4. **A natural-language refinement field** — *"warmer, less rounded, more compact"* — that visibly mutates the tokens on the left. AI accelerates direct manipulation, never replaces it: chat-only configuration leaves nothing to look at.
 5. **Copy your snippet**, plus a "waiting for first load / detected ✓" verification state.
 
 Undo, and reset-to-detected, throughout.
@@ -271,9 +306,11 @@ Undo, and reset-to-detected, throughout.
 
 ## 10. Explicitly not building
 
-Auth, billing, multi-tenant permissions, analytics, conversation persistence, a real LLM, and ingestion tiers 1–2 from §6. Every one of these goes in DECISIONS.md under "what I cut," which is a question they asked and therefore a place to score.
+Auth, billing, multi-tenant permissions, analytics, conversation persistence, and ingestion tiers 1–2 from §6. Every one of these goes in DECISIONS.md under "what I cut," which is a question they asked and therefore a place to score.
 
-**i18n stays on this list, deliberately, after being briefly taken off it.** A Dutch-language KRACHT was planned and then descoped: the market signal it bought lives in the *furniture* (iDEAL, the VAT toggle, the delivery cut-off, the review score), not in the translation, and translated copy is the one surface on this build that a native-speaking reviewer would judge hardest and that no benchmark can check. Both stores ship English. What *survives* from that plan is architectural and worth keeping on its own merits: every user-visible string still travels in the config payload rather than living in the widget (§5), because a copy fix must not require a merchant to re-paste their script tag.
+~~⊗~~ *a real LLM was on this list. It moved to §2 and `TASKS.md` T13.*
+
+**i18n stays on this list after being briefly taken off it.** A Dutch KRACHT was planned, then cut: the market signal lives in the furniture (iDEAL, VAT toggle, delivery cut-off, review score), not the translation — and translated copy is the one surface a native-speaking reviewer judges hardest and no benchmark can check. What survives is worth keeping anyway: every user-visible string travels in the config payload, not the widget (§5), so a copy fix never makes a merchant re-paste their script tag.
 
 ---
 
