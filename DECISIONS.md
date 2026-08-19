@@ -114,9 +114,12 @@ churned trials will. Second: on **14% of brand colour pairs no focus ring stays 
 both the button and the page behind it. Both demo brands sit outside that band, which I name rather
 than enjoy — a demo that dodges its one known failure is the accident the freeze exists to prevent.
 
-**Another hour:** feed the shopper's own history into the conversation, and let the merchant write
-the prompt behind the greeting bubble, so the agent's opening line reacts to what that shopper has
-been doing instead of being one fixed sentence. Both need proper speccing before they need code.
-Then the two-tone focus ring that closes the 14%.
+**Another hour, most urgent first:** keep the conversation alive across page navigation. It lives
+in memory today, so tapping the agent's own product link and coming back opens an empty panel —
+acting on the recommendation is what destroys the conversation. Then: feed the shopper's own
+history into the conversation, and let the merchant write the prompt behind the greeting bubble, so
+the opening line reacts to what that shopper has been doing instead of being one fixed sentence.
+Both of those need proper speccing before they need code. Last, the two-tone focus ring that closes
+the 14%.
 
 *Every decision above was written down in the session it was made: `DECISIONS-LOG.md`.*
