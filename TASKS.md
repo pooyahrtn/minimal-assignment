@@ -462,8 +462,10 @@ Closed: boxes 2, 3, 4, 5 (agent half), 7 and 8. Still open:
   unstarted. Everything else in the box (375px, T14's ordered list) is ready.
 
 Also open across the suite, found by T10 and owned elsewhere: a bare `bun bench` never reaches the
-golden transcripts (T9 owns `run.ts`'s grading), and `bun run test:e2e` exits 1 on the full parallel
-run — one KRACHT spec times out under whole-suite CPU contention and passes 50/50 at `--workers=1`.
+golden transcripts (T9 owns `run.ts`'s grading). **`bun run test:e2e` is green again** — the
+recorded cause (a KRACHT spec timing out under whole-suite CPU contention) was wrong: 20 of 20
+`agent.spec.ts` tests failed deterministically on the launcher's accessible name, fixed
+2026-08-19, full parallel run 84 passed / 4 skipped in 37s [COMPLAINS, e2e gate].
 T5 and T6 landed after the scorecard was judged and are unjudged; the check says so on every run.
 
 **Scope.** One page, honestly written, covering exactly the brief's six bullets:

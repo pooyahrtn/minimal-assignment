@@ -31,6 +31,23 @@ a failure count the check returns.
 (`transcript.ts:370` defaults to `fixture.json`, so `detectBrand()` never matches and a bare
 `bun bench` never reaches gold). Do not fix it off-desk — `run.ts` grading is T9's.
 
+### 4. ~~The e2e gate was red for a reason nobody checked~~ — RESOLVED
+
+`bun run test:e2e` had been reported red since T10 as a CPU-contention flake in a KRACHT storefront
+spec, green at `--workers=1`. It was neither: **20 of 20 `agent.spec.ts` tests failed
+deterministically**, at 5s, on `getByRole('button', { name, exact: true })`, because T7 appended the
+Art. 50 disclosure to the launcher's `aria-label` (`widget.ts:107`) and the accessible name is
+computed from that, not from the visible span. Fixed by spelling the suffix into the expected name
+so the matcher stays exact and now *asserts* the disclosure. Full parallel run: 84 passed, 4
+skipped, 37s, no worker cap.
+
+**Two things this cost that the fix does not buy back.** `tools/qa-deployed.ts:84` hit the identical
+mismatch during T15 and fixed it *locally, in its own file*, with a comment explaining it — nobody
+asked which other callers matched the launcher by exact name, and the one that did sat red for a
+day. And a red gate carried a written cause for a day without anyone reading the failure output;
+"flaky under load" is the most expensive diagnosis in this repo because it is the one that stops
+people looking.
+
 ### 3. `PROGRESS.md` rows are written in retrospective batches
 
 Pickup step 6 already prescribes appending the row at each task's own close. The last wave batched
@@ -97,7 +114,7 @@ registered `bun bench` check (`scorecard`) over ten landed tasks. Two false demo
 - T5 DoD box 3 ("every block survives a 40-character unbroken word") was reported CLOSED on an assertion written on the wrong axis, and it was false: the no-match heading clipped to `CLOSEST WITHOUT "RIJKSMUSEUMSTRAATVERLICHTINGSPROJE`, invisible to the check because it measured block roots against card wrappers that are `overflow: hidden` — a check that can only pass, not evidence — harm: a shipped, demo-facing visual defect was reported done by the author's own gate and surfaced only by a second full adversarial diff round (13 findings); risk: a structurally-can't-fail check will keep passing on the next block built the same way, and self-reported "box closed" claims resting on it cannot be trusted without an independent re-check.
 - The same diff round found three more undisclosed defects in the build: `labelCase` doing nothing on a second block beyond the one already amended in the DoD, a duplicated `fill`/`money` function pair shipped inside the size-capped bundle, and a stale-card double-fire bug — none self-reported, all three found only because three reviewers were driving real browsers against the diff — harm: three shipped defects in one diff went uncaught by the author's own review; risk: self-review in this codebase is not catching this defect class (silent no-op, duplication, double-fire), and it will recur on the next renderer built the same way.
 - `DECISIONS-LOG.md` carries a WITHDRAWN entry where the author asserted "there is no import-boundary lint rule," which was false — the rule exists in a nested `packages/agent/biome.json` (`root: false`, `extends: "//"`) that a root-only grep missed — harm: a false, checkable claim about the codebase sat in the permanent decisions log until a reviewer caught it and forced the withdrawal; risk: an unverified negative claim that skips nested/extended configs will recur, and later sessions read `DECISIONS-LOG.md` as ground truth by default.
-- `bun run test:e2e` exits 1 on the full parallel run because one KRACHT storefront spec flakes under whole-suite CPU contention — green 50/50 at `--workers=1` and green per-file, red only under contention — harm: the task cannot point to a clean run of the gate command as written, so a red gate has to be explained away rather than shown fixed; risk: this exact flake will keep failing the whole-suite gate for whichever task happens to run last and land the blame on unrelated work, every time the suite runs under load.
+- ~~`bun run test:e2e` exits 1 on the full parallel run because one KRACHT storefront spec flakes under whole-suite CPU contention~~ **— the diagnosis was wrong; fixed 2026-08-19, see the e2e-gate entry under Open.** Original text: one KRACHT storefront spec flakes under whole-suite CPU contention — green 50/50 at `--workers=1` and green per-file, red only under contention — harm: the task cannot point to a clean run of the gate command as written, so a red gate has to be explained away rather than shown fixed; risk: this exact flake will keep failing the whole-suite gate for whichever task happens to run last and land the blame on unrelated work, every time the suite runs under load.
 - The plan and diff adversarial rounds cost ~11.6m/455k tokens and ~25.8m/536k tokens respectively — ~37.4 agent-minutes and ~991k tokens combined, more than the build itself, on a task PROGRESS.md scoped at 60m/15m — continuing the same review-exceeds-build ratio already flagged twice this session for T10 and T11; harm: review overhead again outweighed build cost, and nothing in this session's process changed that; risk: a fixed two-round review regardless of task size keeps taxing every task the same fixed amount, and the ratio keeps getting worse, not better, across consecutive tasks in the same session.
 - Two concurrent Claude sessions edited the same working tree throughout T5/T6, exchanging messages about collisions, against `ENGINEERING §5.1` rule 1 ("One task, one desk, one worktree. Two agents in one worktree collide, which is the exact thing worktrees prevent.") — harm: a constant collision surface for the entire session, the direct precondition for the `git add -A` incident above; risk: as long as multiple sessions share one working tree, every file either touches is a potential clobber, and the rule written to prevent exactly this is not being enforced.
 

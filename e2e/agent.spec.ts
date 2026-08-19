@@ -23,7 +23,8 @@ type Brand = {
   readonly base: string
   readonly pdp: string
   /** The widget's accessible name, as computed by the browser — see the hand-off note on why this
-   *  is sentence case for VELDE even though the rendered pixels are tracked caps. */
+   *  is sentence case for VELDE even though the rendered pixels are tracked caps. Includes
+   *  `SIGNATURE`: the browser computes the name from `aria-label`, not from the visible span. */
   readonly launcherName: string
   readonly panelName: string
   readonly composerPlaceholder: string
@@ -32,11 +33,18 @@ type Brand = {
   readonly cookieAccept: (page: Page) => Locator
 }
 
+/** The AI-disclosure suffix `widget.ts` appends to every launcher's `aria-label`
+ *  (`SIGNATURE_LABEL`, EU AI Act Art. 50). There is no code path from `/v1/config` that removes
+ *  it, so the exact matchers below assert the disclosure is present rather than working around
+ *  it — `tools/qa-deployed.ts:84` hit this same mismatch and went substring; here the name is
+ *  spelled out, because a launcher that lost its disclosure should fail this suite. */
+const SIGNATURE = ' — AI assistant by Maximal'
+
 const VELDE: Brand = {
   name: 'velde',
   base: 'http://localhost:4001',
   pdp: '/products/noord-wool-overcoat',
-  launcherName: 'Help me choose',
+  launcherName: `Help me choose${SIGNATURE}`,
   panelName: 'VELDE',
   composerPlaceholder: 'What is it for?',
   opening:
@@ -50,7 +58,7 @@ const KRACHT: Brand = {
   name: 'kracht',
   base: 'http://localhost:4002',
   pdp: '/product/whey-classic-1kg-chocolate',
-  launcherName: 'Ask Joep',
+  launcherName: `Ask Joep${SIGNATURE}`,
   panelName: 'Joep',
   composerPlaceholder: 'Tell me what you need',
   opening: "I'm after a protein shake with no sweeteners, lactose-free, and ideally under €30.",
