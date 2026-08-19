@@ -436,3 +436,45 @@ test('the verification state waits for a real load and then reports it', async (
   await expect(page.locator('.verify')).toContainText('Detected', { timeout: 15_000 })
   await expect(page.locator('.verify')).toContainText(key ?? '')
 })
+
+test('the studio is in the URL, so a refresh keeps the store you selected', async ({ page }) => {
+  await openReview(page)
+  // The selection is recorded where a refresh and a shared link can both read it.
+  await expect(page).toHaveURL(/\?store=http%3A%2F%2Flocalhost%3A4001/)
+  await page.reload()
+  // Replayed, not merely remembered: the review screen comes back with the same store's preview,
+  // rather than dumping the merchant back on the paste screen with their selection gone.
+  await expect(page.locator('#review')).toBeVisible()
+  await expect(page.locator('#preview')).toHaveAttribute('src', 'http://localhost:4001')
+})
+
+test('skipping extraction is replayed on refresh too, not just a pasted store', async ({
+  page,
+}) => {
+  await page.goto(PLATFORM)
+  await page.click('#skip-extract')
+  await expect(page).toHaveURL(/\?store=manual/)
+  await page.reload()
+  await expect(page.getByText('Starting from scratch.')).toBeVisible()
+})
+
+test('a store address typed without https:// is accepted, and the scheme is shown back', async ({
+  page,
+}) => {
+  await page.goto(PLATFORM)
+  await page.fill('#store-url', 'velde.releashed.io')
+  await page.click('#extract-btn')
+  // The browser no longer refuses to submit, and the merchant can see what we made of what they
+  // typed. Whether that address resolves from here is the extractor's business, not this check's.
+  await expect(page.locator('#store-url')).toHaveValue('https://velde.releashed.io')
+  await expect(page.locator('#review')).toBeVisible()
+})
+
+test('an address that already carries a scheme is left exactly as typed', async ({ page }) => {
+  await page.goto(PLATFORM)
+  // Not upgraded to https, not rewritten: the server's guard must judge the scheme the merchant
+  // actually gave it, which is what keeps `javascript:` and `file:` refusable.
+  await page.fill('#store-url', 'http://localhost:4001')
+  await page.click('#extract-btn')
+  await expect(page.locator('#store-url')).toHaveValue('http://localhost:4001')
+})

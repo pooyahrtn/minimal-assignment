@@ -116,9 +116,25 @@ function watchForInstall(shopKey: string): void {
 
 // ------------------------------------------------------------------------------- screen one --
 
+/**
+ * A merchant types `your-store.com`; `new URL` — and the browser's own `type="url"` before it —
+ * demands a scheme. Prepend one only when there is NO scheme at all, so anything carrying one
+ * (`file:`, `javascript:`, `localhost:4001`) passes through untouched and is still refused by the
+ * server's guard. Never `http:`, so this can only upgrade. `.trim()` first: the URL parser tolerates
+ * a leading space today, and prepending in front of one would newly reject what already worked.
+ */
+function withScheme(raw: string): string {
+  const typed = raw.trim()
+  return /^[a-z][a-z0-9+.-]*:/i.test(typed) ? typed : `https://${typed}`
+}
+
 extractForm.addEventListener('submit', (event) => {
   event.preventDefault()
-  void runExtract(urlInput.value.trim())
+  if (urlInput.value.trim() === '') return
+  // Written back, not just sent: the merchant sees the scheme we added, and `storefrontFor` matches
+  // its `STOREFRONTS` origins on the same string it is about to be handed.
+  urlInput.value = withScheme(urlInput.value)
+  void runExtract(urlInput.value)
 })
 
 for (const button of document.querySelectorAll('[data-fill]')) {
@@ -194,6 +210,9 @@ function storefrontFor(url: string | null): { origin: string; foreign: boolean }
 }
 
 function openReview(url: string | null): void {
+  // The store being configured is the only state the merchant can see, so it belongs in the URL:
+  // a refresh — or a link — replays the selection instead of dumping them back on screen one.
+  history.replaceState(null, '', `?${new URLSearchParams({ store: url ?? 'manual' })}`)
   editor = new Editor(draft.tokens)
   editor.onChange(() => {
     render()
@@ -552,7 +571,7 @@ function snippetGroup(tokens: MerchantTokens): HTMLElement {
       el(
         'span',
         undefined,
-        'Waiting for first load — paste the snippet on your store, then reload this page.',
+        'Waiting for first load — paste the snippet on your store. This updates itself.',
       ),
     )
   }
@@ -573,6 +592,9 @@ async function publish(box: HTMLTextAreaElement, button: HTMLButtonElement): Pro
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(await buildConfig(editor.tokens)),
     })
+    // BEFORE the shape guard. A 400 simply misses that guard, and the code below then cleared
+    // `dirtySincePublish` and copied the STALE snippet — the page affirming a publish that failed.
+    if (!response.ok) throw new Error(`publish failed: ${response.status}`)
     const body: unknown = await response.json()
     if (
       typeof body === 'object' &&
@@ -676,3 +698,15 @@ widthToggle.addEventListener('click', () => {
   widthToggle.setAttribute('aria-pressed', String(!phone))
   widthToggle.textContent = phone ? '375px' : 'Full width'
 })
+
+// ------------------------------------------------------------------------------------ resume --
+
+// Replayed through the existing handlers rather than a second entry path into `openReview`, so a
+// hand-edited `?store=` still meets the field's own validation and the merchant can see what is
+// being read. Extraction is deterministic for a given URL, so this lands on the same draft.
+const resume = new URLSearchParams(window.location.search).get('store')
+if (resume === 'manual') need('skip-extract', HTMLButtonElement).click()
+else if (resume) {
+  urlInput.value = resume
+  extractForm.requestSubmit()
+}

@@ -116,7 +116,10 @@ await mkdir(`${OUT}/ui`, { recursive: true })
 // against the config payload and found the surface nobody had named. [TASKS §0 #11]
 await Bun.write(`${OUT}/index.html`, repoint(await Bun.file(UI_INDEX).text()))
 await Bun.write(`${OUT}/ui/ui.css`, Bun.file(UI_CSS))
-await Bun.write(`${OUT}/ui/main.js`, await uiBundle.text())
+// Through `repoint` too, and for a sharper reason than index.html's: `preview.ts`'s STOREFRONTS
+// map is the iframe target, so deployed this framed the reviewer's own machine — a dead pane, and
+// every control's only feedback surface with it.
+await Bun.write(`${OUT}/ui/main.js`, repoint(await uiBundle.text()))
 
 // Copied, not authored. Vercel reads `vercel.json` from the project ROOT when it builds from git,
 // and from the upload root when `vercel deploy dist/platform` uploads a prebuilt directory — two
@@ -173,7 +176,6 @@ const deploying = Object.values(ORIGIN_BY_PORT).some((origin) => !origin.include
 if (deploying) {
   const leaks: string[] = []
   for await (const name of new Bun.Glob('**/*').scan({ cwd: OUT })) {
-    if (name.endsWith('.js')) continue // the bundle legitimately carries a localhost fallback
     const body = await Bun.file(`${OUT}/${name}`).text()
     const found = [...new Set([...body.matchAll(/https?:\/\/localhost:\d+/g)].map((m) => m[0]))]
     if (found.length > 0)
