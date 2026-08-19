@@ -232,34 +232,46 @@ function formatFocusRingDefect(defects: FocusRingVerdict[]): string {
   ].join('\n')
 }
 
+/**
+ * The judgement, split out from the gathering so `bench/fault.test.ts` can hand it a synthetic
+ * failing `FuzzResult` and prove it reports one. Feeding the whole check a failing case would mean
+ * breaking `derive()`, which is not a thing a test may do to prove a benchmark works.
+ *
+ * An empty `AA_GUARANTEED_PAIRS` still THROWS rather than reporting: it means nothing was measured
+ * at all, so every other number in the result is meaningless and there is no partial answer worth
+ * printing [ENGINEERING §3.1]. Returning `worst` alongside is what lets the detail line read it
+ * without a second null check the throw above has already ruled out.
+ */
+export function judgeFuzz(result: FuzzResult): { failures: string[]; worst: WorstContrast } {
+  const worst = result.worstContrast
+  if (!worst) {
+    throw new Error('H1 contrast: AA_GUARANTEED_PAIRS is empty — nothing was checked')
+  }
+  const failures: string[] = []
+  if (worst.ratio < 4.5) failures.push(formatContrastFailure(worst))
+  if (result.ringDefects.length > 0) failures.push(formatFocusRingDefect(result.ringDefects))
+  return { failures, worst }
+}
+
 export const contrast: Check = {
   name: 'contrast',
   tier: 'HARD',
   run: async () => {
     const result = runFuzz()
-
-    if (!result.worstContrast) {
-      throw new Error('H1 contrast: AA_GUARANTEED_PAIRS is empty — nothing was checked')
-    }
-    if (result.worstContrast.ratio < 4.5) {
-      throw new Error(formatContrastFailure(result.worstContrast))
-    }
-    if (result.ringDefects.length > 0) {
-      throw new Error(formatFocusRingDefect(result.ringDefects))
-    }
+    const { failures, worst } = judgeFuzz(result)
 
     const feasibleCount = CONFIG_COUNT - result.infeasibleRingCount
     const detail =
       `${CONFIG_COUNT} seeded MerchantTokens (LCG seed 0x${SEED.toString(16)}), ` +
       `${result.pairsChecked} text/bg pairs checked against AA_GUARANTEED_PAIRS's 7 pairs ` +
       `(independently cross-checked against css.ts — no gap found, see hand-off). ` +
-      `Worst ratio ${result.worstContrast.ratio.toFixed(3)}:1. ` +
+      `Worst ratio ${worst.ratio.toFixed(3)}:1. ` +
       `Focus ring (WCAG 1.4.11, >=3:1 vs both accent and surface): ${feasibleCount}/${CONFIG_COUNT} ` +
       `feasible, ${result.infeasibleRingCount}/${CONFIG_COUNT} have no colour in gamut clearing ` +
       `3:1 on both grounds (reported only, not a defect — a full 0-255 grey scan is a complete ` +
       `search since WCAG contrast is a function of luminance alone), 0 cases where the engine did ` +
       `worse than what was achievable.`
 
-    return { count: result.pairsChecked, detail }
+    return { count: result.pairsChecked, failures, detail }
   },
 }

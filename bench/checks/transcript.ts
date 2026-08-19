@@ -366,8 +366,15 @@ async function runCase(
   return { verdict, blocks: result.blocks }
 }
 
-function parseArgs(args: string[]): { catalogPath: string; expect: Expect; accept: boolean } {
+function parseArgs(args: string[]): {
+  catalogPath: string
+  /** False when the default fixture is in use — which is what a bare `bun bench` always does. */
+  explicitCatalog: boolean
+  expect: Expect
+  accept: boolean
+} {
   let catalogPath = 'packages/agent/src/brain/fixture.json'
+  let explicitCatalog = false
   let expect: Expect = null
   let accept = false
   for (const arg of args) {
@@ -375,9 +382,12 @@ function parseArgs(args: string[]): { catalogPath: string; expect: Expect; accep
     else if (arg === '--expect=empty-unique') expect = 'empty-unique'
     else if (arg === '--expect=non-empty') expect = 'non-empty'
     else if (arg === '--accept') accept = true
-    else if (!arg.startsWith('--')) catalogPath = arg
+    else if (!arg.startsWith('--')) {
+      catalogPath = arg
+      explicitCatalog = true
+    }
   }
-  return { catalogPath, expect, accept }
+  return { catalogPath, explicitCatalog, expect, accept }
 }
 
 function satisfiesExpect(expect: Expect, verdict: CaseVerdict): boolean {
@@ -401,6 +411,31 @@ function summarize(verdicts: Record<string, CaseVerdict>): string {
 }
 
 /**
+ * The default path, and the one every `bun bench` takes. `catalogPath` defaults to `fixture.json`,
+ * which `detectBrand` cannot match, so gold was written by `--accept` and then never read again by
+ * any run anybody actually performs — H3's whole gold set was decorative
+ * [COMPLAINS #2, DECISIONS-LOG → Testing].
+ *
+ * Each brand is compared against ITS OWN opening message and ITS OWN catalog, exactly as
+ * `accept()` generates them. Running every case against every catalog instead would pair a jacket
+ * query with a supplements catalog, whose `degenerate` verdict is correct by construction and is
+ * not a defect — that pairing is what `--expect` is for, and it is how two of T8's landed gates
+ * are worded [TASKS T8 DoD].
+ */
+async function compareAllGold(): Promise<string[]> {
+  const compared: string[] = []
+  for (const goldBrand of GOLD_BRANDS) {
+    if (!(await Bun.file(goldBrand.goldPath).exists())) continue
+    const caseDef = CASES.find((c) => c.label === goldBrand.caseLabel)
+    if (!caseDef) throw new Error(`no CASES entry for brand ${goldBrand.name}`)
+    const { blocks } = await runCase(caseDef, await loadCatalog(goldBrand.catalogPath))
+    await compareToGold(goldBrand, blocks)
+    compared.push(goldBrand.goldPath)
+  }
+  return compared
+}
+
+/**
  * `--accept` and `--expect` on the same command line: `--expect` still has to pass before
  * anything is written — a run that fails its own structural/expect bar never gets to regenerate
  * gold, so `--accept` cannot be used to launder a broken run into new gold. `--accept` only
@@ -410,7 +445,7 @@ export const transcriptCheck: Check = {
   name: 'transcript',
   tier: 'HARD',
   run: async (args) => {
-    const { catalogPath, expect, accept } = parseArgs(args)
+    const { catalogPath, explicitCatalog, expect, accept } = parseArgs(args)
     const catalog = await loadCatalog(catalogPath)
     const brand = detectBrand(catalogPath)
 
@@ -429,6 +464,7 @@ export const transcriptCheck: Check = {
     }
 
     let goldNote = ''
+    let goldCases = 0
     if (accept) {
       goldNote = brand
         ? ` — ${await writeGold(brand, blocksByLabel.get(brand.caseLabel) ?? [])}`
@@ -436,10 +472,15 @@ export const transcriptCheck: Check = {
     } else if (brand && (await Bun.file(brand.goldPath).exists())) {
       await compareToGold(brand, blocksByLabel.get(brand.caseLabel) ?? [])
       goldNote = ` — matches gold ${brand.goldPath}`
+      goldCases = 1
+    } else if (!explicitCatalog) {
+      const compared = await compareAllGold()
+      goldCases = compared.length
+      goldNote = compared.length > 0 ? ` — matches gold ${compared.join(', ')}` : ''
     }
 
-    const detail = `${CASES.length} opening-message cases against ${catalogPath}: ${summarize(verdicts)}${expect ? ` (--expect=${expect} satisfied)` : ''}${goldNote}`
-    return { count: CASES.length, detail }
+    const detail = `${CASES.length} opening-message cases against ${catalogPath}${goldCases > 0 ? ` + ${goldCases} brand-matched gold case(s)` : ''}: ${summarize(verdicts)}${expect ? ` (--expect=${expect} satisfied)` : ''}${goldNote}`
+    return { count: CASES.length + goldCases, detail }
   },
   /** The bare `bun bench --accept` path (BENCHMARKS §4.3): regenerates gold for both brands in
    * one deliberate, human-run pass, each against its own opening message. */

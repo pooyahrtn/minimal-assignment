@@ -158,6 +158,26 @@ export class MxAgent extends HTMLElement {
     })
     window.visualViewport?.addEventListener('resize', () => this.syncViewport())
     window.addEventListener('resize', () => this.clearStickyBar())
+    /*
+     * Cookie banners go away when the shopper consents, and nothing tells us. VELDE dismisses from
+     * a document `click` listener (`assets/velde.js`), KRACHT from a React `onClick` — so the
+     * banner is still laid out during `pointerdown` and during the capture phase, and gone by the
+     * time a BUBBLING `click` reaches the document. Measured both ways: on `pointerdown` the probe
+     * still reads the banner's full height and the launcher stays lifted by a bar that no longer
+     * exists. Bubble phase is the only one that sees the page the shopper just made.
+     *
+     * Deferred one frame rather than measured inside the listener, and that is load-bearing: both
+     * handlers are bubble-phase on `document`, so which one runs first is decided by registration
+     * order — and `agent.js` is `async` while `velde.js` is `defer`, so ours can easily be first.
+     * A frame later, every handler for that click has run and layout has settled, whoever
+     * registered first.
+     *
+     * A `MutationObserver` would catch the case where a banner leaves without a click at all; it
+     * is the upgrade if that ever shows up, and it costs an observer on the whole body to buy it.
+     */
+    document.addEventListener('click', () => {
+      requestAnimationFrame(() => this.clearStickyBar())
+    })
 
     this.push({ kind: 'text', text: voice.greeting })
   }
@@ -201,8 +221,18 @@ export class MxAgent extends HTMLElement {
     this.panel.style.marginBottom = lift
   }
 
+  /**
+   * Probed at the LAUNCHER's own horizontal position, not at the middle of the viewport. The
+   * launcher occupies one corner, so the only bars that can collide with it are the ones under
+   * that corner — and a half-width bar in the middle of the screen used to lift it for nothing,
+   * while a bar that stops short of the corner was measured as if it reached. Taking the tallest
+   * bar found anywhere along the bottom edge would make the first case worse, not better.
+   */
   private stickyBarHeight(): number {
-    const x = Math.round(window.innerWidth / 2)
+    const launcher = this.launcher.getBoundingClientRect()
+    const x = Math.round(
+      launcher.width > 0 ? launcher.left + launcher.width / 2 : window.innerWidth / 2,
+    )
     for (const node of document.elementsFromPoint(x, window.innerHeight - 1)) {
       if (node === this || !(node instanceof HTMLElement)) continue
       const position = window.getComputedStyle(node).position

@@ -1,9 +1,9 @@
-import { chromium } from '@playwright/test'
 import type { Browser, Page } from '@playwright/test'
 import { KRACHT, VELDE, derive } from '@maximal/tokens'
 import type { MerchantTokens } from '@maximal/tokens'
+import { buildGallery, mount, openBrowser, readConfig } from '../browser'
 import type { Check, CheckResult } from '../checks'
-import { isConfigResponse } from '../../packages/agent/src/config'
+import { judgeOverflow, measureList } from '../overflow'
 import type { ConfigResponse } from '../../packages/agent/src/types'
 
 // H2 `brand-divergence` (BENCHMARKS §1, TASKS.md T5). The most important number in the project:
@@ -34,6 +34,8 @@ const VIEWPORT_WIDTH = 375
  * mechanical rather than something this constant is assumed to be big enough for.
  */
 const VIEWPORT_HEIGHT = 5600
+
+const VIEWPORT = { width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT }
 
 /**
  * The shared ground for assertion 1. Every text and surface variable derives from `surface`, so
@@ -98,50 +100,9 @@ type Rendered = {
   /** Base64 PNG of the panel, so the comparison can happen in a browser that already decodes PNG. */
   shot: string
   structure: Record<string, string>
+  /** Structural selectors that matched nothing on this render — see `judgeDivergence`. */
+  missing: string[]
   overflow: { element: string; scrollWidth: number; clientWidth: number }[]
-}
-
-async function readConfig(path: string): Promise<ConfigResponse> {
-  const body: unknown = await Bun.file(path).json()
-  if (!isConfigResponse(body)) throw new Error(`${path} is not a valid ConfigResponse`)
-  return body
-}
-
-/** Built once and injected into every page — the same IIFE for both brands and both passes. */
-async function buildGallery(): Promise<string> {
-  const out = `${import.meta.dir}/../../node_modules/.cache/mx-gallery.js`
-  const built =
-    await Bun.$`bun build bench/gallery.ts --outfile ${out} --target=browser --format=iife`
-      .cwd(`${import.meta.dir}/../..`)
-      .quiet()
-      .nothrow()
-  if (built.exitCode !== 0) {
-    throw new Error(`bench/gallery.ts failed to build:\n${built.stderr.toString()}`)
-  }
-  return Bun.file(out).text()
-}
-
-/**
- * A FRESH page per render, not `setContent` on a reused one. `setContent` keeps the same JS realm,
- * so the custom-element registry and `__MX_GALLERY_READY__` both survive into the next mount: the
- * second injection skips `customElements.define`, `new MxAgent()` throws "Illegal constructor"
- * against the class the first bundle registered, and the already-true ready flag lets the check
- * sail past it into a locator timeout with no widget on the page. Reproduced, then fixed
- * [ENGINEERING §3.4]; a few hundred ms buys the whole class of bug.
- */
-async function mount(browser: Browser, bundle: string, config: ConfigResponse): Promise<Page> {
-  const page = await browser.newPage({
-    viewport: { width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT },
-  })
-  await page.setContent('<!doctype html><html><head></head><body></body></html>')
-  await page.evaluate((payload: ConfigResponse) => {
-    window.__MX_GALLERY__ = payload
-  }, config)
-  await page.addScriptTag({ content: bundle })
-  await page.waitForFunction(() => Reflect.get(window, '__MX_GALLERY_READY__') === true)
-  // One frame, so layout and the scroll reset have both settled before the camera opens.
-  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => resolve(null))))
-  return page
 }
 
 async function render(
@@ -150,16 +111,22 @@ async function render(
   brand: Brand,
   config: ConfigResponse,
 ): Promise<Rendered> {
-  const page = await mount(browser, bundle, config)
+  const page = await mount(browser, bundle, config, { viewport: VIEWPORT })
   const panel = page.locator('.panel')
   const shot = (await panel.screenshot()).toString('base64')
 
-  const structure = await page.evaluate((selectors: string[]) => {
+  const { structure, missing } = await page.evaluate((selectors: string[]) => {
     const root = document.querySelector('mx-agent')?.shadowRoot
     const out: Record<string, string> = {}
+    const absent: string[] = []
     for (const selector of selectors) {
       const node = root?.querySelector(selector)
-      if (!(node instanceof HTMLElement)) continue
+      // Reported, not skipped. A selector that matches nothing contributes no keys, so it can
+      // never make two brands differ — and the >=4 bar then gets cleared by whatever survived.
+      if (!(node instanceof HTMLElement)) {
+        absent.push(selector)
+        continue
+      }
       const style = getComputedStyle(node)
       out[`${selector}|padding`] = `${style.paddingTop} ${style.paddingLeft}`
       out[`${selector}|borderRadius`] = style.borderRadius
@@ -167,7 +134,7 @@ async function render(
       out[`${selector}|boxShadow`] = style.boxShadow
       out[`${selector}|textTransform`] = style.textTransform
     }
-    return out
+    return { structure: out, missing: absent }
   }, STRUCTURAL_SELECTORS)
 
   /*
@@ -182,28 +149,7 @@ async function render(
    * `.compare-scroll` and its subtree are exempt BY DESIGN: three columns cannot fit at 375px and
    * a swipe beats clipping, so that one container is allowed to scroll horizontally.
    */
-  const measurements = await page.evaluate(() => {
-    const list = document.querySelector('mx-agent')?.shadowRoot?.querySelector('.messages')
-    if (!(list instanceof HTMLElement)) return []
-    const nodes = [list, ...Array.from(list.querySelectorAll('*'))]
-    return nodes.flatMap((node) =>
-      node instanceof HTMLElement
-        ? [
-            {
-              element: node.className || node.tagName.toLowerCase(),
-              scrollWidth: node.scrollWidth,
-              clientWidth: node.clientWidth,
-              scrollHeight: node.scrollHeight,
-              clientHeight: node.clientHeight,
-              outerWidth: Math.round(node.getBoundingClientRect().width),
-              isBlockRoot: node.parentElement === list,
-              exempt: node.closest('.compare-scroll') !== null,
-              listWidth: list.clientWidth,
-            },
-          ]
-        : [],
-    )
-  })
+  const measurements = await measureList(page)
 
   // The browser side only measures; the judgement is made here, where it reads plainly and where a
   // serialisable callback does not have to carry it.
@@ -213,13 +159,7 @@ async function render(
   // word render as "CLOSEST WITHOUT “RIJKSMUSEUMSTRAATVERLICHTINGSPROJE", clipped at the card edge,
   // while every block root sat exactly at panel width because the card wrappers are
   // `overflow: hidden`. Outer width against the list catches a block that widens the panel.
-  const overflow = measurements
-    .filter((m) => !m.exempt)
-    .filter(
-      (m) =>
-        m.scrollWidth > m.clientWidth + 0.5 || (m.isBlockRoot && m.outerWidth > m.listWidth + 0.5),
-    )
-    .map((m) => ({ element: m.element, scrollWidth: m.scrollWidth, clientWidth: m.clientWidth }))
+  const overflow = judgeOverflow(measurements)
 
   /*
    * H2 says "render all 7 message blocks ... screenshot". A list that scrolls has blocks the camera
@@ -237,7 +177,7 @@ async function render(
   }
 
   await page.close()
-  return { brand: brand.name, shot, structure, overflow }
+  return { brand: brand.name, shot, structure, missing, overflow }
 }
 
 /**
@@ -326,16 +266,45 @@ async function writeContactSheet(browser: Browser): Promise<void> {
   await page.close()
 }
 
-async function openBrowser(): Promise<Browser> {
-  try {
-    return await chromium.launch()
-  } catch (error) {
-    throw new Error(
-      `chromium could not launch — run \`bunx playwright install chromium\` and try again. (${
-        error instanceof Error ? error.message : String(error)
-      })`,
+/**
+ * H2's judgement, split from its gathering so `bench/fault.test.ts` can feed it a failing case
+ * without driving a browser [TASKS T9 DoD]. Fault-injecting the whole check would mean shipping a
+ * deliberately broken brand config, which is a worse thing to have in the tree than this seam.
+ */
+export function judgeDivergence(input: {
+  overflow: { element: string; scrollWidth: number; clientWidth: number }[]
+  missing: string[]
+  differing: string[]
+  measured: number
+}): string[] {
+  const failures: string[] = []
+  if (input.overflow.length > 0) {
+    failures.push(
+      `horizontal overflow at ${VIEWPORT_WIDTH}px: ${input.overflow
+        .map((o) => `${o.element} ${o.scrollWidth}>${o.clientWidth}`)
+        .join(', ')}`,
     )
   }
+  // A selector that rendered under NEITHER brand used to `continue` silently, contributing no keys
+  // and therefore no difference — so a block that vanished entirely left the >=4 bar to be cleared
+  // by the survivors and the check stayed green. A structural claim about blocks that are not on
+  // the page is not a claim.
+  if (input.missing.length > 0) {
+    failures.push(
+      `structural selector(s) rendered under no brand, so nothing was compared for them: ${input.missing.join(', ')}`,
+    )
+  }
+  if (input.differing.length < 4) {
+    failures.push(
+      `only ${input.differing.length} of ${STRUCTURAL_PROPERTIES.length} structural properties differ between the brands (${input.differing.join(', ')}). Colour alone is not a second brand. [BENCHMARKS §1 H2]`,
+    )
+  }
+  if (input.measured < DISTANCE_FLOOR) {
+    failures.push(
+      `perceptual distance ${input.measured.toFixed(4)} is below the pinned floor ${DISTANCE_FLOOR}. Never lower the floor to make this pass [BENCHMARKS §4.1/§4.4].`,
+    )
+  }
+  return failures
 }
 
 async function run(): Promise<CheckResult> {
@@ -355,7 +324,7 @@ async function run(): Promise<CheckResult> {
       }
       normalised.push(await render(browser, bundle, brand, forced))
 
-      const sheet = await mount(browser, bundle, real)
+      const sheet = await mount(browser, bundle, real, { viewport: VIEWPORT })
       await sheet.locator('.panel').screenshot({ path: `bench/gallery/${brand.name}.png` })
       blocksSeen += await sheet.evaluate(
         () =>
@@ -368,36 +337,28 @@ async function run(): Promise<CheckResult> {
     const [first, second] = normalised
     if (first === undefined || second === undefined) throw new Error('divergence: need two brands')
 
-    const overflowing = [...first.overflow, ...second.overflow]
-    if (overflowing.length > 0) {
-      throw new Error(
-        `horizontal overflow at ${VIEWPORT_WIDTH}px: ${overflowing
-          .map((o) => `${o.element} ${o.scrollWidth}>${o.clientWidth}`)
-          .join(', ')}`,
-      )
-    }
-
     const differing = differingProperties(first.structure, second.structure)
-    if (differing.length < 4) {
-      throw new Error(
-        `only ${differing.length} of ${STRUCTURAL_PROPERTIES.length} structural properties differ between the brands (${differing.join(', ')}). Colour alone is not a second brand. [BENCHMARKS §1 H2]`,
-      )
-    }
 
     const metrics = await browser.newPage()
     const measured = await distance(metrics, first.shot, second.shot)
     await metrics.close()
     await writeContactSheet(browser)
-    if (measured < DISTANCE_FLOOR) {
-      throw new Error(
-        `perceptual distance ${measured.toFixed(4)} is below the pinned floor ${DISTANCE_FLOOR}. Never lower the floor to make this pass [BENCHMARKS §4.1/§4.4].`,
-      )
-    }
+
+    // All three judged together, and all three reported rather than thrown: a run that overflows
+    // AND fails the floor should say both, because the second is often the explanation for the
+    // first. The old form stopped at whichever came first in this function.
+    const failures = judgeDivergence({
+      overflow: [...first.overflow, ...second.overflow],
+      missing: [...first.missing, ...second.missing],
+      differing,
+      measured,
+    })
 
     return {
       // Every block rendered under every brand, which is what H2 says it examines. A run that
       // rendered nothing must never read as a pass. [ENGINEERING §3.1]
       count: blocksSeen,
+      failures,
       detail: `distance ${measured.toFixed(4)} >= ${DISTANCE_FLOOR} (ground normalised to ${NORMALISED_SURFACE}); ${differing.length}/5 structural properties differ (${differing.join(', ')}); ${blocksSeen} block renders, no overflow at ${VIEWPORT_WIDTH}px; contact sheet in bench/gallery/`,
     }
   } finally {

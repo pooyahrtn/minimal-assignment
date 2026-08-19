@@ -1,6 +1,14 @@
 import { checks } from './checks'
+import { grade } from './grade'
 
-type Row = { name: string; tier: string; ok: boolean; count: number; detail: string }
+type Row = {
+  name: string
+  tier: string
+  ok: boolean
+  count: number
+  failures: string[]
+  detail: string
+}
 
 const rawArgs = process.argv.slice(2)
 
@@ -33,16 +41,30 @@ const rows: Row[] = []
 
 for (const check of selected) {
   try {
-    const { count, detail } = await check.run(rest)
-    // A check that collected nothing has proven nothing, whatever it returned.
-    rows.push({ name: check.name, tier: check.tier, ok: count > 0, count, detail })
+    const { count, failures, detail } = await check.run(rest)
+    // A check that collected nothing has proven nothing, whatever it returned — and a check that
+    // reported failures fails even if it collected thousands of cases.
+    const reported = failures ?? []
+    rows.push({
+      name: check.name,
+      tier: check.tier,
+      ok: grade({ count, failures: reported }),
+      count,
+      failures: reported,
+      detail,
+    })
   } catch (error) {
+    // A throw is still a failure, and still the right protocol for one that makes the rest of the
+    // measurement meaningless. It lands in the same column as a reported one so the report has a
+    // single answer to "what went wrong", not two.
+    const message = error instanceof Error ? error.message : String(error)
     rows.push({
       name: check.name,
       tier: check.tier,
       ok: false,
       count: 0,
-      detail: error instanceof Error ? error.message : String(error),
+      failures: [message],
+      detail: message,
     })
   }
 }
@@ -55,10 +77,13 @@ const report = [
   '',
   filter ? `Filter: \`${filter}\`` : 'All checks.',
   '',
-  '| check | tier | result | cases | detail |',
-  '|---|---|---|---|---|',
+  '| check | tier | result | cases | failures | detail |',
+  '|---|---|---|---|---|---|',
   ...rows.map(
-    (r) => `| ${r.name} | ${r.tier} | ${r.ok ? 'pass' : 'FAIL'} | ${r.count} | ${r.detail} |`,
+    (r) =>
+      `| ${r.name} | ${r.tier} | ${r.ok ? 'pass' : 'FAIL'} | ${r.count} | ${r.failures.length} | ${
+        r.failures.length > 0 ? `${r.failures.join(' · ')} — ` : ''
+      }${r.detail} |`,
   ),
   '',
   collectedNothing

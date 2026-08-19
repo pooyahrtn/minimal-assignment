@@ -37,8 +37,23 @@ function hostPage(agentJsOrigin: string): string {
   return `<!doctype html><html><body><script src="${agentJsOrigin}/v1/agent.js" data-shop="velde" async></script></body></html>`
 }
 
-/** Counts every assertion actually made, so `count` in the CheckResult is never a guess. */
-function makeAsserter(): { assert: (condition: boolean, message: string) => void; count: number } {
+/**
+ * Counts every assertion actually made, so `count` in the CheckResult is never a guess.
+ *
+ * H6 keeps the throw-on-first-failure protocol rather than collecting into `failures`, and that is
+ * deliberate: the asserter is threaded through a bundle build, a `fetch` contract check and a
+ * Playwright paint measurement, and each stage's numbers are only meaningful if the one before it
+ * held. Made non-fatal, `assert(widgetStampMs !== null)` would fall through to
+ * `widgetStampMs ?? 0`, and `0 - configResponseEndMs` is a large negative that then *passes* the
+ * paint cap — a phantom pass, which is worse than the thing the change was meant to fix.
+ *
+ * Exported so `bench/fault.test.ts` can prove a false assertion actually throws, rather than the
+ * suite resting on the belief that it does [COMPLAINS #2].
+ */
+export function makeAsserter(): {
+  assert: (condition: boolean, message: string) => void
+  count: number
+} {
   const state = { count: 0 }
   return {
     assert(condition: boolean, message: string): void {

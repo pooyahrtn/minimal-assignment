@@ -2,9 +2,27 @@ import type { Corner, DerivedTokens } from '@maximal/tokens'
 
 /**
  * Every widget style, authored only against the `--mx-*` custom properties in `CssVarName`.
- * No component invents a colour, radius, spacing step or font size [ENGINEERING §1.2]. The three
- * literal lengths that survive are accessibility floors or device hairlines, each commented where
- * it is used, and they are listed in the hand-off.
+ * No component invents a colour, radius, spacing step or font size [ENGINEERING §1.2].
+ *
+ * Two groups of literals survive, and the count matters because this comment used to say "three"
+ * while the file carried ten:
+ *
+ *  1. **Accessibility floors and device constants**, each commented where it is used —
+ *     `min-height/min-width: 44px` (WCAG 2.5.5 target size), `1px` borders (device hairline),
+ *     `border-radius: 999px` (a pill is a shape, not a scale step), `outline: 2px` /
+ *     `outline-offset: 2px` (WCAG 2.4.13), `line-height: 1` on single-glyph marks, one
+ *     `opacity: 0.55` on an out-of-stock photograph, and `.sr-only`'s standard 1px clip.
+ *
+ *  2. **The constant signature** (`.signature`, below) — seven more literals, and they are the
+ *     one block in this file that is REQUIRED to sit outside the token system. `PRINCIPLES §9`:
+ *     *"one small, constant signature that sits outside the token system and is never
+ *     merchant-set."* Tokenising its geometry would make the AI disclosure scale with the
+ *     merchant's own `scale`/`density` ramp, which is precisely what §9 and the EU AI Act Art. 50
+ *     framing exist to prevent. Its colours DO follow the brand, on purpose — see the comment on
+ *     the block.
+ *
+ * So the universal "no hardcoded spacing or font size outside `packages/tokens`" bullet has a
+ * named carve-out here rather than an exception nobody wrote down. [TASKS §2]
  */
 
 /**
@@ -46,20 +64,44 @@ export function styles(tokens: DerivedTokens): string {
   return `
   :host {
     ${vars}
-    /* Inherited properties still cross a shadow boundary, so reset everything and re-state the
-       few every child inherits from us. [PRINCIPLES §5] */
-    all: initial;
-    font-family: var(--mx-font-body);
-    font-size: var(--mx-text-md);
-    line-height: var(--mx-line-height);
-    color: var(--mx-text-primary);
-    display: block;
-    position: fixed;
-    inset: 0;
-    z-index: ${LAUNCHER_Z_INDEX};
+    /*
+     * Inherited properties still cross a shadow boundary, so reset everything and re-state the
+     * few every child inherits from us. [PRINCIPLES §5]
+     *
+     * Every declaration below is \`!important\`, and that is not belt-and-braces — it is the only
+     * form of this rule that works. The shadow-host cascade rule is that a NORMAL declaration in
+     * the outer document beats \`:host\`, whatever the specificity, and only an IMPORTANT \`:host\`
+     * declaration beats an important outer one. So a plain \`mx-agent { font-size: 40px }\` on the
+     * storefront defeated the bare \`all: initial\` outright, and \`* { color: red !important }\`
+     * defeated it twice over. Measured before the change and after: H5 \`isolation\` read 31
+     * properties leaking into the shadow root on each storefront — font-size 18px to 40px, family
+     * to cursive, colour to red, direction to rtl — and reports zero now.
+     *
+     * The important \`all\` is why each line after it repeats \`!important\`: an important \`all\`
+     * outranks the normal declarations that follow it in the same rule, so dropping one does not
+     * leave that property un-hardened, it resets it to the CSS initial value. Losing \`display\`
+     * alone makes the host \`inline\`; losing \`pointer-events\` makes it swallow every click on the
+     * storefront underneath.
+     *
+     * \`direction\` and \`unicode-bidi\` are stated separately because \`all\` does not reset them —
+     * the spec exempts both, along with custom properties (which is what keeps \`\${vars}\` above
+     * intact). Pinning \`ltr\` is right while every string the widget ships is English; a merchant
+     * on an RTL storefront is a named ceiling, not a solved case. [TASKS §0 #10]
+     */
+    all: initial !important;
+    direction: ltr !important;
+    unicode-bidi: isolate !important;
+    font-family: var(--mx-font-body) !important;
+    font-size: var(--mx-text-md) !important;
+    line-height: var(--mx-line-height) !important;
+    color: var(--mx-text-primary) !important;
+    display: block !important;
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: ${LAUNCHER_Z_INDEX} !important;
     /* The host spans the viewport so the panel can anchor to any corner; only real controls take
        clicks, everything else falls through to the storefront underneath. */
-    pointer-events: none;
+    pointer-events: none !important;
   }
 
   *, *::before, *::after { box-sizing: border-box; }
@@ -316,10 +358,11 @@ export function styles(tokens: DerivedTokens): string {
      a --mx-* custom property. The card image is sized by 'aspect-ratio' and the compare columns by
      flex, precisely so neither needs a length no token can supply. [ENGINEERING §1.2]
 
-     The literals that DO appear here are the same three classes the file already carries, and
-     nothing else: 'min-height: 44px' (WCAG 2.5.5 target floor), '1px' borders (device hairline),
-     and one 'opacity: 0.55' on an out-of-stock photograph — a paint value with no token, and the
-     state is also stated in words so opacity is never the only signal.
+     The literals that DO appear in THIS section are group 1 from the file header and nothing else:
+     'min-height: 44px' (WCAG 2.5.5 target floor), '1px' borders (device hairline), and one
+     'opacity: 0.55' on an out-of-stock photograph — a paint value with no token, and the state is
+     also stated in words so opacity is never the only signal. The signature block's seven are
+     group 2, and they are above, not here.
      ------------------------------------------------------------------------------------------ */
 
   /* The one place 'labelCase' becomes visible outside the shell chrome — every block that has a

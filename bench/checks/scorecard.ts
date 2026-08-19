@@ -40,9 +40,12 @@ const MIN_RATIONALE = 40
 export const scorecard: Check = {
   name: 'scorecard',
   tier: 'SOFT',
-  run: async () => {
-    const file = Bun.file(SCORECARD)
-    if (!(await file.exists())) throw new Error(`${SCORECARD} is missing`)
+  // Takes an optional path, the same way `transcript` takes a catalog path: `bench/fault.test.ts`
+  // points it at deliberately malformed scorecards to prove this check can actually fail. A check
+  // whose only input is a hardcoded good file can never be shown to reject a bad one.
+  run: async (args) => {
+    const file = Bun.file(args[0] ?? SCORECARD)
+    if (!(await file.exists())) throw new Error(`${args[0] ?? SCORECARD} is missing`)
     const rows: Row[] = (await file.json()).rows
 
     const seen = new Set(rows.map((r) => r.task))
