@@ -89,25 +89,27 @@ for await (const name of new Bun.Glob('*.json').scan({ cwd: CONFIG_DIR })) {
   shops.push(shop)
 }
 
-await Bun.write(
-  `${OUT}/vercel.json`,
-  `${JSON.stringify(
-    {
-      headers: [
-        { source: '/v1/agent.js', headers: CORS },
-        {
-          source: '/v1/config/(.*)',
-          headers: [...CORS, { key: 'content-type', value: 'application/json; charset=utf-8' }],
-        },
-      ],
-      // Only reached when the filesystem has no such shop. Preserves T6's "unknown shopKey returns
-      // a safe default config, not a 500 — the widget must never break a merchant's page".
-      rewrites: [{ source: '/v1/config/:key', destination: '/v1/config/default' }],
-    },
-    null,
-    2,
-  )}\n`,
-)
+// Copied, not authored. Vercel reads `vercel.json` from the project ROOT when it builds from git,
+// and from the upload root when `vercel deploy dist/platform` uploads a prebuilt directory — two
+// consumers, and a second copy here would be a contract that drifts. The root file is the
+// definition; the CORS list above documents what it must contain and is asserted against it below.
+await Bun.write(`${OUT}/vercel.json`, Bun.file(`${ROOT}/vercel.json`))
+
+const shipped: unknown = await Bun.file(`${OUT}/vercel.json`).json()
+const headerRules = isRecord(shipped) && Array.isArray(shipped.headers) ? shipped.headers : []
+for (const { key, value } of CORS) {
+  const everywhere = headerRules.every(
+    (rule) =>
+      isRecord(rule) &&
+      Array.isArray(rule.headers) &&
+      rule.headers.some((h) => isRecord(h) && h.key === key && h.value === value),
+  )
+  if (!everywhere || headerRules.length === 0) {
+    throw new Error(
+      `vercel.json does not set ${key}: ${value} on every /v1 route — the deployed platform would diverge from apps/platform/server.ts`,
+    )
+  }
+}
 
 const bundleBytes = (await Bun.file(`${OUT}/v1/agent.js`).bytes()).length
 console.log(

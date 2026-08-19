@@ -1,0 +1,49 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "headers": [
+    {
+      "source": "/v1/agent.js",
+      "headers": [
+        {
+          "key": "access-control-allow-origin",
+          "value": "*"
+        },
+        {
+          "key": "access-control-allow-methods",
+          "value": "GET, POST, OPTIONS"
+        },
+        {
+          "key": "cache-control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/v1/config/(.*)",
+      "headers": [
+        {
+          "key": "access-control-allow-origin",
+          "value": "*"
+        },
+        {
+          "key": "access-control-allow-methods",
+          "value": "GET, POST, OPTIONS"
+        },
+        {
+          "key": "cache-control",
+          "value": "public, max-age=0, must-revalidate"
+        },
+        {
+          "key": "content-type",
+          "value": "application/json; charset=utf-8"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/v1/config/:key",
+      "destination": "/v1/config/default"
+    }
+  ]
+}
