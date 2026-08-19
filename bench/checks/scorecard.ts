@@ -28,11 +28,31 @@ type Row = { task: string; title: string; axes: Record<string, Axis>; worst_find
  * run must show up as a gap rather than quietly widen the denominator. Add the row here when you
  * add its judgement, never before — this list is what makes "we judged everything" falsifiable.
  *
- * Known gap: T5 and T6 landed in `d222edb` after this run and are NOT judged yet. They are listed
- * so the check says so out loud on every run instead of reporting full coverage of a stale set.
+ * Known gap: T13 (`48b31bb`) is landed in `TASKS.md` §1 and carries a PROGRESS row and a COMPLAINS
+ * section, but was held out of this judging run as in flight, so it is listed here rather than
+ * silently absent — the check says so out loud on every run instead of reporting full coverage of a
+ * stale set. T5, T6, T7, T9, T10, T11 and T15 were the previous gap and are judged as of this run.
  */
-const EXPECTED = ['T0', 'T1', 'T2', 'T3', 'T4', 'T8', 'T12', 'T14', 'H1+H3', 'wire']
-const UNJUDGED_LANDED = ['T5', 'T6']
+const EXPECTED = [
+  'T0',
+  'T1',
+  'T2',
+  'T3',
+  'T4',
+  'T8',
+  'T12',
+  'T14',
+  'H1+H3',
+  'wire',
+  'T5',
+  'T6',
+  'T7',
+  'T9',
+  'T10',
+  'T11',
+  'T15',
+]
+const UNJUDGED_LANDED = ['T13']
 
 /** A rationale short enough to be a placeholder is not evidence [BENCHMARKS §2: quoted next to the evidence]. */
 const MIN_RATIONALE = 40
@@ -97,7 +117,7 @@ export const scorecard: Check = {
         (secondBand.length > 0
           ? `, then ${secondBand.map((r) => `${r.task} (${r.green}/4)`).join(', ')}`
           : '') +
-        `. ${UNJUDGED_LANDED.length > 0 ? `NOT judged: ${UNJUDGED_LANDED.join(', ')} (landed after this run). ` : ''}` +
+        `. ${UNJUDGED_LANDED.length > 0 ? `NOT judged: ${UNJUDGED_LANDED.join(', ')} (landed, held out of this judging run). ` : ''}` +
         `Judge is uncalibrated — advisory only. Rationales: bench/scorecard.json.`,
     }
   },
