@@ -103,8 +103,8 @@ actually happened.
 | T2 | ✅ landed, **frozen** `9aa8c0b` | Two storefronts | 90m + photo sourcing | **90m** | T0 | yes (split A/B) |
 | T3 | ✅ landed | Agent shell — embed, shadow root, chrome | 45m | 45m | T0 | yes |
 | T4 | ✅ landed | Agent brain — FSM, retrieval, obstacle | 30m | 20m | T0 | yes |
-| T5 | 🔄 in flight | Message block renderers | 60m | **90m** | T3 | yes |
-| T6 | 🔄 in flight | Platform API + snippet delivery | 15m | 10m | T0 | yes |
+| T5 | ◐ landed (**box 5's sale-price third open — blocked on T0/T8, see PROGRESS**) | Message block renderers | 60m | **90m** | T3 | yes |
+| T6 | ✅ landed | Platform API + snippet delivery | 15m | 10m | T0 | yes |
 | T7 | ⬜ open | Configuration page | 90m | **120m** | T6, T2, **T11** | yes |
 | T8 | ✅ landed | Catalog ingest + brand extractor | 45m | 30m | T0, T2 · T4 to close last DoD | yes (build) |
 | T9 | ⬜ open | Hostile-page hardening + polish pass | 45m | 60m | T3, T5, T2 | no |
@@ -299,8 +299,8 @@ the trade-off stated as a choice.
 - [ ] Product card renders VELDE specs (`material`, `fit`, `made in`) and KRACHT specs (`protein per serving`, `flavour`, `servings`) with **no schema-specific code** — two schemas, one renderer.
 - [ ] `no-match` looks designed, not apologetic. A reviewer should stop and read it.
 - [ ] Every block survives a 40-character unbroken word and a 3-line title at 375px.
-- [ ] `labelCase: upper-tracked` visibly changes label treatment across all 7.
-- [ ] Out-of-stock, sale price, and missing image all render deliberately.
+- [x] `labelCase: upper-tracked` visibly changes label treatment across all 7. **Amended: across all 6 that HAVE a label.** `text` is a prose bubble with no label surface, and uppercasing conversational prose would be wrong. All six others verified by computed `text-transform`/`letter-spacing` under both brands.
+- [ ] Out-of-stock and missing image render deliberately — **done, on real catalog data**. **Sale price NOT built:** the normalised `Product` has no compare-at field, and the storefronts' JSON-LD `Offer` carries only `price`, so `tools/ingest.ts` cannot produce one. Both stores DO have sale products and show struck prices on their own pages — it is only the JSON-LD projection that drops it. Closing this needs a field on `Product` (T0's contract), a change to ingest (T8's), and a human `bun bench --accept` for the gold files that embed `Product`. Left open, not faked. [BENCHMARKS §4.1]
 
 - [ ] **Owns benchmark H2 (`brand-divergence`) — the most important number in the project.**
 - [ ] **Its seam ships with it.** The T12 agent specs deferred for want of a renderer (the
@@ -447,12 +447,24 @@ still cross the shadow boundary). Motion, focus rings, loading and empty states,
 
 ## T10 `◐ draft half landed` — DECISIONS.md, the log, and demo rehearsal
 
-**Draft half landed `ed09a5d`.** Closed: boxes 2, 3, 4, 5 (agent half) and 8. Still open: **box 1**
-(one page — `DECISIONS.md` is 1565 words), **box 5's human half** (the two worst-scoring tasks
-re-read by a human — `bun bench scorecard` names T14 at 1/4, then a three-way tie at 2/4 between T2,
-T12 and H1+H3, so "the two" needs a tiebreak nobody specified), and **boxes 6 and 7**, which are
-blocked on T15/T7/T11 rather than deferred. T5 and T6 landed after the scorecard ran and are
-unjudged; the check prints that gap on every run.
+**Draft half landed `ed09a5d`; box 7 closed by rehearsal after T11 landed (`f879393`).**
+
+Closed: boxes 2, 3, 4, 5 (agent half), 7 and 8. Still open:
+- **Box 1 — "One page. Not two."** `DECISIONS.md` is 1445 words. Reported open, not closed. The
+  floor with all ten mandated topics present (the brief's six bullets plus T10's four disclosures)
+  is about that; going lower means dropping mandated content. **This box needs a human call, not
+  another trim pass** — six passes across three desks moved it 1959 → 1445 and no further.
+- **Box 5's human half** — the two worst-scoring tasks re-read by a human. `bun bench scorecard`
+  names **T14 at 1/4**, then a three-way tie at 2/4 (T2, T12, H1+H3), so "the two" needs a tiebreak
+  nobody specified. T14's top finding is already fixed (its unsourced rows are now marked
+  `unverified`); the re-read itself is Pooya's and cannot be delegated to another agent.
+- **Box 6** — the 6-minute demo, twice, on the deployed links. **Blocked on T15**, which is
+  unstarted. Everything else in the box (375px, T14's ordered list) is ready.
+
+Also open across the suite, found by T10 and owned elsewhere: a bare `bun bench` never reaches the
+golden transcripts (T9 owns `run.ts`'s grading), and `bun run test:e2e` exits 1 on the full parallel
+run — one KRACHT spec times out under whole-suite CPU contention and passes 50/50 at `--workers=1`.
+T5 and T6 landed after the scorecard was judged and are unjudged; the check says so on every run.
 
 **Scope.** One page, honestly written, covering exactly the brief's six bullets:
 merchant thinking / cross-brand approach / **what AI suggested that I overrode** / what I cut /

@@ -232,6 +232,29 @@ order: `plan` · `law` · `review-1` · `T0` · `re-plan` · `review-2` · `desc
 
 ## Process & planning
 
+- **T10 box 7 (the rehearsed live extension) is closed by rehearsal, and the beat is the derived
+  value, not the brand object** ← rehearsing it as "watch me paste ten lines" · timed end to end
+  against the landed T11: a `MerchantTokens` literal plus a `Voice` plus one `SHOPS` entry, then
+  `bun run build:config` — **under one second**, 5 configs written. The stage moment is what comes
+  back out: a `#FF4D00`-on-`#101014` brand nobody had entered derives `--mx-text-muted: #85858a`
+  against that near-black surface with no manual override anywhere in the input. Pointing at the
+  input is a party trick; pointing at the output is the product. Rehearsal brand added and removed
+  in the same session — `git diff` on `brands.ts`, `index.ts` and `build-config.ts` is empty `[T10]`
+- **`COMPETITORS §2`'s verification claim corrected, and the matrix gained a `Verified` column** ←
+  the header's "11 of 13 product rows are `doc`" with no per-row marking · three products carrying
+  specific factual claims — **Wizzy, Lyro, Zoovu** — had no source in the file or its bibliography,
+  so the count asserted a rigour the document did not carry. Found by T10's own scorecard judge
+  against T14, which is the SOFT tier doing exactly the job `BENCHMARKS §2` describes: it ranked
+  T14 worst at 1/4 and named the reason. `TASKS.md` T14's own line applies — a confident wrong
+  claim about a named company on stage is worse than the gap `[T10]`
+- **`DECISIONS.md` failed DoD box 1 ("One page. Not two.") and the box is reported open rather than
+  declared closed** ← shaving words until the number looked right · the file went 1398 → 745 →
+  1959 → 1445 words across three desks and six passes; word-level trimming moved almost nothing
+  because every paragraph is load-bearing. The floor with all ten mandated topics present — the
+  brief's six bullets plus T10's four disclosures — is around 1400. Cutting below it means dropping
+  mandated content, which is a worse failure than a long page. Two sections that were *not* brief
+  bullets (the twelve-product scan, the chip row) were compressed to their claims; both survive in
+  full in `COMPETITORS.md` and here `[T10]`
 - **`DECISIONS.md` cites its overrides in prose with a date, and the date comes from
   `git log -S '<entry text>' -- DECISIONS-LOG.md`** ← declaring T10 DoD box 3's "with dates"
   unsatisfiable because entries carry a session tag and not a date ((me)) · the refuting agent

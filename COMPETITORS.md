@@ -12,7 +12,14 @@ thrown away. Every product below is read as **an answer to one question**:
 > Many merchants cannot name their own brand. How do you serve both with one interface?
 
 **Verification.** `doc` = vendor pages opened and quoted. `search` = summaries only.
-`unverified` = third-party or inference. 11 of 13 product rows are `doc`.
+`unverified` = third-party or inference. Marked per row in the §2 table.
+
+**Corrected 2026-08-19 [T10].** This line previously read "11 of 13 product rows are `doc`" with no
+per-row marking, while three products carrying specific factual claims — **Wizzy, Lyro and Zoovu** —
+had no source anywhere in this file or its bibliography. The count was asserting a rigour the
+document did not carry. Every row is now marked, and the three are `unverified`: their claims are
+inference from a paired product's docs, not something opened. `TASKS.md` T14's own warning applies —
+a confident wrong claim about a named company on stage is worse than the gap.
 
 ---
 
@@ -40,16 +47,16 @@ Which is exactly the channel our token system already uses.
 
 Vocabulary = merchant-facing **appearance** controls. Counted the same way for every product.
 
-| Product | Controls | Font? | The position it takes |
-|---|---|---|---|
-| **Gorgias** | 11 | none | Line drawn very low, then a **separate developer-only** CSS/JS injection route that is explicitly disowned. Bimodal: pixel-perfect with a developer, one accent colour without. No bridge between. |
-| **Manifest AI** | 13 | none | Smallest true ceiling in the set. Its own docs concede it "will always read as Manifest's chat card, tinted one of your colors, not a native piece of the storefront." |
-| **Klevu / Nosto** | 14 | none native | Klevu configures **inside Shopify's theme editor** — the merchant styles it where they style their store. Nosto forks a template and hands you a `nosto-cli` dev workflow. Same category, opposite bets. |
-| **Algolia / Wizzy** | 14 named, then unbounded | raw CSS only | Algolia's docs "address only developers" — the non-technical merchant is *not in the audience at all*. Ceiling is your frontend team, unbounded upward, absent without one. |
-| **Tidio / Lyro** | 19 | none | Two fixed container shapes, three fixed sizes, colours hand-picked and **not derived from each other**. |
-| **Zoovu** | 25 | one, theme-level | No self-serve font-family on Zoe; real control means a Vue.js theme rebuild. |
-| **Rep AI** | 27 | **yes — any hosted `.woff2` URL** | The outlier. See below. |
-| **Rebuy** | 32 | none native | Ten times the colour granularity of Gorgias and *the same font gap.* More knobs on one axis doesn't buy the axis everyone misses. |
+| Product | Controls | Font? | Verified | The position it takes |
+|---|---|---|---|---|
+| **Gorgias** | 11 | none | `doc` | Line drawn very low, then a **separate developer-only** CSS/JS injection route that is explicitly disowned. Bimodal: pixel-perfect with a developer, one accent colour without. No bridge between. |
+| **Manifest AI** | 13 | none | `doc` | Smallest true ceiling in the set. Its own docs concede it "will always read as Manifest's chat card, tinted one of your colors, not a native piece of the storefront." |
+| **Klevu / Nosto** | 14 | none native | `doc` | Klevu configures **inside Shopify's theme editor** — the merchant styles it where they style their store. Nosto forks a template and hands you a `nosto-cli` dev workflow. Same category, opposite bets. |
+| **Algolia / Wizzy** | 14 named, then unbounded | raw CSS only | Algolia `doc`; **Wizzy `unverified`** | Algolia's docs "address only developers" — the non-technical merchant is *not in the audience at all*. Ceiling is your frontend team, unbounded upward, absent without one. |
+| **Tidio / Lyro** | 19 | none | Tidio `doc`; **Lyro `unverified`** | Two fixed container shapes, three fixed sizes, colours hand-picked and **not derived from each other**. |
+| **Zoovu** | 25 | one, theme-level | **`unverified`** — G2 403'd; no vendor page opened | No self-serve font-family on Zoe; real control means a Vue.js theme rebuild. |
+| **Rep AI** | 27 | **yes — any hosted `.woff2` URL** | `doc` | The outlier. See below. |
+| **Rebuy** | 32 | none native | `doc` | Ten times the colour granularity of Gorgias and *the same font gap.* More knobs on one axis doesn't buy the axis everyone misses. |
 | *(Intercom, pilot)* | ~6 | none | Smallest vocabulary, and fills it automatically from a typed domain. Refuses font and CSS **silently** — neither appears in official docs, only in staff forum replies. |
 
 **Three findings from the shape of that table:**
