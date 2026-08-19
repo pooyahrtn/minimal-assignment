@@ -12,9 +12,9 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-PLATFORM=https://maximal-platform.vercel.app
-VELDE=https://maximal-velde.vercel.app
-KRACHT=https://maximal-kracht.vercel.app
+PLATFORM=https://maximal.releashed.io
+VELDE=https://velde.releashed.io
+KRACHT=https://kracht.releashed.io
 
 fail() { echo "FAIL: $*" >&2; exit 1; }
 
@@ -24,13 +24,19 @@ deploy() {
   # build`, which no serverless host can do. See tools/build-platform.ts for the full reasoning.
   # The storefront origins go IN: each config's catalog carries absolute product `url` and
   # `image` fields built against localhost, and the widget renders them on the deployed page.
-  bun run tools/build-platform.ts --velde="$VELDE" --kracht="$KRACHT"
-  bunx vercel deploy dist/platform --prod --yes --project maximal-platform
+  # All three are built by Vercel from the repo, not uploaded as a local dist/: uploading a
+  # prebuilt directory still runs the project's own build command against it, and `tools/` is not
+  # in there. So the origins live in the build command, the same dashboard-state-as-code rule the
+  # KRACHT block below already follows.
+  bunx vercel project update maximal-platform --build-command \
+    "bun run tools/build-platform.ts --velde=$VELDE --kracht=$KRACHT"
+  bunx vercel deploy --prod --yes --project maximal-platform
 
-  bun run tools/build-velde.ts --site="$VELDE" --platform="$PLATFORM"
-  bunx vercel deploy dist/velde --prod --yes --project maximal-velde
+  bunx vercel project update maximal-velde --build-command \
+    "bun run tools/build-velde.ts --site=$VELDE --platform=$PLATFORM"
+  bunx vercel deploy --prod --yes --project maximal-velde
 
-  # KRACHT is the only one Vercel builds itself. Two settings it cannot infer:
+  # KRACHT is the only Next.js one, and carries three settings Vercel cannot infer:
   #  - root-directory, so `next build` runs in the app; the deploy still uploads from the REPO ROOT
   #    so that `apps/shop-kracht/public/photos` (a symlink to ../../assets/photos/kracht) has a
   #    target at all. Deploying with --cwd instead uploads only the app dir and the symlink dangles.
@@ -47,6 +53,15 @@ deploy() {
   printf '%s' "$KRACHT"   | bunx vercel env add NEXT_PUBLIC_SITE_ORIGIN production --project maximal-kracht
   printf '%s' "$PLATFORM" | bunx vercel env add NEXT_PUBLIC_PLATFORM_ORIGIN production --project maximal-kracht
   bunx vercel deploy --prod --yes --project maximal-kracht
+
+  # The three subdomains, attached here rather than in the dashboard for the same reason as every
+  # other project setting above. `releashed.io` sits on Vercel nameservers, so each `add` writes the
+  # DNS record too — no third-party registrar step. Re-adding an attached domain reports
+  # `domain_already_assigned` and exits 0, so this is idempotent. AFTER the deploys, not before:
+  # Vercel refuses to assign a domain to a project whose latest production deployment errored.
+  bunx vercel domains add maximal.releashed.io maximal-platform
+  bunx vercel domains add velde.releashed.io   maximal-velde
+  bunx vercel domains add kracht.releashed.io  maximal-kracht
 }
 
 verify() {

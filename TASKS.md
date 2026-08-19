@@ -30,7 +30,7 @@ measurement, the alternative that was rejected. This table is the index, not the
 | 4 | Preview over a *capture* of their page | **Preview is an iframe of the live storefront** with the widget mounted inside it. Screenshot fallback only for foreign URLs. |
 | 5 | Obstacle lands in "Car" (stage 3) | **Obstacle lands with the first agent slice.** It is the graded moment and ~20 lines of set logic. |
 | 6 | 7-row adversary table | **Build 3 on purpose** (max-z cookie banner, global reset + Tailwind preflight, 375px sticky ATC bar). Rest are stretch. |
-| 7 | 3 Vercel projects on `releashed.io` apex | **3 projects on free `*.vercel.app`**; custom DNS last, if slack remains. Still genuinely cross-origin, so the CORS point stands. |
+| 7 | 3 Vercel projects on `releashed.io` apex | **3 projects on `{maximal,velde,kracht}.releashed.io`** — subdomains, not the apex. Shipped first on `*.vercel.app`; the DNS was un-cut once it turned out to cost three CLI commands (§3 item 4). Sibling subdomains are still separate origins and the embed fetches `credentials: 'omit'`, so the CORS point is unchanged. |
 | 8 | `product-compare`, 2nd obstacle (mind-change) | **Explicitly optional.** Cut candidates #1 and #2 (§3). |
 | 9 | MARENNE (editorial skincare) + KLYFT (Nordic outdoor) | **VELDE** (Amsterdam minimal apparel) + **KRACHT** (Dutch sports nutrition) — archetypes of Minimal's published client list. **Cost:** both accents now clear 16.5:1 and 14.7:1, so T11's pale-yellow brand is **required** — the only place the clamp visibly does its job. |
 | 10 | A Dutch-language KRACHT, locale as a fourth brand axis | **Descoped. Both stores ship English; the Dutch *market* furniture stays** — iDEAL, the VAT toggle, the delivery cut-off, the score out of 10. Strings still travel in the config payload (ENGINEERING §2.1). |
@@ -113,7 +113,7 @@ actually happened.
 | T12 | ◐ both halves landed | E2E critical-flow suite (Playwright) | 40m | 30m | T2 · T3+T4 wired · **T5 for the card flows** | no |
 | T13 | ⬜ open (cut #0) | Real LLM turn behind the AI SDK | 2h | 45m | T6 (stub is enough) | yes |
 | T14 | ✅ landed | Competitor scan → feature matrix → demo subset | 40m | **30m** | — (reads the built tree) | yes |
-| T15 | ◐ landed | Deploy the three projects on `*.vercel.app` — **box 4 (phone) needs Pooya** | 40m | 30m | T6 · §0 #11 | no |
+| T15 | ◐ landed | Deploy the three projects on `*.releashed.io` — **box 4 (phone) needs Pooya** | 40m | **45m** | T6 · §0 #11 | no |
 
 T12 is `◐` not `✅`: both halves are committed, but its `no-match` card specs are deferred and land
 **with T5**, not later — see T5's DoD.
@@ -324,7 +324,7 @@ KV — **no database**.
 - [ ] Fetched **cross-origin** with no CORS error in console — in **two** proofs, because the
       storefront freeze blocks the obvious one locally [COMPLAINS #1]: (a) the H6 check mounts the
       widget on a synthetic foreign-origin host page and asserts a clean fetch — **this is the box
-      T6 closes**; (b) the real `*.vercel.app` storefront origins are proved by **T15**, once the
+      T6 closes**; (b) the real `*.releashed.io` storefront origins are proved by **T15**, once the
       embed line's origin is repointed under the §0 #11 exemption. Do not edit `apps/shop-*` to
       close this box.
 - [ ] Unknown `shopKey` returns a safe default config, not a 500 — the widget must never break a merchant's page.
@@ -672,7 +672,8 @@ re-baseline with no row, no DoD and no estimate — which is exactly the shape o
 already ate 135 unbudgeted minutes [PROGRESS lessons 6/9]. The brief lists "a deployed link" first
 under *What to send*.
 
-**Scope.** Three Vercel projects on free `*.vercel.app`: the two storefronts and the platform.
+**Scope.** Three Vercel projects on `{maximal,velde,kracht}.releashed.io`: the two storefronts and
+the platform. Shipped first on `*.vercel.app`, which remain live as the projects' default domains.
 Repoint each storefront's embed `src=` origin at the deployed platform — the one byte the freeze
 now exempts (§0 #11) — and nothing else. Config and `agent.js` served with the same caching headers
 T6 pinned locally.
@@ -681,15 +682,23 @@ T6 pinned locally.
 - [ ] Three live URLs, and the widget mounts on both storefronts from one `<script>` line.
 - [ ] **T6's cross-origin box closes for real here**: config fetched from a genuinely different
       origin, zero CORS errors in a fresh browser console.
-- [ ] `git log -p apps/shop-*` shows this commit changed the `src=` origin and nothing else.
+- [x] The deploy changed **no line under `apps/`** — `git log -p <range> -- apps/` is empty, because
+      the §0 #11 widening made every origin an env var. Emptiness proves nothing on its own, so the
+      box that carries the weight is `deploy.sh`'s: the live HTML, sitemap, `robots.txt` and every
+      config payload are grepped for `localhost` and for the right origin, on the deployed URLs.
 - [ ] The full obstacle flow walked on the deployed links at 375px, on a phone, not an emulator.
-- [ ] Custom DNS **stays cut** (§3 item 4). `*.vercel.app` is genuinely cross-origin, which is the
-      only property the demo argues from.
+- [x] ~~Custom DNS **stays cut** (§3 item 4)~~ — **reversed**, see below. What the box was really
+      protecting is that the origins are *genuinely* cross-origin, and they still are: `maximal.`
+      and `velde.releashed.io` are same-**site** but different **origins**, so the preflight and the
+      `access-control-allow-origin` check are byte-for-byte the ones `*.vercel.app` produced, and
+      `config.ts:147` fetches `credentials: 'omit'` so the same-site cookie relaxation cannot even
+      apply. The apex stays unused.
 
 **QA (independent).** Fresh browser, no localhost running anywhere: open both deployed storefronts
 and reach the obstacle. If any part needs a local server, this task is not done.
 
-**Not in scope.** DNS, CI/CD, preview environments, analytics.
+**Not in scope.** CI/CD, preview environments, analytics. The apex `releashed.io` and `www` —
+three subdomains is the whole DNS surface.
 
 ---
 
@@ -705,7 +714,7 @@ making. The list below is now an *order of last resort*, not a plan:
 1. ~~`product-compare` block (T5)~~ — already built (`blocks.ts:24`); nothing left to cut here.
 2. Mind-change / second obstacle (T4)
 3. Stretch adversaries — focus-trap modal, junk scripts, third-party bubble (T2)
-4. `releashed.io` custom DNS (ship on `*.vercel.app`)
+4. ~~`releashed.io` custom DNS (ship on `*.vercel.app`)~~ — **un-cut and done.** The premise was that DNS is a project; the domain was already registered *through Vercel* and already on `ns[12].vercel-dns.com`, so it was three `vercel domains add` commands and no waiting. A cut priced at 0 minutes is not a cut.
 5. ~~Third brand (T11)~~ — **off the cut list.** Promoted to required; it is demo beat 4 and the
    only place the clamp is visible.
 6. T12's desktop project (keep `mobile` — 375px is never cut)
@@ -714,11 +723,13 @@ making. The list below is now an *order of last resort*, not a plan:
 **Never cut:** the obstacle flow, the two-brand proof, 375px, DECISIONS.md.
 
 **Back ON the plan, funded by the re-baseline** — in the order they earn points:
-1. **Deploy for real** on `*.vercel.app` — **now T15, with its own DoD**, because a line in this
+1. **Deploy for real** — **now T15, with its own DoD**, because a line in this
    list is not a task and this project has now proved twice what an unowned seam costs. The brief
-   lists "a deployed link" first under What to send. **Custom DNS stays cut** — it is item 4 above,
-   the brief explicitly exempts deployment, and using that same sentence as a licence in §0 #7 and
-   ignoring it here would be selective.
+   lists "a deployed link" first under What to send. ~~**Custom DNS stays cut**~~ — it went in after
+   all, on `{maximal,velde,kracht}.releashed.io`. The reasoning that cut it ("the brief exempts
+   deployment, DNS scores nothing") was sound about *cost*, and wrong about the cost: the domain was
+   already owned and already on Vercel nameservers, so the three subdomains cost three commands. The
+   demo property the cut was protecting — genuinely cross-origin — survives intact.
 2. **T11's third brand — promoted from stretch to required.** It is no longer a party trick: with
    VELDE at 16.5:1 and KRACHT at 14.7:1, the pale-yellow brand is the only place a reviewer can
    *see* the contrast clamp do its job. It also has to pass its own DoD, which currently fails —

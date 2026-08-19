@@ -13,10 +13,10 @@
  */
 import { chromium, type Browser, type Page } from '@playwright/test'
 
-const PLATFORM = 'https://maximal-platform.vercel.app'
+const PLATFORM = 'https://maximal.releashed.io'
 const VELDE = {
   name: 'velde',
-  base: 'https://maximal-velde.vercel.app',
+  base: 'https://velde.releashed.io',
   pdp: '/products/noord-wool-overcoat',
   launcher: 'Help me choose',
   composer: 'What is it for?',
@@ -25,7 +25,7 @@ const VELDE = {
 }
 const KRACHT = {
   name: 'kracht',
-  base: 'https://maximal-kracht.vercel.app',
+  base: 'https://kracht.releashed.io',
   pdp: '/product/whey-classic-1kg-chocolate',
   launcher: 'Ask Joep',
   composer: 'Tell me what you need',
