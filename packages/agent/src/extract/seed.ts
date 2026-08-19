@@ -83,6 +83,44 @@ export const SEED_BY_ORIGIN: Record<string, MerchantDraft> = {
 }
 
 /**
+ * The same two stores, at their DEPLOYED addresses.
+ *
+ * `extractMerchantTokens` looks a seed up by exact origin [extract.ts], and the config page offers
+ * the two demo stores as one-click links — which point at localhost locally and at the deployed
+ * origins in production. Seeding only the local pair meant the deployed demo, the one a reviewer
+ * actually opens, fell through to the live crawler and got `accent #FBFAF8 / surface #FFFFFF` for
+ * VELDE and `surface #FFFFFF` for a black KRACHT: the 1.04:1 alarm, and no embed snippet. Measured
+ * on the deployed origins, both are the same colours the local pair already records, because they
+ * are the same stores.
+ *
+ * Written as an alias rather than a second copy so the two addresses cannot drift into disagreeing
+ * about one store. Hard-coded rather than injected: `packages/agent` is shipped software with no
+ * build-time environment [ENGINEERING §1.3], and a wrong origin here degrades to a live crawl
+ * rather than breaking anything.
+ *
+ * ponytail: the real fix is the crawler reading these stores correctly — VELDE names its pair
+ * `--paper`/`--ink` and KRACHT uses Tailwind utilities with no custom properties, and `pickSurface`
+ * matches neither, so surface falls to the #FFFFFF default. Seeding seven brands would be the
+ * smell; seeding the two the page links to is the demo's own fixture. Upgrade path: widen
+ * `pickSurface` to read the rendered body background, then delete this block.
+ */
+for (const [local, deployed] of [
+  ['http://localhost:4001', 'https://velde.releashed.io'],
+  ['http://localhost:4002', 'https://kracht.releashed.io'],
+] as const) {
+  const draft = SEED_BY_ORIGIN[local]
+  // `tokens` is shared by reference — that is the part that must never drift. Only the note is
+  // rewritten, because a merchant looking at the deployed store should not be told we read it off
+  // localhost.
+  if (draft !== undefined) {
+    SEED_BY_ORIGIN[deployed] = {
+      ...draft,
+      note: `Seeded from ${deployed} — cached so the demo never waits on a network fetch.`,
+    }
+  }
+}
+
+/**
  * Self-check: `bun packages/agent/src/extract/seed.ts`. The one thing a wrong pair here costs is
  * the embed snippet — the config page refuses to hand one over while accent-on-surface is under
  * 3:1 — so that is what this asserts, on the same `readabilityReport` row the page guards on.
