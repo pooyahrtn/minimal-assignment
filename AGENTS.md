@@ -41,7 +41,7 @@ section is the contract.
 | `TAKE_HOME.md` | The actual brief. Wins over every other doc, including this one. |
 | `PRINCIPLES.md` | Product taste, the token contract, the two brands, the agent's behaviour. |
 | `ENGINEERING.md` | Where logic lives, what "done" means, what is mechanically enforced. |
-| `TASKS.md` | The task graph, each task's scope, DoD and QA box, the cut order. |
+| `TASKS.md` | The task graph, each task's scope, DoD and QA box, the cut order, and per-task **status**. |
 | `BENCHMARKS.md` | The HARD gates and the SOFT agent scorecard. Gold files are human-owned. |
 | `DECISIONS-LOG.md` | This rule's output. Append-only. |
 | `COMPETITORS.md` | T14's matrix, the three buckets, and the ordered demo list T10 rehearses against. |

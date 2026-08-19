@@ -90,6 +90,9 @@ One task, seven steps. Steps 2 and 5 are the point — never skip them.
 
 - Append the `PROGRESS.md` row **and delete this task's `## In flight` line in the
   same edit** — the claim exists to be released.
+- Flip the task's status marker in `TASKS.md` — the heading and the §1 table row.
+  `TASKS.md` answers *whether* a task is done; `PROGRESS.md`'s `## In flight`
+  answers *which desk owns it right now*. A stale marker is worse than none.
 - Write it now, not in a later batch: a row reconstructed days later sounds
   reconstructed [COMPLAINS #3].
 

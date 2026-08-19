@@ -5,9 +5,7 @@ Where the two disagree, the brief wins. Deviations from PRINCIPLES are listed in
 mirrored into `DECISIONS-LOG.md`.
 
 **Budget: 36h wall clock, and the constraint is NOT typing.**
-100% of this code is agent-written. T0 was estimated at 2.5h and landed in **6 minutes**, because
-its scope was config files and type declarations — the cheapest thing an agent does. Every estimate
-below is therefore in **two units**:
+100% of this code is agent-written, so every estimate below is in **two units**:
 
 - **A** = agent wall-clock — how long producing it takes.
 - **R** = human review time — Pooya reading the diff, opening the screen, deciding, correcting.
@@ -21,20 +19,22 @@ it is **spent on iteration loops over T2/T5/T7**.
 
 ## 0. What changed from PRINCIPLES, and why
 
-| # | PRINCIPLES said | Doing instead | Why |
-|---|---|---|---|
-| 1 | 6 pages × 2 storefronts | **3 templates × 2** (home+listing, PDP, cart drawer) | About / shipping pages are never opened in a review. Templates cost hours; catalog *data* stays at 30+ per store because it is a JSON file. |
-| 2 | Start from Shopify Dawn's CSS | **Do not ship Dawn.** KRACHT from Next.js Commerce (MIT, Vercel). VELDE derived from Dawn's *rendered structure*, CSS regenerated. | Dawn's LICENSE.md is MIT **with a field-of-use clause**: rights "may only be exercised to develop themes that integrate or interoperate with Shopify software or services… All other uses are strictly prohibited." A storefront on our own domain is not that. PRINCIPLES §4 already said "derive if restrictive" — this resolves it. |
-| 3 | Live tier-0 crawl is a build stage | **Crawl is a build-time script**, output committed as a JSON snapshot. Live-URL crawl is the config page's *brand* extractor only. | The crawl is real, provable, and same-code-path — but nothing in the live demo depends on a network fetch of a site we don't control. Cloudflare blocking a datacenter IP mid-presentation is a losing coin flip. |
-| 4 | Preview over a *capture* of their page | **Preview is an iframe of the live storefront** with the widget mounted inside it. Screenshot fallback only for foreign URLs. | Headless Chrome on Vercel (`@sparticuz/chromium`, cold starts, 50MB) buys a static image. An iframe is less work *and* a better demo — it is live and interactive. |
-| 5 | Obstacle lands in "Car" (stage 3) | **Obstacle lands with the first agent slice.** | The brief says the happy path is the easy part. Empty-intersection + which-chip-to-drop is ~20 lines of set logic and it is the graded moment. Build it before `product-compare`. |
-| 6 | 7-row adversary table | **Build 3 on purpose** (max-z cookie banner, global reset + Tailwind preflight, 375px sticky ATC bar). Rest are stretch. | Those three are visible surviving. A focus-trap modal that works looks like nothing happened. |
-| 7 | 3 Vercel projects on `releashed.io` apex | **3 Vercel projects on free `*.vercel.app`** first; custom DNS last, if slack remains. | Still genuinely cross-origin, so the CORS point stands. Zero DNS yak-shaving. Brief: "your code does not have to be deployed anywhere." |
-| 8 | `product-compare`, 2nd obstacle (mind-change) | **Explicitly optional.** Cut candidates #1 and #2. | Named now so they can't quietly eat the polish budget. |
-| 9 | PRINCIPLES §4: MARENNE (warm editorial skincare) + KLYFT (Nordic technical outdoor) | **VELDE** (Amsterdam minimal apparel, EN) + **KRACHT** (Dutch sports nutrition, NL) | The originals were `TAKE_HOME.md`'s own example sentence handed back to its author. Replaced with archetypes of Minimal's published client list (ETQ, XXL Nutrition). Full entry in `DECISIONS-LOG.md`. **Cost, measured and owned:** the old accents stressed the contrast clamp harder (MARENNE sage was 3.23:1 against its surface); the new ones are 16.5:1 and 14.7:1. T11's pale-yellow brand is therefore promoted from stretch to **required** — it is now the only place the clamp visibly does its job. |
-| 10 | A Dutch-language KRACHT, with locale as a fourth brand axis | **Descoped. Both stores ship English; the Dutch *market* furniture stays.** | The signal that reads as "he knows this market" lives in the furniture — iDEAL, the VAT toggle, the delivery cut-off, the score out of 10 — not in the translation. Translated copy was also the one surface no benchmark can check and that a native-speaking reviewer would judge hardest. i18n goes back on the §10 not-building list. What survives is architectural: user-visible strings still travel in the config payload (ENGINEERING §2.1), which is right for one language too. |
+Eleven deviations. **The reasoning for each lives in `DECISIONS-LOG.md`** — the licence clause, the
+measurement, the alternative that was rejected. This table is the index, not the argument.
 
-| 11 | PRINCIPLES §4: storefront source frozen after the `<script>` tag, "no exceptions" | **Exactly one exemption: the embed line's origin string.** Everything else stays frozen. | Both storefronts hardcode `http://localhost:4003/v1/agent.js` (`9aa8c0b`). Deployed, that line loads nothing — so "deploy for real" and the freeze as written cannot both hold, and T6's cross-origin DoD had no way to close. The freeze exists so *visual* bugs get fixed in the widget; an origin string is not a visual fix and repointing it cannot hide a widget bug. T9/T12's proof narrows from "zero commits to `apps/shop-*`" to "no commit whose diff touches anything but the `src=` origin" — `git log -p` still proves it. [COMPLAINS #1] |
+| # | PRINCIPLES said | Doing instead |
+|---|---|---|
+| 1 | 6 pages × 2 storefronts | **3 templates × 2** (home+listing, PDP, cart drawer). About/shipping are never opened in a review; catalog *data* stays at 30+ per store because it is a JSON file. |
+| 2 | Start from Shopify Dawn's CSS | **Do not ship Dawn.** KRACHT from Next.js Commerce (MIT); VELDE derived from Dawn's *rendered structure*, CSS regenerated. Dawn's MIT licence carries a field-of-use clause limiting it to Shopify themes. |
+| 3 | Live tier-0 crawl is a build stage | **Crawl is a build-time script**, output committed as a JSON snapshot. Live-URL crawl is the config page's *brand* extractor only — nothing in the demo depends on a network fetch of a site we don't control. |
+| 4 | Preview over a *capture* of their page | **Preview is an iframe of the live storefront** with the widget mounted inside it. Screenshot fallback only for foreign URLs. |
+| 5 | Obstacle lands in "Car" (stage 3) | **Obstacle lands with the first agent slice.** It is the graded moment and ~20 lines of set logic. |
+| 6 | 7-row adversary table | **Build 3 on purpose** (max-z cookie banner, global reset + Tailwind preflight, 375px sticky ATC bar). Rest are stretch. |
+| 7 | 3 Vercel projects on `releashed.io` apex | **3 projects on free `*.vercel.app`**; custom DNS last, if slack remains. Still genuinely cross-origin, so the CORS point stands. |
+| 8 | `product-compare`, 2nd obstacle (mind-change) | **Explicitly optional.** Cut candidates #1 and #2 (§3). |
+| 9 | MARENNE (editorial skincare) + KLYFT (Nordic outdoor) | **VELDE** (Amsterdam minimal apparel) + **KRACHT** (Dutch sports nutrition) — archetypes of Minimal's published client list. **Cost:** both accents now clear 16.5:1 and 14.7:1, so T11's pale-yellow brand is **required** — the only place the clamp visibly does its job. |
+| 10 | A Dutch-language KRACHT, locale as a fourth brand axis | **Descoped. Both stores ship English; the Dutch *market* furniture stays** — iDEAL, the VAT toggle, the delivery cut-off, the score out of 10. Strings still travel in the config payload (ENGINEERING §2.1). |
+| 11 | Storefront source frozen after the `<script>` tag, "no exceptions" | **Exactly one exemption: the embed line's `src=` origin.** Everything else stays frozen. T9/T12's proof narrows to "no commit whose diff touches anything but the origin" — `git log -p` still proves it. [COMPLAINS #1] |
 
 **Additions not in PRINCIPLES:**
 - **T10** makes "what AI suggested that I overrode" a tracked artifact, not an end-of-build reconstruction.
@@ -68,10 +68,9 @@ against a synthetic host page.
 ### 1.1 The remaining schedule — the fan-out is mostly spent
 
 The first wave parallelised well because T1/T2/T3/T4/T8 wrote to five disjoint trees. **The
-remaining eight do not.** Four of them write to `apps/platform` (T6, T7, T13, T15) and three to
+remaining eight do not.** Four write to `apps/platform` (T6, T7, T13, T15) and three to
 `packages/agent/src` (T5, T9, T13); one task, one desk, one worktree [ENGINEERING §5.1] means those
-queue whatever the graph says. Measured right now, `brands.ts`, `converse.ts` and `css.ts` are all
-dirty in the in-flight T5/T6 trees. And the constraint underneath has not changed: **A parallelises
+queue whatever the graph says. And the constraint underneath has not changed: **A parallelises
 across desks, R serialises on one human.** A third desk that produces one more screen to review
 buys nothing.
 
@@ -93,56 +92,37 @@ buys nothing.
 remaining item the brief itself calls unnecessary (`TAKE_HOME.md:78`), writing into both contended
 trees.
 
-| ID | Task | A (agent) | R (review) | Depends on | Parallel-safe |
-|----|------|-----------|------------|-----------|---------------|
-| T0 | Contracts, guardrails & repo skeleton | ~~2.5h~~ **6m actual** | 20m | — | no (blocking) |
-| T1 | Token derivation engine | 20m | 15m | T0 | yes |
-| T2 | Two storefronts | 90m + photo sourcing | **90m** | T0 | yes (split A/B) |
-| T3 | Agent shell — embed, shadow root, chrome | 45m | 45m | T0 | yes |
-| T4 | Agent brain — FSM, retrieval, obstacle | 30m | 20m | T0 | yes |
-| T5 | Message block renderers | 60m | **90m** | T3 | yes |
-| T6 | Platform API + snippet delivery | 15m | 10m | T0 | yes |
-| T7 | Configuration page | 90m | **120m** | T6, T2 | yes |
-| T8 | Catalog ingest + brand extractor | 45m | 30m | T0, T2 · T4 to close last DoD | yes (build) |
-| T9 | Hostile-page hardening + polish pass | 45m | 60m | T3, T5, T2 | no |
-| T10 | DECISIONS.md, log, demo rehearsal | 20m draft | **90m** | all | no |
-| T11 | Third brand (stretch / live-extend prep) | 10m | 10m | T1, T6 | yes |
-| T12 | E2E critical-flow suite (Playwright) | 40m | 30m | T2 · T3+T4 wired · T5 for the card flows | no |
-| T13 | Real LLM turn behind the AI SDK | 2h | 45m | T6 (stub is enough) | yes |
-| T14 | Competitor scan → feature matrix → demo subset | 40m | **30m** | — (reads the built tree) | yes |
-| T15 | Deploy the three projects on `*.vercel.app` | 40m | 30m | T6 · §0 #11 | no |
+**Status is this table's job; `PROGRESS.md` owns estimate-vs-actual and the re-baseline.** Don't
+duplicate its numbers here — the A/R columns below are the *plan*, and PROGRESS records what
+actually happened.
 
-**Total, re-baselined against `PROGRESS.md` actuals (2026-08-19): ~5.5h of A spent across the
-landed rows, and the estimates were not wrong the way the last re-baseline assumed.** Of those
-~332 minutes, **135 (41%) went to work with no row in this table** — photography (88m), the
-storefront fix pass (32m), the brain↔shell wire (15m). That is the finding, not the total: the
-schedule risk was never the tasks, it was the **seams between them** [PROGRESS lessons 6/7/9].
-Remaining A (T5, T6, T7, T9, T10, T11, T13, T15) is ~4h on the same evidence. The bolded R values
-are the graded surfaces, and R is still the binding constraint: A parallelises across desks, **R
-serialises on one human**, and 36h is 1.5 calendar days containing sleep. Plan iteration against
-~8h of real remaining attention.
+| ID | Status | Task | A (agent) | R (review) | Depends on | Parallel-safe |
+|----|--------|------|-----------|------------|-----------|---------------|
+| T0 | ✅ landed | Contracts, guardrails & repo skeleton | 2.5h | 20m | — | no (blocking) |
+| T1 | ✅ landed | Token derivation engine | 20m | 15m | T0 | yes |
+| T2 | ✅ landed, **frozen** `9aa8c0b` | Two storefronts | 90m + photo sourcing | **90m** | T0 | yes (split A/B) |
+| T3 | ✅ landed | Agent shell — embed, shadow root, chrome | 45m | 45m | T0 | yes |
+| T4 | ✅ landed | Agent brain — FSM, retrieval, obstacle | 30m | 20m | T0 | yes |
+| T5 | 🔄 in flight | Message block renderers | 60m | **90m** | T3 | yes |
+| T6 | 🔄 in flight | Platform API + snippet delivery | 15m | 10m | T0 | yes |
+| T7 | ⬜ open | Configuration page | 90m | **120m** | T6, T2, **T11** | yes |
+| T8 | ✅ landed | Catalog ingest + brand extractor | 45m | 30m | T0, T2 · T4 to close last DoD | yes (build) |
+| T9 | ⬜ open | Hostile-page hardening + polish pass | 45m | 60m | T3, T5, T2 | no |
+| T10 | 🔄 draft half in flight | DECISIONS.md, log, demo rehearsal | 20m draft | **90m** | all, **T15** | no |
+| T11 | ⬜ open (**required**) | Third brand — the visible clamp | 10m | 10m | T1, T6 | yes |
+| T12 | ◐ both halves landed | E2E critical-flow suite (Playwright) | 40m | 30m | T2 · T3+T4 wired · **T5 for the card flows** | no |
+| T13 | ⬜ open (cut #0) | Real LLM turn behind the AI SDK | 2h | 45m | T6 (stub is enough) | yes |
+| T14 | ✅ landed | Competitor scan → feature matrix → demo subset | 40m | **30m** | — (reads the built tree) | yes |
+| T15 | ⬜ open | Deploy the three projects on `*.vercel.app` | 40m | 30m | T6 · §0 #11 | no |
+
+T12 is `◐` not `✅`: both halves are committed, but its `no-match` card specs are deferred and land
+**with T5**, not later — see T5's DoD.
 
 **Every remaining task must name its seam** — the integration work that only exists once it lands
 (T5→T7's preview, T13→the widget's turn loop, T15→everything). A seam with no row is the single
-most reliable way this plan has already lost time.
-
-**Two caveats, both now measured rather than predicted.** (1) T2 came in at **162m** all-in
-(VELDE 18.5 + KRACHT 24 + photography 88 + the fix pass 32) — inside `PRINCIPLES §4`'s 6h box, but
-**1.8× the 90m row**, and every minute of the overage was in the two lines the row did not contain.
-Asset sourcing is its own task class and still has no baseline [PROGRESS lesson 7]. (2) The A
-column still excludes `pickup`'s two adversarial rounds; measured, they run 7–8.5m and 88–95k
-tokens *each*, which makes process overhead the largest single line in the A column and the reason
-four T0 defects never reached T9. Budget it explicitly for every remaining task.
-
-**What this re-baseline changes.** Pure-logic tasks (T1, T4, T6, T8) collapse to minutes and stop
-being schedule risks. Asset-bound and taste-bound work (T2's photography and Dutch copy, T5's
-seven blocks × two brands, T7's whole surface) does **not** compress, because it is bounded by a
-human looking at a screen. Estimation is now tracked per task in `PROGRESS.md`; a systematic miss
-re-baselines the whole class, not the single row.
-
-The benchmark suite is no longer a trade against the buffer — the buffer is now ~18h. It is
-straightforwardly worth it: it is what makes it safe to let agents write fast, and its per-task
-retry count measures `TASKS.md` as much as it measures the model.
+most reliable way this plan has already lost time [PROGRESS lessons 6/7/9]. Two costs the A column
+does not contain and every remaining task must budget: **asset sourcing** (T2's photography ran 88m
+against no estimate at all) and **`pickup`'s two adversarial rounds** (7–8.5m and ~90k tokens each).
 
 ---
 
@@ -161,7 +141,7 @@ Every task inherits these. A task is not done without them.
 
 ---
 
-## T0 — Contracts, guardrails & repo skeleton
+## T0 `✅ landed` — Contracts, guardrails & repo skeleton
 **Blocking. Nothing else starts until this lands.** Guardrails go in *before the first line of
 feature code* — retrofitting a complexity cap onto eight parallel worktrees is a rewrite, not a
 lint pass. [ENGINEERING §4]
@@ -194,7 +174,7 @@ function — and confirm each is caught by name. A guardrail nobody has seen fai
 
 ---
 
-## T1 — Token derivation engine
+## T1 `✅ landed` — Token derivation engine
 `packages/tokens`. Pure functions. **No UI, no DOM.**
 
 **Scope.** `derive(merchantTokens) -> DerivedTokens`, in OKLCH, with a hard AA clamp.
@@ -216,7 +196,7 @@ radius/elevation map to a numeric spacing + radius + shadow ramp.
 
 ---
 
-## T2 — Two storefronts
+## T2 `✅ landed, frozen` — Two storefronts
 `apps/shop-velde` (static HTML/CSS), `apps/shop-kracht` (Next + Tailwind). **Both English.**
 **Integration-blind: build as if the agent is never coming.** Splits cleanly across two desks.
 
@@ -258,7 +238,7 @@ Stretch adversaries: focus-trap newsletter modal, announcement bar that reflows 
 
 ---
 
-## T3 — Agent shell (embed, shadow root, chrome)
+## T3 `✅ landed` — Agent shell (embed, shadow root, chrome)
 `packages/agent`. **Renders against a literal token object — does not wait on T1 or T6.**
 
 **Scope.** The loader: read `data-shop` from its own `<script>`, fetch config, cache in
@@ -280,7 +260,7 @@ open/close, header with persona, scrolling message list, composer, constraint-ch
 
 ---
 
-## T4 — Agent brain (FSM, retrieval, the obstacle)
+## T4 `✅ landed` — Agent brain (FSM, retrieval, the obstacle)
 `packages/agent/src/brain`. **Pure logic, headless, no DOM.**
 
 **Scope.** The FSM `idle → intake → clarify → recommend → obstacle → resolve → act`.
@@ -307,7 +287,7 @@ quantified cost ("closest is €48"). Chip removal is reversible.
 
 ---
 
-## T5 — Message block renderers
+## T5 `🔄 in flight` — Message block renderers
 7 renderers: `text` · `quick-replies` · `chips-update` · `product-card` · `product-compare` · `no-match` · `cta`.
 
 **Scope.** One renderer per block type, each consuming derived tokens only. The product card
@@ -333,7 +313,7 @@ the trade-off stated as a choice.
 
 ---
 
-## T6 — Platform API + snippet delivery
+## T6 `🔄 in flight` — Platform API + snippet delivery
 `apps/platform`.
 
 **Scope.** `GET /v1/config/:shopKey` → `{tokens, voice, catalog}` with permissive CORS.
@@ -357,7 +337,7 @@ KV — **no database**.
 
 ---
 
-## T7 — Configuration page
+## T7 `⬜ open` — Configuration page
 `apps/platform`. **The highest-scoring surface after the agent. Do not start it tired.**
 
 **Scope.** The layered flow from PRINCIPLES §9:
@@ -415,7 +395,7 @@ there.
 
 ---
 
-## T8 — Catalog ingest + brand extractor
+## T8 `✅ landed` — Catalog ingest + brand extractor
 Two things that share one crawl.
 
 **Scope.**
@@ -441,7 +421,7 @@ Returns a `MerchantTokens` draft. Must degrade to sensible defaults on any failu
 
 ---
 
-## T9 — Hostile-page hardening + polish pass
+## T9 `⬜ open` — Hostile-page hardening + polish pass
 **The task that proves the storefront freeze.**
 
 **Scope.** Every bug found on a real storefront gets fixed **inside the widget**. Defensive
@@ -465,7 +445,7 @@ still cross the shadow boundary). Motion, focus rings, loading and empty states,
 
 ---
 
-## T10 — DECISIONS.md, the log, and demo rehearsal
+## T10 `🔄 draft half in flight` — DECISIONS.md, the log, and demo rehearsal
 
 **Scope.** One page, honestly written, covering exactly the brief's six bullets:
 merchant thinking / cross-brand approach / **what AI suggested that I overrode** / what I cut /
@@ -490,7 +470,7 @@ distils it.
 
 ---
 
-## T11 — Third brand (**required** — it is demo beat 4, not a stretch)
+## T11 `⬜ open` — Third brand (**required** — it is demo beat 4, not a stretch)
 **Scope.** A third `MerchantTokens` literal — deliberately ugly/hostile (pale yellow accent,
 pill radius, generous scale, no personification). Ten lines, no new code.
 
@@ -503,7 +483,7 @@ pill radius, generous scale, no personification). Ten lines, no new code.
 
 ---
 
-## T12 — E2E critical-flow suite
+## T12 `◐ both halves landed` — E2E critical-flow suite
 **Requested by Pooya mid-session, not derived from the brief.** `@playwright/test` is already pinned
 and ENGINEERING §4.7 already routes anything with a DOM to it, so this costs a suite, not a
 dependency. `e2e/`, specs named **`*.spec.ts` and never `*.test.ts`** — `bun run test` collects
@@ -544,7 +524,7 @@ and they belong in the bench registry BENCHMARKS.md governs, not in a second run
 
 ---
 
-## T13 — Real LLM turn behind the AI SDK
+## T13 `⬜ open` — Real LLM turn behind the AI SDK
 **Requested by Pooya, and it reverses a standing contract.** `PRINCIPLES §2` used to say "No live
 LLM at runtime. The agent is deterministic," `§1` filed a real LLM under *not graded*, and the brief
 itself says a real AI agent "is not necessary" (`TAKE_HOME.md:78`). None of that made it *wrong* — the
@@ -609,7 +589,7 @@ fallback — budget it inside this task, not after it. **Blocks nothing.** Sits 
 
 ---
 
-## T14 — Competitor scan, feature matrix, and the demo subset
+## T14 `✅ landed` — Competitor scan, feature matrix, and the demo subset
 
 **Requested by Pooya, and it reverses a standing contract.** `PRINCIPLES §1` filed market research
 under *not graded* and that line is now struck. The brief still does not ask for this. The **office
@@ -666,7 +646,7 @@ contract are not reopened by it.
 
 ---
 
-## T15 — Deploy the three projects
+## T15 `⬜ open` — Deploy the three projects
 
 **A seam, promoted to a task.** "Deploy for real" has sat in §3's *back ON the plan* list since the
 re-baseline with no row, no DoD and no estimate — which is exactly the shape of the three lines that

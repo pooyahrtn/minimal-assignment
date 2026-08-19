@@ -63,6 +63,10 @@ Both rows are retroactive, which is the whole point: nobody wrote them at the ti
    at 25-40% of estimate, as predicted. But the two largest lines in this session — **photography at
    88 minutes and the storefront fix pass at 32** — had *no estimate at all*, because neither is a
    task in `TASKS.md`. The schedule risk was never the tasks; it was the work between them.
+   **Measured: of ~332 minutes of A spent across the landed rows, 135 (41%) went to work with no
+   row in `TASKS.md`** — photography 88m, the storefront fix pass 32m, the brain↔shell wire 15m.
+   That ratio, not the total, is the finding. Remaining A across T5/T6/T7/T9/T10/T11/T13/T15 is
+   ~4h on the same evidence, against ~8h of real remaining human attention.
 7. **Asset sourcing is its own task class and needs its own baseline.** `TASKS.md` §1 says "sourcing
    60-80 coherent product photos is the least compressible hour in the project and is *not* in the
    90m" — that was right, and it still went unbudgeted. It took two full attempts and was ultimately
