@@ -19,6 +19,10 @@
                   "@maximal/shop-*/**"
                 ],
                 "message": "packages/agent is shipped software that happens to share this repo: a merchant's browser loads it, our apps never ship with it. Zero imports from apps/ [ENGINEERING §1.3]. Move the shared thing into packages/, or send it through /v1/config."
+              },
+              {
+                "group": ["ai", "ai/**", "@ai-sdk/*", "@ai-sdk/*/**", "zod", "zod/**"],
+                "message": "The provider SDK is server-side only [TASKS T13]. `agent.js` runs on a merchant's page, where everything the bundle carries is public — an API key reaching it is the whole reason /v1/chat exists. Bun's workspace install hoists `ai` to the root node_modules, so this package CAN resolve it and nothing else stops it: H6's gzip cap has under 1kB of headroom, which is still enough to swallow a provider shim and stay green. This rule is the gate, not the cap."
               }
             ]
           }

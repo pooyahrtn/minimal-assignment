@@ -20,7 +20,16 @@ export type BrainState = {
 }
 
 export type Action =
-  | { type: 'message'; text: string }
+  /**
+   * `chips` is the model's reading of `text`, when there was one [TASKS T13]. It is a REPLACEMENT
+   * for this turn's parse, not for the parser: `converse.ts` only ever supplies it after the
+   * platform has verified the reading against the merchant's catalog, and falls back to `text`
+   * alone on any doubt. Everything after this point — `mergeChips`, `evaluate`, `intersect`,
+   * `findObstacle` — is the same code either way, so there is no second path for retrieval or the
+   * obstacle to diverge down. Optional rather than a separate action type because `step` must
+   * treat the two identically by construction; a second case is a second thing to keep in sync.
+   */
+  | { type: 'message'; text: string; chips?: ParsedChip[] }
   | { type: 'drop-chip'; id: string }
   | { type: 'restore-chip'; id: string }
   | { type: 'select-product'; productId: string }
@@ -93,7 +102,14 @@ function setChipState(current: BrainState, id: string, next: Chip['state']): Bra
 export function step(current: BrainState, action: Action): StepResult {
   switch (action.type) {
     case 'message': {
-      const parsed = parseChips(action.text)
+      // Length-checked, not `??`: an empty array is a reading that found nothing, and `[] ?? x`
+      // is `[]`. Without this, a model turn that matched no constraint would suppress the
+      // deterministic parser on the one input the parser handles perfectly — the LLM path would
+      // be strictly worse than no LLM at all, which is the opposite of "degrade, never break".
+      const parsed =
+        action.chips !== undefined && action.chips.length > 0
+          ? action.chips
+          : parseChips(action.text)
       const merged = mergeChips(current.chips, parsed)
       return evaluate({ ...current, state: 'intake', chips: merged })
     }

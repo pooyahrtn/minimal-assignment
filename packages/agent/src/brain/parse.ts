@@ -44,38 +44,70 @@ const SYNONYMS: SynonymEntry[] = [
 const PRICE_PATTERN =
   /(?:under|below|less than|max(?:imum)?)\s*€\s*(\d+(?:\.\d+)?)|€\s*(\d+(?:\.\d+)?)\s*(?:or less|max)/i
 
-function parsePriceChip(text: string): ParsedChip | null {
+/** The ceiling itself, not a chip: `chipsFrom` below is the one place a chip is built. */
+function parsePriceMax(text: string): number | undefined {
   const match = PRICE_PATTERN.exec(text)
-  if (!match) return null
+  if (!match) return undefined
   const raw = match[1] ?? match[2]
-  if (!raw) return null
-  const max = Number(raw)
-  return {
-    id: 'chip-price',
-    label: `under €${max}`,
-    state: 'active',
-    kind: { type: 'price-max', max },
+  if (!raw) return undefined
+  return Number(raw)
+}
+
+/**
+ * The one place a `ParsedChip` is constructed, with two callers: `parseChips` below (the
+ * deterministic path) and `POST /v1/chat` (the model path, T13). Both therefore emit the same
+ * `id` and the same `label` for the same tag — which is what makes T13's DoD box 2 ("three
+ * openings reach the same chips as the verbatim §8 message") a property of the code rather than
+ * a coincidence the model has to reproduce. The model's only degree of freedom is WHICH tags,
+ * never what a tag is called: `PRINCIPLES §8` says the chip row is computed, never generated, so
+ * a label may not come off the wire. A tag with no table entry falls back to the tag itself
+ * rather than being dropped — the catalog is the vocabulary, and `build-config.ts` can add a tag
+ * the table has never named.
+ */
+export function chipsFrom(constraints: { tags: string[]; maxPrice?: number }): ParsedChip[] {
+  const chips: ParsedChip[] = []
+  const seen = new Set<string>()
+  for (const tag of constraints.tags) {
+    if (seen.has(tag)) continue
+    seen.add(tag)
+    chips.push({
+      id: `chip-${tag}`,
+      label: SYNONYMS.find((entry) => entry.tag === tag)?.label ?? tag,
+      state: 'active',
+      kind: { type: 'tag', tag },
+    })
   }
+  const max = constraints.maxPrice
+  // Finite and positive, or there is no price chip. `obstacle.ts` does `product.price - max`
+  // arithmetic and `parse.ts` renders `under €${max}` straight into the chip row, so a NaN or an
+  // Infinity off the wire would reach both the sentence and the row. The regex path cannot
+  // produce one; the model path can, and this is the only place that has to care.
+  if (max !== undefined && Number.isFinite(max) && max > 0) {
+    chips.push({
+      id: 'chip-price',
+      label: `under €${max}`,
+      state: 'active',
+      kind: { type: 'price-max', max },
+    })
+  }
+  return chips
+}
+
+/**
+ * Whether the deterministic table names this tag. `POST /v1/chat` uses it to decide which of two
+ * co-extensive catalog tags to offer the model, so both paths agree on what a constraint is called
+ * [apps/platform/chat.ts]. A function, not a module-scope `Set`: this module IS in the bundle via
+ * `fsm.ts`, and a top-level call is the thing DCE cannot prove pure — the +1859 B in this file's
+ * header is that mistake, already made once.
+ */
+export function parserKnowsTag(tag: string): boolean {
+  return SYNONYMS.some((entry) => entry.tag === tag)
 }
 
 /** Free text → constraint chips. Exported cleanly, free of any agent/FSM state. */
 export function parseChips(text: string): ParsedChip[] {
-  const chips: ParsedChip[] = []
-  const seen = new Set<string>()
-  for (const entry of SYNONYMS) {
-    if (!seen.has(entry.tag) && entry.pattern.test(text)) {
-      seen.add(entry.tag)
-      chips.push({
-        id: `chip-${entry.tag}`,
-        label: entry.label,
-        state: 'active',
-        kind: { type: 'tag', tag: entry.tag },
-      })
-    }
-  }
-  const priceChip = parsePriceChip(text)
-  if (priceChip) chips.push(priceChip)
-  return chips
+  const tags = SYNONYMS.filter((entry) => entry.pattern.test(text)).map((entry) => entry.tag)
+  return chipsFrom({ tags, maxPrice: parsePriceMax(text) })
 }
 
 /** Which group of MerchantTokens a phrase moves. The config page shows one row per group it

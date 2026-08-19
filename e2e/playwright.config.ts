@@ -37,6 +37,11 @@ export default defineConfig({
     {
       command: 'bun run dev:platform',
       cwd: repoRoot,
+      // T13's live intake turn is opt-in, and this pins it off for a platform THIS config starts.
+      // It is not sufficient on its own — `reuseExistingServer` below means a server someone
+      // already started by hand is reused and this block never applies — which is why
+      // `offline.spec.ts` asserts the endpoint is actually off rather than trusting this line.
+      env: { ...process.env, MAXIMAL_LLM: '0' },
       url: 'http://localhost:4003/v1/config/velde',
       reuseExistingServer: true,
       timeout: 30_000,

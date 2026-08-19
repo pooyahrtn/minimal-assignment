@@ -137,7 +137,9 @@ async function boot(): Promise<void> {
   if (customElements.get(TAG) === undefined) customElements.define(TAG, MxAgent)
   const agent = new MxAgent(config)
   // Wired before mount so the first thing a shopper types cannot outrun the listener.
-  converse(agent, config)
+  // The chat endpoint resolves against `script.src`, exactly as the config URL does — the platform
+  // origin is wherever this bundle was served from, never a literal. [TASKS T13]
+  converse(agent, config, { url: new URL('/v1/chat', script.src).href, shop })
   const body = await bodyReady()
   // LAST child of <body> on purpose: the launcher's z-index is already at the 32-bit ceiling, so
   // paint order is what breaks the tie against a cookie banner sitting at the same number.

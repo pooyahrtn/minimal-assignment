@@ -59,6 +59,17 @@ const CORS: Record<string, string> = {
   'access-control-allow-methods': 'GET, POST, OPTIONS',
   // The embed fetches with `credentials: 'omit'`, so `*` is legal and no allow-credentials
   // pairing is needed. A merchant-scoped origin list is out of scope (T6 DoD: "Not in scope").
+  //
+  // `allow-headers` is what makes a cross-origin POST possible at all, and it was missing until
+  // T13 needed one. Every call this server had answered cross-origin was a simple GET
+  // (`config.ts` fetches the config with no custom header), and the two existing POSTs are
+  // same-origin from the configuration page, which never preflights — so nothing had exercised
+  // it. `POST /v1/chat` carries `content-type: application/json` from the merchant's storefront,
+  // which is not a CORS-simple request: the browser preflights, and a 204 with no
+  // `access-control-allow-headers` makes it refuse to send the POST at all. The widget would
+  // then have fallen back to the local brain on every single turn, on every page, silently and
+  // by design — with T13's whole feature dead and every DoD box but one still green.
+  'access-control-allow-headers': 'content-type',
 }
 
 /**
@@ -104,7 +115,7 @@ function jsonError(
  * `content-length` header can lie, so the cap is enforced on bytes actually read off the stream,
  * not on that header. `null` means "over cap"; callers turn that into a 400.
  */
-async function readCappedBody(
+export async function readCappedBody(
   request: Request,
   capBytes: number,
 ): Promise<Uint8Array<ArrayBuffer> | null> {
@@ -564,6 +575,77 @@ async function handleConfigGet(request: Request, url: URL): Promise<Response> {
   return cachedResponse(bytes, 'application/json; charset=utf-8', request)
 }
 
+const MAX_CHAT_BODY_BYTES = 8 * 1024
+
+/**
+ * T13's live intake turn. The model reads the shopper's sentence and answers with CONSTRAINTS —
+ * never blocks, never prose, never a product. Retrieval, the obstacle and the chip row all stay in
+ * the widget's own FSM, so `chips` is the whole contract.
+ *
+ * **This deviates from T13's stated wire contract** ("the widget only ever sees `Block[]`",
+ * TASKS.md:610) and does so deliberately: returning `Block[]` would mean running retrieval and
+ * `findObstacle` on this origin, i.e. a second copy of the brain that has to agree with the
+ * widget's forever. Constraints keep exactly one implementation of the graded logic. Logged in
+ * DECISIONS-LOG.md the same session.
+ *
+ * Every failure — unknown shop, bad body, no key, kill switch, timeout, provider error, or a
+ * reading that would answer worse than the local brain — is a BODILESS 503, which is the one
+ * signal `converse.ts` needs to run the turn locally instead. No error JSON: there is no caller
+ * who could act on the reason, and a body would only tempt one to.
+ */
+async function handleChat(request: Request, _url: URL): Promise<Response> {
+  const bytes = await readCappedBody(request, MAX_CHAT_BODY_BYTES)
+  if (bytes === null) return new Response(null, { status: 503, headers: CORS })
+
+  let body: unknown
+  try {
+    body = JSON.parse(new TextDecoder().decode(bytes))
+  } catch {
+    return new Response(null, { status: 503, headers: CORS })
+  }
+  if (!isRecord(body) || typeof body.shop !== 'string' || typeof body.text !== 'string') {
+    return new Response(null, { status: 503, headers: CORS })
+  }
+
+  // The same closed-set rule as `handleConfigGet`: a key is a Set lookup, never a path segment.
+  // Unknown key falls back to the local brain rather than to `default`'s catalog — answering a
+  // KRACHT shopper out of the default assortment is worse than not answering at all.
+  if (!SHOPS.has(body.shop)) return new Response(null, { status: 503, headers: CORS })
+
+  /*
+   * Imported HERE, not at module scope, and the reason is the deployment. `api/platform.ts` wraps
+   * this same file, so a top-level `import './chat'` would pull `ai` + `@ai-sdk/anthropic` + `zod`
+   * (and their transitive deps) into the module graph of EVERY platform request — `/v1/config`,
+   * `/v1/agent.js`, `/v1/font.css` — with the model switched off. A resolution failure there takes
+   * the merchant's config route down, not the chat turn, which is the opposite of "degrade, never
+   * break". `chatEnabled()` is a plain env read in this file's own graph, so the common
+   * switched-off case never loads the SDK at all and never reads a config off disk to say so.
+   */
+  const { chatEnabled, proposeChips } = await import('./chat')
+
+  // A bodiless 503 either way, but the header says WHICH kind, because the widget must treat them
+  // differently: "off" is true for the whole session and worth remembering, while a declined
+  // reading is about this one sentence. [converse.ts]
+  if (!chatEnabled()) {
+    return new Response(null, { status: 503, headers: { ...CORS, 'x-mx-chat': 'off' } })
+  }
+
+  let config: unknown
+  try {
+    config = await Bun.file(configPath(body.shop)).json()
+  } catch {
+    // A key can be in `SHOPS` and its file gone — minted keys live in `/tmp` on Vercel and are
+    // reaped. Unguarded, this threw out of the handler into Bun's 500, which carries no CORS
+    // headers and falsifies this handler's own "every failure is a bodiless 503".
+    return new Response(null, { status: 503, headers: CORS })
+  }
+  if (!isConfigResponse(config)) return new Response(null, { status: 503, headers: CORS })
+
+  const chips = await proposeChips(body.text, config.catalog)
+  if (chips === null) return new Response(null, { status: 503, headers: CORS })
+  return Response.json({ chips }, { headers: CORS })
+}
+
 function handlePublished(_request: Request, url: URL): Response {
   const key = url.pathname.slice('/v1/published/'.length)
   return Response.json({ firstSeenAt: firstServedAt.get(key) ?? null }, { headers: CORS })
@@ -582,6 +664,7 @@ const ROUTES: { method: string; match: (pathname: string) => boolean; handle: Ro
   { method: 'GET', match: (p) => p.startsWith('/v1/config/'), handle: handleConfigGet },
   { method: 'GET', match: (p) => p.startsWith('/v1/published/'), handle: handlePublished },
   { method: 'POST', match: (p) => p === '/v1/config', handle: handleConfigPost },
+  { method: 'POST', match: (p) => p === '/v1/chat', handle: handleChat },
   { method: 'POST', match: (p) => p === '/v1/extract', handle: handleExtract },
   {
     method: 'GET',
@@ -634,5 +717,8 @@ if (import.meta.main) {
   console.log(`  GET  /v1/config/{${[...SHOPS].join(',')}} -> ${CONFIG_DIR}/*.json`)
   console.log(`  POST /v1/config          -> mints a shop key, writes ${CONFIG_DIR}/<key>.json`)
   console.log(`  POST /v1/extract         -> runs the brand extractor on a merchant URL`)
+  console.log(
+    `  POST /v1/chat            -> LLM intake, ${process.env.MAXIMAL_LLM === '1' ? `ON (${process.env.MAXIMAL_MODEL ?? 'claude-opus-5'})` : 'OFF — set MAXIMAL_LLM=1 to enable'}`,
+  )
   console.log(`  GET  /v1/font.css        -> wraps ?src= as a @font-face stylesheet`)
 }

@@ -11,3 +11,17 @@ dist/
 # matched by this pattern.
 apps/platform/config/shop-*.json
 .vercel/
+
+# Provider keys for T13's live LLM turn. Never committed: the platform reads them from the
+# process environment (Bun auto-loads `.env.local`), and nothing in `packages/agent` — the code
+# that ships to a merchant's page — can see them. [TASKS T13, PRINCIPLES §2]
+.env
+.env.local
+.env.*.local
+
+# Git worktrees created inside the repo. Generated state, like `.vercel/` above — but this one also
+# BREAKS a gate if left visible: a worktree carries a full copy of the tree including `biome.json`,
+# and Biome refuses to run at all on "a nested root configuration" (`bun run lint` exits 1 across
+# the whole repo, on every desk). Biome has `vcs.useIgnoreFile: true`, so ignoring it here is what
+# makes the gate pass rather than a second Biome setting.
+.claude/worktrees/

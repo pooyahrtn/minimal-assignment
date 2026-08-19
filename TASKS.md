@@ -103,7 +103,7 @@ actually happened.
 | T2 | ✅ landed, **frozen** `9aa8c0b` | Two storefronts | 90m + photo sourcing | **90m** | T0 | yes (split A/B) |
 | T3 | ✅ landed | Agent shell — embed, shadow root, chrome | 45m | 45m | T0 | yes |
 | T4 | ✅ landed | Agent brain — FSM, retrieval, obstacle | 30m | 20m | T0 | yes |
-| T5 | ◐ landed (**box 5's sale-price third open — blocked on T0/T8, see PROGRESS**) | Message block renderers | 60m | **90m** | T3 | yes |
+| T5 | ✅ landed (**sale price ruled out of scope, not blocked** — see the box) | Message block renderers | 60m | **90m** | T3 | yes |
 | T6 | ✅ landed | Platform API + snippet delivery | 15m | 10m | T0 | yes |
 | T7 | ✅ landed (**boxes 8 amended, 9 half-open — see below**) | Configuration page | 90m | **120m** | T6, T2, **T11** | yes |
 | T8 | ✅ landed | Catalog ingest + brand extractor | 45m | 30m | T0, T2 · T4 to close last DoD | yes (build) |
@@ -111,7 +111,7 @@ actually happened.
 | T10 | ◐ draft half landed `ed09a5d` | DECISIONS.md, log, demo rehearsal | 20m draft | **90m** | all, **T15** | no |
 | T11 | ✅ landed (**boxes 1+3 unclosable — see PROGRESS**) | Third brand — the visible clamp | 10m | 10m | T1, T6 | yes |
 | T12 | ◐ both halves landed | E2E critical-flow suite (Playwright) | 40m | 30m | T2 · T3+T4 wired · **T5 for the card flows** | no |
-| T13 | ⬜ open (cut #0) | Real LLM turn behind the AI SDK | 2h | 45m | T6 (stub is enough) | yes |
+| T13 | ✅ landed (**box 7 reported, not claimed**) | Real LLM turn behind the AI SDK | 2h | 45m | T6 (stub is enough) | yes |
 | T14 | ✅ landed | Competitor scan → feature matrix → demo subset | 40m | **30m** | — (reads the built tree) | yes |
 | T15 | ◐ landed | Deploy the three projects on `*.releashed.io` — **box 4 (phone) needs Pooya** | 40m | **45m** | T6 · §0 #11 | no |
 
@@ -300,7 +300,7 @@ the trade-off stated as a choice.
 - [ ] `no-match` looks designed, not apologetic. A reviewer should stop and read it.
 - [ ] Every block survives a 40-character unbroken word and a 3-line title at 375px.
 - [x] `labelCase: upper-tracked` visibly changes label treatment across all 7. **Amended: across all 6 that HAVE a label.** `text` is a prose bubble with no label surface, and uppercasing conversational prose would be wrong. All six others verified by computed `text-transform`/`letter-spacing` under both brands.
-- [ ] Out-of-stock and missing image render deliberately — **done, on real catalog data**. **Sale price NOT built:** the normalised `Product` has no compare-at field, and the storefronts' JSON-LD `Offer` carries only `price`, so `tools/ingest.ts` cannot produce one. Both stores DO have sale products and show struck prices on their own pages — it is only the JSON-LD projection that drops it. Closing this needs a field on `Product` (T0's contract), a change to ingest (T8's), and a human `bun bench --accept` for the gold files that embed `Product`. Left open, not faked. [BENCHMARKS §4.1]
+- [ ] Out-of-stock and missing image render deliberately — **done, on real catalog data**. **Sale price NOT built:** the normalised `Product` has no compare-at field, and the storefronts' JSON-LD `Offer` carries only `price`, so `tools/ingest.ts` cannot produce one. Both stores DO have sale products and show struck prices on their own pages — it is only the JSON-LD projection that drops it. **Ruled out of scope by Pooya, 19 Aug** — not deferred, not blocked. The obvious fix (emit `compareAt` in the `Offer`) is a storefront source edit that is not an origin literal, so it costs a second freeze exemption, and unlike the origin one it fails the freeze's own rationale: a JSON-LD field IS the shop being edited to feed the widget. The freeze-respecting alternative — scraping the struck price out of rendered HTML — is brittle selector-matching against markup for 3 sale products in 55. Left open and named, not faked. [BENCHMARKS §4.1, DECISIONS-LOG → Scope]
 
 - [ ] **Owns benchmark H2 (`brand-divergence`) — the most important number in the project.**
 - [ ] **Its seam ships with it.** The T12 agent specs deferred for want of a renderer (the
@@ -595,7 +595,7 @@ and they belong in the bench registry BENCHMARKS.md governs, not in a second run
 
 ---
 
-## T13 `⬜ open` — Real LLM turn behind the AI SDK
+## T13 `✅ landed` (**box 7 unsatisfiable as written — reported against intent, see PROGRESS**) — Real LLM turn behind the AI SDK
 **Requested by Pooya, and it reverses a standing contract.** `PRINCIPLES §2` used to say "No live
 LLM at runtime. The agent is deterministic," `§1` filed a real LLM under *not graded*, and the brief
 itself says a real AI agent "is not necessary" (`TAKE_HOME.md:78`). None of that made it *wrong* — the

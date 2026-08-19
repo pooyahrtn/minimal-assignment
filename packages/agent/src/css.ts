@@ -56,6 +56,21 @@ export function cornerCss(corner: Corner): string {
   }
 }
 
+/**
+ * The turn indicator [TASKS T13] fills the hole T9 recorded at TASKS.md:494: before a live model sat
+ * in front of the FSM, `step()` and `push()` happened in the same tick and there was nothing to wait
+ * for. `.pending` reuses the agent bubble wholesale, so it inherits the merchant's surface, radius
+ * and shadow and cannot drift from the message it stands in for. Three dots, no words: copy would
+ * have to travel in the config payload [ENGINEERING §2.1], and a fourth string across four brand
+ * files is a poor trade for a state that lasts a second. It is `aria-hidden` for the same reason it
+ * is wordless — the answer lands in the same `role="log"` a moment later and IS announced, so
+ * announcing the wait as well only makes a screen reader noisier. The reduced-motion block is the
+ * guard `motion.test.ts` demands; this is the widget's first and only motion.
+ *
+ * Its rationale lives here rather than in the stylesheet because `bun build --minify` strips TS
+ * comments, while a comment inside the emitted CSS template literal is shipped bytes on every
+ * merchant's page — and H6's gzip cap is the tightest budget in the repo.
+ */
 export function styles(tokens: DerivedTokens): string {
   /*
    * `!important` on the custom properties too, and it is the half the first hardening pass missed.
@@ -362,6 +377,30 @@ export function styles(tokens: DerivedTokens): string {
     align-self: flex-end;
     background: var(--mx-accent);
     color: var(--mx-text-on-accent);
+  }
+
+  /* Turn indicator [T13]. */
+  .pending {
+    display: flex;
+    gap: var(--mx-space-1);
+    align-items: center;
+    min-height: 1em;
+  }
+  .pending > i {
+    width: 0.4em;
+    height: 0.4em;
+    border-radius: 50%;
+    background: var(--mx-text-muted);
+    animation: mx-pending 1.2s ease-in-out infinite;
+  }
+  .pending > i:nth-child(2) { animation-delay: 0.15s; }
+  .pending > i:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes mx-pending {
+    0%, 80%, 100% { opacity: 0.25; }
+    40% { opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pending > i { animation: none; opacity: 0.6; }
   }
 
   /* ------------------------------------------------------------------------------------------

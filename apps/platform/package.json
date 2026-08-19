@@ -2,5 +2,10 @@
   "name": "@maximal/platform",
   "version": "0.0.0",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "@ai-sdk/anthropic": "^4.0.39",
+    "ai": "^7.0.68",
+    "zod": "^4.4.3"
+  }
 }

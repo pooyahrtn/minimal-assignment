@@ -83,6 +83,8 @@ export class MxAgent extends HTMLElement {
   private readonly input: HTMLInputElement
   private chipRow: HTMLElement
   private chips: Chip[] = []
+  /** The turn indicator's node while a turn is in flight, else null. See `setPending`. */
+  private pending: HTMLElement | null = null
   /** One sticky-bar measurement per frame, however many events asked for one. */
   private stickyBarPending = false
   /** The launcher's last known horizontal centre — see `stickyBarHeight`. */
@@ -318,8 +320,47 @@ export class MxAgent extends HTMLElement {
     this.appendMessage(node)
   }
 
-  private appendMessage(node: HTMLElement): void {
+  /**
+   * The waiting state for a turn that has to cross the network [TASKS T13, filling the hole T9
+   * recorded at TASKS.md:494]. Idempotent in both directions, because the caller's `finally` runs
+   * on the fallback path too and a turn that failed fast may clear a pending state it never set.
+   *
+   * Deliberately NOT a disabled composer: a shopper who types a second thought while the first is
+   * in flight keeps it, and `converse.ts` serialises the turns. Taking the input away to express
+   * "busy" would lose the sentence they were halfway through.
+   */
+  setPending(on: boolean): void {
+    if (on === (this.pending !== null)) return
+    // `aria-busy` is the part a screen reader gets: the dots are aria-hidden (announcing the wait
+    // AND the answer is noise), so without this a non-sighted shopper has no signal at all that a
+    // turn is in flight — just silence until the answer lands in the live region.
+    this.list.setAttribute('aria-busy', String(on))
+    if (!on) {
+      this.pending?.remove()
+      this.pending = null
+      return
+    }
+    const node = el('div', 'msg pending')
+    node.dataset.from = 'agent'
+    node.setAttribute('aria-hidden', 'true')
+    node.append(el('i', ''), el('i', ''), el('i', ''))
+    // Appended directly, not through `appendMessage` — that keeps the indicator last by inserting
+    // before it, which would mean inserting this node before itself.
+    this.pending = node
     this.list.append(node)
+    this.list.scrollTop = this.list.scrollHeight
+  }
+
+  /**
+   * The dots always stay LAST. A chip drop or restore is answered synchronously while a message
+   * turn is still in flight [converse.ts serialises messages, never chip actions], so without this
+   * the drop's cards render underneath the indicator for the message the shopper sent first — and
+   * an earlier version cleared the dots on any `push`, which took the indicator away mid-turn and
+   * left the shopper watching nothing for the rest of the round trip.
+   */
+  private appendMessage(node: HTMLElement): void {
+    if (this.pending !== null) this.list.insertBefore(node, this.pending)
+    else this.list.append(node)
     this.list.scrollTop = this.list.scrollHeight
   }
 
