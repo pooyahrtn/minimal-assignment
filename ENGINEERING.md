@@ -16,10 +16,18 @@
 
 1. **Never edit storefront source after the `<script>` tag lands.** Any visual bug on a storefront
    is a bug in the widget, fixed in the widget. This rule *is* the demo. [PRINCIPLES §4]
-   **One exemption, and only this one:** the embed line's `src=` origin, changed once by T15 to
-   point at the deployed platform. An origin string is not a visual fix and cannot hide a widget
-   bug. The proof narrows, it does not lapse — `git log -p apps/shop-*` must show no changed byte
-   outside that origin. [TASKS §0 #11, COMPLAINS #1]
+   **One exemption, and only this one: origin literals.** Every hardcoded origin in storefront
+   source — the embed line's `src=`, VELDE's `ORIGIN`, KRACHT's `metadataBase` and its two `SITE`
+   constants — changed once by T15 to point at the deployed hosts, as `process.env.X ?? '<the
+   frozen literal>'` so the default IS the frozen value and local dev, e2e and the bench see
+   byte-identical output. An origin string is not a visual fix and cannot hide a widget bug, and
+   that rationale covers `metadataBase` exactly as well as it covers the embed. The proof narrows,
+   it does not lapse — `git log -p apps/shop-*` must show no changed byte outside an origin
+   literal, its `process.env` wrapper, or a comment explaining one.
+   **Widened by Pooya mid-T15, not by a desk** — the narrow wording was authored with only the
+   embed line in view, and read literally the deployed storefronts would have served
+   `<link rel="canonical" href="http://localhost:4002/…">` and a `sitemap.xml` full of laptop URLs.
+   [DECISIONS-LOG → Scope, TASKS §0 #11, COMPLAINS #1]
 2. **Never invent a token.** No component authors a colour, radius, spacing value, or font size.
    A missing token is a conversation, not a local `#hex`. [PRINCIPLES §2]
 3. **Never import from `apps/` inside `packages/agent`.** It is shipped software that happens to

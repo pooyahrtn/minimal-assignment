@@ -89,7 +89,7 @@ Anything is allowed if a real store would already have it *for its own reasons*,
 - No container div, no mount point, no `data-agent-*` attribute, no CSS hook, no window global, no reserved z-index, no shared stylesheet, no knowledge that Maximal exists.
 - Pages: home, category listing, product detail, cart, about, shipping & returns. Real copy with a voice. Real photography (stock is fine — placeholder blocks are not).
 - **Do not author the storefront CSS by hand.** Start from a real theme's markup and CSS — Shopify's Dawn, since that is what a large share of stores run. Check its LICENSE first; derive the structure if the terms are restrictive. "The storefront CSS was not written by me" beats any hand-made polish.
-- **After the `<script>` tag is added, storefront source is frozen.** Any bug that would be fixed by editing shop CSS is a bug in the widget. Fix it in the widget. This rule is the demo.
+- **After the `<script>` tag is added, storefront source is frozen.** Any bug that would be fixed by editing shop CSS is a bug in the widget. Fix it in the widget. This rule is the demo. One exemption, adjudicated by Pooya during T15: **origin literals**, which are not visual and cannot hide a widget bug [ENGINEERING §1.1, TASKS §0 #11].
 
 **Realism is the test rig, not decoration.** Each element below is an adversary the widget must survive. Build the ones in this table on purpose:
 
@@ -330,7 +330,7 @@ Rough allocation across the window: 6h storefronts · 10h agent · 8h config pag
 ## 12. Working agreement
 
 - **`DECISIONS-LOG.md` is appended to as we go**, not reconstructed at the end. Every time a suggestion is overridden, one line: what was proposed, what was done, why. They ask about this explicitly and a reconstructed answer sounds reconstructed.
-- Storefront source is frozen after §4. No exceptions, no "just one class".
+- Storefront source is frozen after §4. No exceptions, no "just one class" — the single exemption is origin literals, and it is enumerated in `ENGINEERING §1.1` rather than left to judgement.
 - No new token without it being added to §7 first.
 - Nothing is done until it has been seen under both brands at 375px.
 - Parallel agent work runs through `git-desks`.

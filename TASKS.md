@@ -34,7 +34,7 @@ measurement, the alternative that was rejected. This table is the index, not the
 | 8 | `product-compare`, 2nd obstacle (mind-change) | **Explicitly optional.** Cut candidates #1 and #2 (§3). |
 | 9 | MARENNE (editorial skincare) + KLYFT (Nordic outdoor) | **VELDE** (Amsterdam minimal apparel) + **KRACHT** (Dutch sports nutrition) — archetypes of Minimal's published client list. **Cost:** both accents now clear 16.5:1 and 14.7:1, so T11's pale-yellow brand is **required** — the only place the clamp visibly does its job. |
 | 10 | A Dutch-language KRACHT, locale as a fourth brand axis | **Descoped. Both stores ship English; the Dutch *market* furniture stays** — iDEAL, the VAT toggle, the delivery cut-off, the score out of 10. Strings still travel in the config payload (ENGINEERING §2.1). |
-| 11 | Storefront source frozen after the `<script>` tag, "no exceptions" | **Exactly one exemption: the embed line's `src=` origin.** Everything else stays frozen. T9/T12's proof narrows to "no commit whose diff touches anything but the origin" — `git log -p` still proves it. [COMPLAINS #1] |
+| 11 | Storefront source frozen after the `<script>` tag, "no exceptions" | **Exactly one exemption: origin literals** — the embed `src=`, VELDE's `ORIGIN`, KRACHT's `metadataBase` and both `SITE` constants, each as `process.env.X ?? '<the frozen literal>'`. Everything else stays frozen. **Widened from "the embed line's `src=`" by Pooya mid-T15**, because read literally the deployed shops served canonical URLs pointing at a laptop [DECISIONS-LOG → Scope]. T9/T12's proof narrows to "no commit whose diff touches anything but an origin literal, its wrapper, or a comment explaining one" — `git log -p` still proves it. [COMPLAINS #1] |
 
 **Additions not in PRINCIPLES:**
 - **T10** makes "what AI suggested that I overrode" a tracked artifact, not an end-of-build reconstruction.
@@ -107,7 +107,7 @@ actually happened.
 | T6 | ✅ landed | Platform API + snippet delivery | 15m | 10m | T0 | yes |
 | T7 | ✅ landed (**boxes 8 amended, 9 half-open — see below**) | Configuration page | 90m | **120m** | T6, T2, **T11** | yes |
 | T8 | ✅ landed | Catalog ingest + brand extractor | 45m | 30m | T0, T2 · T4 to close last DoD | yes (build) |
-| T9 | ⬜ open | Hostile-page hardening + polish pass | 45m | 60m | T3, T5, T2 | no |
+| T9 | ✅ landed (**box 3 N/A, box 4 vacuous — see below**) | Hostile-page hardening + polish pass | 45m | 60m | T3, T5, T2 | no |
 | T10 | ◐ draft half landed `ed09a5d` | DECISIONS.md, log, demo rehearsal | 20m draft | **90m** | all, **T15** | no |
 | T11 | ✅ landed (**boxes 1+3 unclosable — see PROGRESS**) | Third brand — the visible clamp | 10m | 10m | T1, T6 | yes |
 | T12 | ◐ both halves landed | E2E critical-flow suite (Playwright) | 40m | 30m | T2 · T3+T4 wired · **T5 for the card flows** | no |
@@ -421,7 +421,7 @@ Returns a `MerchantTokens` draft. Must degrade to sensible defaults on any failu
 
 ---
 
-## T9 `⬜ open` — Hostile-page hardening + polish pass
+## T9 `✅ landed` — Hostile-page hardening + polish pass
 **The task that proves the storefront freeze.**
 
 **Scope.** Every bug found on a real storefront gets fixed **inside the widget**. Defensive
@@ -429,19 +429,69 @@ Returns a `MerchantTokens` draft. Must degrade to sensible defaults on any failu
 still cross the shadow boundary). Motion, focus rings, loading and empty states, reduced-motion.
 
 **DoD**
-- [ ] Widget is visually identical on the reset-heavy shop and the Tailwind-preflight shop.
-- [ ] Launcher survives the announcement bar reflow, sits deliberately relative to the cookie banner, and does not collide with the sticky ATC bar at 375px.
-- [ ] Opening the widget while the newsletter modal's focus trap is active still works (if that adversary was built).
-- [ ] `prefers-reduced-motion` respected.
-- [ ] **Owns benchmarks H4 (`viewport-375`) and H5 (`isolation`).** H5 mounts the widget on both hostile storefronts and asserts computed styles inside the shadow root are **identical across hosts** — a difference means the host leaked in, and the storefront freeze forbids fixing it at the source.
-- [ ] **No commit to `apps/shop-*` after the script tag landed touches anything but the embed
-      line's `src=` origin** (§0 #11). `git log -p` proves it — the narrowed claim is still the demo.
-- [ ] **`bench/run.ts` grades a check on the failures it reports, not on `count > 0`.** Every
-      check is verified to actually fail when fed a failing case; a harness that cannot tell
-      "collected 20 cases" from "passed 20 cases" makes every green report in this repo an
-      assumption [COMPLAINS #2, ENGINEERING §3.1]. Nobody owned this; T9 does now.
+- [x] Widget is visually identical on the reset-heavy shop and the Tailwind-preflight shop. H5, one
+      config forced onto both live shops, **699 computed properties compared, 0 differences**. The
+      only exclusion is `.launcher|margin` / `.panel|margin` — the deliberate sticky-bar lift, which
+      differs because the two shops pin bars of different heights; emptying the exclusion list makes
+      the check report exactly those two and nothing else, which is how it was proven live.
+- [x] Launcher survives the announcement bar reflow, sits deliberately relative to the cookie
+      banner, and does not collide with the sticky ATC bar at 375px. **Two real defects found and
+      fixed in the widget**: VELDE's launcher stayed lifted 156.562px by a banner it had already
+      dismissed, and on KRACHT's PDP it sat *on top of* a 143px cookie bar that `CookieBar.tsx`
+      renders from a `useEffect` after `window.load`. Measured after: 156.562px→0px, and launcher
+      bottom 655 against bar top 669. The announcement-bar clause is satisfied **by absence of an
+      adversary** — `.announcement-bar` is static, in normal flow, never scripted, and the launcher
+      is `position: fixed`, so no reflow can reach it. §0 #6 never built one.
+- [ ] ~~Opening the widget while the newsletter modal's focus trap is active still works~~ →
+      **NOT APPLICABLE, and reported rather than substituted.** The newsletter modal is stretch
+      adversary §3 item 3 and was cut; `document.querySelectorAll('dialog,[role=dialog],[aria-modal]')`
+      on VELDE returns `[]`. The modal that *does* exist is KRACHT's cart `<dialog>` opened with
+      `showModal()`, and it genuinely blocks the widget: measured, a real click on the launcher does
+      nothing and Tab cannot reach it. **Not fixed, on purpose.** `showModal()` makes the rest of the
+      document `inert`, which is independent of the top layer — so the obvious `popover="manual"`
+      fix addresses the painting and not the blocker. At 375px that drawer is the full viewport
+      (screenshot in the hand-off), so floating a chat launcher over the shopper's open basket
+      would be a regression. Reasoned in `DECISIONS-LOG` → Agent behaviour.
+- [x] `prefers-reduced-motion` respected — **vacuously, and the box says so.** The widget ships zero
+      `transition`, `animation` or `@keyframes`; the only animated surface in the repo is VELDE's
+      cart drawer, which is frozen storefront source. Adding motion in order to suppress it would be
+      building a problem to solve it, and it would make H2 and H4 timing-dependent. What ships is
+      `packages/agent/src/motion.test.ts`, which reads the **emitted** stylesheet under all three
+      brands and fails the moment anyone adds motion without a `prefers-reduced-motion` guard.
+      Named ceiling: it sees CSS motion only.
+- [x] **Owns benchmarks H4 (`viewport-375`) and H5 (`isolation`).** Both registered, both proven
+      able to fail: H4 red with 21 failures on a 900px `.msg` and 3 on deleting `syncViewport`'s
+      body; H5 red on the host-page leak (31 properties per shop) and on the custom-property vector.
+      H5 mounts on the two live storefronts and serves `/v1/agent.js` from the working copy, because
+      left to the page it measured whatever `:4003` was running — reproduced: the whole `:host`
+      hardening reverted in a detached worktree still reported PASS.
+- [x] **No commit to `apps/shop-*` after the script tag landed touches anything but an origin
+      literal** (§0 #11, widened by Pooya mid-T15 and propagated to `ENGINEERING §1.1` and
+      `PRINCIPLES §4` by this task). `git diff 9aa8c0b..HEAD -- apps/shop-*` is 16 lines: five origin
+      literals wrapped in `process.env.X ?? '<the frozen literal>'`, one JSX reflow of the same embed
+      line, and a four-line comment naming the exemption. Nothing visual, nothing behavioural — with
+      the env unset every default is the frozen value. **T9 itself changes no storefront byte.**
+- [x] **`bench/run.ts` grades a check on the failures it reports, not on `count > 0`.**
+      `CheckResult.failures` is optional so the SOFT tier is not dragged into the HARD tier's
+      contract [ENGINEERING §3.12]; `grade()` lives in its own module so `bench/fault.test.ts` can
+      import it without executing the suite. **30 fault cases**, each at the layer that decides, and
+      each judge also handed a passing input so a judge that failed everything could not satisfy the
+      test. `budget` keeps throwing, with the reason in a comment: made non-fatal its null-guard
+      falls through and the paint cap then *passes*.
 
-**QA (independent).** `git log -p apps/shop-velde apps/shop-kracht` — after the integration commit, the only changed bytes are the `src=` origin. Full flow on both shops at 375px and 1440px, keyboard only.
+**QA (independent).** `git log -p apps/shop-velde apps/shop-kracht` — run, 16 lines, all origins.
+Full flow on both shops at 375px and 1440px, keyboard only — run: launcher reachable by Tab with a
+visible ring, Enter opens and moves focus to the composer, a typed turn renders 5 blocks on VELDE
+and 3 on KRACHT, Escape returns focus to the launcher.
+
+**Two thirds of the Scope line are inventory, not new work, and neither was touched by this task.**
+*Focus rings*: already complete before T9 — one `:is()` rule covers all nine interactive elements
+with a contrast-derived `--mx-focus-ring`, and H1 already gates the ratio. *Loading and empty
+states*: already present — the greeting is pushed in the constructor so the log is never blank,
+`.chips:empty` collapses, a missing or 404 image renders the merchant's own "no photograph" copy, a
+404 avatar falls back to the brand initial, and `converse` can never return a silent turn. There is
+no "thinking" state because `step()` and `push()` happen in the same tick; that becomes a real hole
+the moment T13 puts a real LLM behind it, and it is T13's to fill.
 
 ---
 
