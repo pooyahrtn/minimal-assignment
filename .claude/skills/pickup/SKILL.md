@@ -1,44 +1,35 @@
 ---
 name: pickup
 description: >
-  Pick up a task from TASKS.md and run it through this project's process:
-  read the task and its cited contracts, plan, get the plan adversarially
-  refuted, build (Sonnet subagents for mechanical work), get the diff
-  adversarially reviewed against the DoD, run the gates, then post a status
-  update covering how close the project is to done, whether the task order is
-  still right, and how far the estimate was off, then have a Sonnet agent log
-  what went wrong in COMPLAINS.md. Use when the user says
-  "pickup T3", "let's pick up the next task", "/pickup", names a task ID from
-  TASKS.md, or asks what to work on next.
+  Run one task from TASKS.md through this project's process: read the task and
+  its cited contracts, plan, get the plan adversarially refuted, build, get the
+  diff adversarially reviewed against the DoD, run the gates, post a status
+  update, log complaints. Use when the user says "pickup T3", "let's pick up the
+  next task", "/pickup", names a task ID from TASKS.md, or asks what to work on
+  next.
 ---
 
 # pickup
 
-One task at a time, through seven steps. Do not skip step 2 or step 5 — they are
-the two the process exists for.
+One task, seven steps. Steps 2 and 5 are the point — never skip them.
 
-## 1. Read before planning
+## 1. Read, then claim
 
-Read the `TASKS.md` entry in full: Scope, DoD, QA box, "Not in scope". Then read
-every doc section it cites (`PRINCIPLES §n`, `ENGINEERING §n`, `BENCHMARKS §n`) —
-the task text is a summary, the cited section is the contract.
-
-Confirm the dependencies in the §1 task graph actually landed. If they did not,
-say so and stop; do not build against an imagined interface.
-
-**Then claim the task**, before writing a line of plan: append one row to the
-`## In flight` block at the top of `PROGRESS.md` — task, desk, date, and what it
-is about to touch. Check that block first, too: another desk may already own the
-task, or own a file this one needs. Desks cannot see each other's worktrees
-[ENGINEERING §5.1], so an unclaimed task in flight is invisible except as dirt in
-`git status` — which shows which *files* are hot and never which *task* owns them.
+- Read the whole `TASKS.md` entry: Scope, DoD, QA box, Not in scope.
+- Read every section it cites (`PRINCIPLES §n`, `ENGINEERING §n`, `BENCHMARKS §n`).
+  The task text is a summary; the cited section is the contract.
+- Confirm the §1 task-graph dependencies landed. If not, say so and stop.
+- Read `## In flight` at the top of `PROGRESS.md` — another desk may own the task, or
+  a file you need.
+- **Claim it before writing any plan:** append a row there — task, desk, date, files
+  it will touch.
+- Desks can't see each other's worktrees [ENGINEERING §5.1]; an unclaimed task shows
+  up only as dirt in `git status`, which names hot *files*, never the *task*.
 
 ## 2. Plan, then have it refuted
 
-Write a short plan — what changes, which files, which DoD box each part closes.
-
-Then spawn an **adversarial plan reviewer** (Agent tool, default model, not
-Sonnet — this one needs judgment). Its only job is to attack:
+- Write a short plan: what changes, which files, which DoD box each part closes.
+- Spawn an **adversarial plan reviewer** (Agent tool, default model — needs judgment):
 
 > Here is a task and a plan for it. Your job is to REFUTE the plan, not improve
 > it. Default to "refuted" under uncertainty. For each finding cite the DoD
@@ -47,77 +38,80 @@ Sonnet — this one needs judgment). Its only job is to attack:
 > belongs to a different task; a contract invented rather than read; a shortcut
 > that will be discovered during demo rehearsal with no budget left to fix it.
 
-Refute the **task text** too, not just the plan. Check every DoD box for
-satisfiability before building against it, and run every proof-by-grep by hand
-against the state the task will be in once *all* its own boxes are closed — not
-the state it starts in. A box that is impossible, or a grep that forbids strings
-a sibling box mandates, costs more to discover mid-build than to catch here.
+- Refute the **task text** too: is every DoD box satisfiable?
+- Hand-run every proof-by-grep against the state after *all* the task's boxes close,
+  not the state it starts in. An impossible box, or a grep forbidding what a sibling
+  box mandates, costs far more mid-build.
+- Apply survivors only. A high rejection rate is expected.
+- Log overrides in `DECISIONS-LOG.md` the same session.
 
-Apply survivors only. A high rejection rate is the expected outcome, not a
-failure — log any override in `DECISIONS-LOG.md` the same session.
+## 3. Build — orchestrate, don't type
 
-## 3. Build
-
-Delegate **mechanical, fully-specified slices to Sonnet** (`model: "sonnet"`):
-config files, type transcription, catalog/data generation, repetitive markup,
-test fixtures, ingest parsing. Run independent slices in parallel in one message.
-
-**Keep on the main model:** anything graded on feel (UI, copy, layout, motion),
-any product judgment, any decision the task text did not already settle.
-
-Ponytail applies throughout — the ladder shortens the solution, never the reading.
+- Your context is for orchestration: contracts, plan, refutations, decisions.
+- Anything you would only skim — repo-wide greps, file sweeps, bulk edits, fixture
+  and catalog generation — goes to a subagent that returns the conclusion, not the
+  file dumps.
+- **Sonnet** (`model: "sonnet"`) for mechanical, fully-specified slices: config, type
+  transcription, catalogs, repetitive markup, fixtures, ingest parsing. Independent
+  slices in parallel, one message.
+- **Main model** for feel (UI, copy, layout, motion), product judgment, anything the
+  task text left open, and the adversarial reviews in steps 2 and 4.
+- **The main session owns every shared file** — `bench/checks.ts`, root
+  `package.json`, `tsconfig*`, `TASKS.md`, `PROGRESS.md`, `DECISIONS-LOG.md`.
+  Subagents write inside their own directory only, and report what needs registering
+  [DECISIONS-LOG, five-concurrent-agents entry].
+- **Workflow tool** when hand-spawning is the bottleneck: five-plus independent
+  slices, or per-DoD-box verification in step 4. `/workflows` watches it live.
+- Never wrap the whole pickup in one workflow — steps 1, 2, 6 and 7 are where Pooya
+  stays in the loop.
+- Ponytail throughout: the ladder shortens the solution, never the reading.
 
 ## 4. Have the diff refuted
 
-Spawn an **adversarial code reviewer** against the actual diff:
+- Spawn an **adversarial code reviewer** against the actual diff:
 
 > Go through this diff against the task's DoD, box by box. For each box state
 > PROVEN (naming the evidence — a command run and its output, a screenshot) or
 > UNPROVEN. Then: what does the hand-off claim that the diff does not do? What
 > did it silently skip, stub, or scope down? Assume the author overstated.
 
-An agent's self-report is the least reliable signal here [ENGINEERING §3]. Verify
-externally — fetch the URL, curl the endpoint, open the page — never on an exit
-code [§3.9]. UI work opens the real screen at 375px before it is called done [§3.6].
+- An agent's self-report is the weakest signal here [ENGINEERING §3].
+- Verify externally — fetch the URL, curl the endpoint, open the page. Never on an
+  exit code [§3.9].
+- UI work opens the real screen at 375px before it is done [§3.6].
 
 ## 5. Gates
 
-`bun run typecheck` · `bun run lint` · `bun bench` · the task's own QA box, run
-the gate-exact way from the repo root. Never edit a gold file or threshold to go
-green — say so and stop [BENCHMARKS §4.1].
+- `bun run typecheck` · `bun run lint` · `bun bench` · the task's QA box.
+- Gate-exact, from the repo root.
+- Never edit a gold file or threshold to go green: say so and stop [BENCHMARKS §4.1].
 
 ## 6. Status update — always, in this shape
 
-Append the row to `PROGRESS.md` first (create it if missing) **and delete this
-task's line from the `## In flight` block in the same edit** — the claim exists
-to be released. Writing the row here rather than in a later batch is also what
-keeps it honest: a row reconstructed from memory days after the fact sounds
-reconstructed [COMPLAINS #3]. Then report:
+- Append the `PROGRESS.md` row **and delete this task's `## In flight` line in the
+  same edit** — the claim exists to be released.
+- Write it now, not in a later batch: a row reconstructed days later sounds
+  reconstructed [COMPLAINS #3].
 
-**Where the project stands.** Tasks landed / total, and honestly what share of
-the *graded* surface that represents — a count of finished tasks is not progress
-if the ones left hold everything the brief scores. Name what is demoable today.
+Then report:
 
-**a. If we are not close, why.** Is it a prioritisation problem? Answer against
-`PRINCIPLES §1` (the graded list) and `TASKS §3` (the pre-committed cut order):
-is time going into things nobody scores? Has a cut candidate quietly eaten
-polish budget? Should the order change? Say so plainly, and say if the answer is
-"no, the order is fine".
+- **Where the project stands.** Tasks landed / total, and what share of the *graded*
+  surface that is — a task count is not progress if the remainder holds everything
+  the brief scores. Name what is demoable today.
+- **a. If we are not close, why.** Against `PRINCIPLES §1` (graded list) and
+  `TASKS §3` (pre-committed cut order): is time going into things nobody scores? Has
+  a cut candidate eaten polish budget? Should the order change? Say plainly if the
+  answer is "no, the order is fine".
+- **b. Estimate vs actual.** Both units — **agent wall-clock** and **human review
+  time** — plus retries-before-green. If a whole class is systematically off,
+  re-baseline the class, not the row. Say whether the miss was the agent or an
+  under-specified task description [BENCHMARKS §2].
+- Numbers and one recommendation. No essay.
 
-**b. Estimate vs actual.** Estimates are in two units — **agent wall-clock** and
-**human review time** — because nobody types here. Report both against actual,
-plus retries-before-green. Then adjust: if a whole class of task is
-systematically off, re-baseline that class rather than the single row, and note
-whether the miss was the agent or an under-specified task description
-[BENCHMARKS §2].
+## 7. Complaints
 
-Keep it short. Numbers and the one recommendation, not an essay.
-
-## 7. Complaints — log what went wrong
-
-Spawn a **Sonnet agent** (`model: "sonnet"`) over this session's work. It
-complains only; it does not propose fixes, and it does not think about how to
-solve anything — `/retro` turns these into action points later.
+- Spawn a **Sonnet agent** (`model: "sonnet"`) over the session. It complains only —
+  no fixes; `/retro` turns these into actions later.
 
 > Read this session: the task, the diff, and how it went. List what went wrong —
 > friction, wasted rounds, wrong turns, things done twice, gaps in the task text,
@@ -127,7 +121,7 @@ solve anything — `/retro` turns these into action points later.
 > the complaint. If nothing is worth complaining about, say so and return
 > nothing.
 
-Append its output to `COMPLAINS.md` (create if missing) as a new section:
+- Append to `COMPLAINS.md` (create if missing). Never rewrite earlier sections.
 
 ```markdown
 ## <TASK-ID> — <date>
@@ -138,6 +132,5 @@ Append its output to `COMPLAINS.md` (create if missing) as a new section:
 - <complaint> — harm: <what it cost this session>; risk: <what it costs if it recurs>
 ```
 
-Append, never rewrite earlier sections. Nothing to complain about → append the
-heading with `- none` so the ledger shows the task was checked.
-
+- Nothing to complain about → append the heading with `- none`, so the ledger shows
+  the task was checked.
