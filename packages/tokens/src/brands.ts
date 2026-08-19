@@ -116,3 +116,54 @@ export const DEFAULT_VOICE: Voice = {
   greeting: 'Tell me what you are looking for and I will help you narrow it down.',
   tone: 'neutral',
 }
+
+/**
+ * The third brand (T11), and the only place in this repo where the AA clamp is *visible*.
+ *
+ * VELDE's accent measures 10.3:1 against its surface and KRACHT's 14.7:1, so on both of them the
+ * clamp runs and changes nothing a reviewer can see. The instinct — and what TASKS.md T11 asked
+ * for — was a pale-yellow *accent*, but that proves nothing either: `derive()` emits `accent`
+ * verbatim (`derive.ts`) and `textOnAccent` is a black/white contrast flip, so a pale accent on a
+ * white surface still derives the same `#6a6a6a` muted grey every white-surface brand gets. The
+ * clamp searches text against `surface`/`surfaceRaised`/`surfaceSunken` ONLY. So the hostile axis
+ * has to be the **surface**, and that is what this brand is.
+ *
+ * Measured, and the reason this brand exists:
+ *   accent #E8D44D on surface #F7F0B8 is 1.30:1 raw — illegible, an unusable input
+ *   textMuted derives to #646147, an olive tinted by the surface's own hue, at 5.42:1
+ *   worst AA-guaranteed pair lands at 4.501:1 — the tightest of the three brands
+ *
+ * That olive is the demo: it is obviously a computed colour, not one anybody picked. Nothing here
+ * is a manual override — every value below is merchant input, and legibility is the engine's.
+ *
+ * Deliberately hostile on every other axis too (pill radius, generous scale, no personification),
+ * because the brief's bar is "many configurations, not just the one you designed it against".
+ */
+export const HELDER: MerchantTokens = {
+  accent: '#E8D44D',
+  surface: '#F7F0B8',
+  fontDisplay: {
+    family: 'Fraunces',
+    weight: 700,
+    href: 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&display=swap',
+  },
+  fontBody: {
+    family: 'DM Sans',
+    weight: 400,
+    href: 'https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&display=swap',
+  },
+  scale: 'generous',
+  radius: 'pill',
+  elevation: 'soft',
+  labelCase: 'sentence',
+  density: 'comfortable',
+  launcher: { style: 'bubble', position: 'bottom-left' },
+}
+
+/** No persona: the shop's own name, no face. Nothing here to soften the palette. */
+export const HELDER_VOICE: Voice = {
+  name: 'Helder',
+  avatar: null,
+  greeting: 'Say what the occasion is. I will work backwards from it.',
+  tone: 'plain',
+}

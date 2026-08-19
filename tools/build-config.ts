@@ -2,6 +2,8 @@ import {
   DEFAULT_BRAND,
   DEFAULT_VOICE,
   derive,
+  HELDER,
+  HELDER_VOICE,
   KRACHT,
   KRACHT_VOICE,
   VELDE,
@@ -30,6 +32,39 @@ type ShopSpec = {
    * an empty JSON array would be a file on disk pretending to be data. */
   catalogPath: string | null
   strings: Record<string, string>
+}
+
+/**
+ * The house-neutral string set. `default` uses it as-is; a new brand spreads it and overrides only
+ * the lines that carry voice, so adding a brand does not mean authoring 24 strings by hand.
+ * A named const rather than an optional `ShopSpec.strings` — ENGINEERING §2.7 prefers non-optional
+ * types, and an optional field would put a branch in `buildConfig()` for no gain.
+ */
+const NEUTRAL_STRINGS: Record<string, string> = {
+  'launcher.label': 'Help me choose',
+  'panel.close': 'Close',
+  'chips.legend': 'Looking for',
+  'chips.drop': 'Drop {label}',
+  'chips.restore': 'Put {label} back',
+  'composer.placeholder': 'What are you looking for?',
+  'composer.send': 'Send',
+  clarify: 'Tell me what you need and I will narrow it down.',
+  'recommend.lead': 'Here is what fits:',
+  'recommend.item': '{title} · {price}',
+  'obstacle.text':
+    'Nothing matches all of it. {options} everything except “{blocking}”. Closest: {closest}. Tap “{blocking}” to drop it, or drop something else instead.',
+  'obstacle.count.one': 'One option fits',
+  'obstacle.count.many': '{n} options fit',
+  'card.specs': 'Details',
+  'card.outofstock': 'Out of stock',
+  'card.noimage': 'No image',
+  'card.view': 'View',
+  'nomatch.heading': 'Closest without “{blocking}”',
+  'nomatch.drop': 'Drop “{blocking}” and show these',
+  'compare.heading': 'Side by side',
+  'no-results': 'Nothing matches all of that. Drop a filter and I will look again.',
+  'catalog.offline':
+    'This shop is not set up yet, so I cannot show you products. Tell the shop owner their embed key does not match a configured shop.',
 }
 
 /**
@@ -108,6 +143,30 @@ const SHOPS: Record<string, ShopSpec> = {
     },
   },
   /**
+   * T11's third brand. Ten lines and no new code — that is the whole claim: it reuses VELDE's
+   * catalog on purpose, because "same products, same renderers, unrecognisably different brand"
+   * is the token system's proof. A third catalog would be an asset task, not a token one.
+   *
+   * `NEUTRAL_STRINGS` spread with only the lines that would otherwise lie: the neutral
+   * `catalog.offline` tells a shopper the shop is not set up, which is false for a configured
+   * merchant, and the neutral launcher label is byte-identical to VELDE's.
+   */
+  helder: {
+    merchant: HELDER,
+    voice: HELDER_VOICE,
+    catalogPath: 'packages/agent/src/brain/catalog.velde.json',
+    strings: {
+      ...NEUTRAL_STRINGS,
+      'launcher.label': 'Find me something',
+      'composer.placeholder': 'What are you after?',
+      // Without this override `clarify` reads 'Tell me what you need and I will narrow it down.',
+      // three bubbles from the greeting and near-verbatim to it — it reads as a repeat bug.
+      clarify: 'Give me the occasion, or a budget, and I will work from there.',
+      'catalog.offline':
+        'I cannot reach the catalogue right now, so I cannot show you anything. Your filters are kept — try again in a moment.',
+    },
+  },
+  /**
    * The unknown-key answer, NOT a merchant. `/v1/config/:shopKey` serves this instead of a 404 so
    * a typo in `data-shop` degrades to a neutral, legible widget rather than a console error on a
    * merchant's page [TASKS T6 DoD]. Excluded from the generated `FALLBACK` below: `FALLBACK` is
@@ -120,32 +179,7 @@ const SHOPS: Record<string, ShopSpec> = {
     catalogPath: null,
     // No persona, no house style — plain second-person English that reads as unfinished setup
     // rather than as somebody's brand voice.
-    strings: {
-      'launcher.label': 'Help me choose',
-      'panel.close': 'Close',
-      'chips.legend': 'Looking for',
-      'chips.drop': 'Drop {label}',
-      'chips.restore': 'Put {label} back',
-      'composer.placeholder': 'What are you looking for?',
-      'composer.send': 'Send',
-      clarify: 'Tell me what you need and I will narrow it down.',
-      'recommend.lead': 'Here is what fits:',
-      'recommend.item': '{title} · {price}',
-      'obstacle.text':
-        'Nothing matches all of it. {options} everything except “{blocking}”. Closest: {closest}. Tap “{blocking}” to drop it, or drop something else instead.',
-      'obstacle.count.one': 'One option fits',
-      'obstacle.count.many': '{n} options fit',
-      'card.specs': 'Details',
-      'card.outofstock': 'Out of stock',
-      'card.noimage': 'No image',
-      'card.view': 'View',
-      'nomatch.heading': 'Closest without “{blocking}”',
-      'nomatch.drop': 'Drop “{blocking}” and show these',
-      'compare.heading': 'Side by side',
-      'no-results': 'Nothing matches all of that. Drop a filter and I will look again.',
-      'catalog.offline':
-        'This shop is not set up yet, so I cannot show you products. Tell the shop owner their embed key does not match a configured shop.',
-    },
+    strings: NEUTRAL_STRINGS,
   },
 }
 

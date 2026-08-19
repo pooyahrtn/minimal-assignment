@@ -190,10 +190,97 @@ const KRACHT_CONFIG: ConfigResponse = {
   catalog: [],
 }
 
+const HELDER_CONFIG: ConfigResponse = {
+  tokens: {
+    css: {
+      '--mx-accent': '#e8d44d',
+      '--mx-text-on-accent': '#000000',
+      '--mx-surface': '#f7f0b8',
+      '--mx-surface-raised': '#e3dca5',
+      '--mx-surface-sunken': '#ffffff',
+      '--mx-border': '#d0c992',
+      '--mx-text-primary': '#000000',
+      '--mx-text-muted': '#646147',
+      '--mx-focus-ring': '#000000',
+      '--mx-overlay-scrim': 'rgba(0, 0, 0, 0.45)',
+      '--mx-space-1': '6px',
+      '--mx-space-2': '12px',
+      '--mx-space-3': '24px',
+      '--mx-space-4': '36px',
+      '--mx-space-5': '56px',
+      '--mx-radius-sm': '9999px',
+      '--mx-radius-md': '20px',
+      '--mx-radius-lg': '28px',
+      '--mx-shadow-1': '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08)',
+      '--mx-shadow-2': '0 8px 24px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.1)',
+      '--mx-font-display': "'Fraunces', system-ui, sans-serif",
+      '--mx-font-body': "'DM Sans', system-ui, sans-serif",
+      '--mx-text-xs': '13px',
+      '--mx-text-sm': '15px',
+      '--mx-text-md': '18px',
+      '--mx-text-lg': '24px',
+      '--mx-label-transform': 'none',
+      '--mx-label-tracking': 'normal',
+      '--mx-line-height': '1.55',
+    },
+    labelCase: 'sentence',
+    launcher: {
+      style: 'bubble',
+      position: 'bottom-left',
+    },
+    fonts: {
+      display: {
+        family: 'Fraunces',
+        weight: 700,
+        href: 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&display=swap',
+      },
+      body: {
+        family: 'DM Sans',
+        weight: 400,
+        href: 'https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&display=swap',
+      },
+    },
+  },
+  voice: {
+    name: 'Helder',
+    avatar: null,
+    greeting: 'Say what the occasion is. I will work backwards from it.',
+    tone: 'plain',
+  },
+  strings: {
+    'launcher.label': 'Find me something',
+    'panel.close': 'Close',
+    'chips.legend': 'Looking for',
+    'chips.drop': 'Drop {label}',
+    'chips.restore': 'Put {label} back',
+    'composer.placeholder': 'What are you after?',
+    'composer.send': 'Send',
+    clarify: 'Give me the occasion, or a budget, and I will work from there.',
+    'recommend.lead': 'Here is what fits:',
+    'recommend.item': '{title} · {price}',
+    'obstacle.text':
+      'Nothing matches all of it. {options} everything except “{blocking}”. Closest: {closest}. Tap “{blocking}” to drop it, or drop something else instead.',
+    'obstacle.count.one': 'One option fits',
+    'obstacle.count.many': '{n} options fit',
+    'card.specs': 'Details',
+    'card.outofstock': 'Out of stock',
+    'card.noimage': 'No image',
+    'card.view': 'View',
+    'nomatch.heading': 'Closest without “{blocking}”',
+    'nomatch.drop': 'Drop “{blocking}” and show these',
+    'compare.heading': 'Side by side',
+    'no-results': 'Nothing matches all of that. Drop a filter and I will look again.',
+    'catalog.offline':
+      'I cannot reach the catalogue right now, so I cannot show you anything. Your filters are kept — try again in a moment.',
+  },
+  catalog: [],
+}
+
 /** Keyed by `data-shop`. An unknown key has no brand, so the loader fails loudly instead. */
 export const FALLBACK: Record<string, ConfigResponse> = {
   velde: VELDE_CONFIG,
   kracht: KRACHT_CONFIG,
+  helder: HELDER_CONFIG,
 }
 
 /**

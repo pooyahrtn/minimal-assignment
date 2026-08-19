@@ -212,7 +212,15 @@ const RADIUS_MAP: Record<RadiusStep, RadiusRamp> = {
   sm: { sm: '4px', md: '6px', lg: '8px' },
   md: { sm: '6px', md: '10px', lg: '14px' },
   lg: { sm: '10px', md: '16px', lg: '22px' },
-  pill: { sm: '9999px', md: '9999px', lg: '9999px' },
+  // `pill` is fully round only at `sm`, the step chips and buttons use — that is what "pill" names
+  // [css.ts:107 already treats fully-round as definitional for the pill/bubble launcher, not as a
+  // radius]. `md` and `lg` land on large boxes (cards, the compare table, the panel itself, which
+  // is `overflow: hidden`), and 9999px there is not a rounder card — it is an ellipse whose curve
+  // eats its own content: at 1440px the panel clipped the merchant's name to "elder". Continues the
+  // ramp past `lg` (10/16/22) so pill stays visibly the roundest step without swallowing text.
+  // Found by rendering the first config in the project that asks for it [T11]; VELDE is '0' and
+  // KRACHT is 'md', so no gate could have caught it.
+  pill: { sm: '9999px', md: '20px', lg: '28px' },
 }
 
 /** hairline = a 0-blur "border" shadow; soft = a real blurred shadow. Distinguishable in

@@ -109,7 +109,7 @@ actually happened.
 | T8 | ✅ landed | Catalog ingest + brand extractor | 45m | 30m | T0, T2 · T4 to close last DoD | yes (build) |
 | T9 | ⬜ open | Hostile-page hardening + polish pass | 45m | 60m | T3, T5, T2 | no |
 | T10 | ◐ draft half landed `ed09a5d` | DECISIONS.md, log, demo rehearsal | 20m draft | **90m** | all, **T15** | no |
-| T11 | ⬜ open (**required**) | Third brand — the visible clamp | 10m | 10m | T1, T6 | yes |
+| T11 | ✅ landed (**boxes 1+3 unclosable — see PROGRESS**) | Third brand — the visible clamp | 10m | 10m | T1, T6 | yes |
 | T12 | ◐ both halves landed | E2E critical-flow suite (Playwright) | 40m | 30m | T2 · T3+T4 wired · **T5 for the card flows** | no |
 | T13 | ⬜ open (cut #0) | Real LLM turn behind the AI SDK | 2h | 45m | T6 (stub is enough) | yes |
 | T14 | ✅ landed | Competitor scan → feature matrix → demo subset | 40m | **30m** | — (reads the built tree) | yes |
@@ -477,7 +477,7 @@ distils it.
 
 ---
 
-## T11 `⬜ open` — Third brand (**required** — it is demo beat 4, not a stretch)
+## T11 `✅ landed` — Third brand (**required** — it is demo beat 4, not a stretch)
 **Scope.** A third `MerchantTokens` literal — deliberately ugly/hostile (pale yellow accent,
 pill radius, generous scale, no personification). Ten lines, no new code.
 

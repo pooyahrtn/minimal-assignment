@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test'
-import { KRACHT, VELDE } from './brands'
+import { HELDER, KRACHT, VELDE } from './brands'
 import { contrastRatio } from './contrast'
 import { AA_GUARANTEED_PAIRS, derive } from './derive'
 import { hexToRgb, oklchToRgb, rgbToOklch } from './oklch'
@@ -39,14 +39,37 @@ test('sRGB <-> OKLCH round-trips within 1/255 per channel', () => {
 // --- the AA contract itself -------------------------------------------------------------------
 test('every AA_GUARANTEED_PAIRS pair clears 4.5:1 for both brands', () => {
   let checked = 0
-  for (const tokens of [VELDE, KRACHT, PALE_YELLOW]) {
+  for (const tokens of [VELDE, KRACHT, HELDER, PALE_YELLOW]) {
     const css = derive(tokens).css
     for (const [fg, bg] of AA_GUARANTEED_PAIRS) {
       expect(ratioFor(css, fg, bg)).toBeGreaterThanOrEqual(4.5)
       checked++
     }
   }
-  expect(checked).toBe(AA_GUARANTEED_PAIRS.length * 3)
+  expect(checked).toBe(AA_GUARANTEED_PAIRS.length * 4)
+})
+
+// --- the clamp's only visible case: a chromatic surface [T11] ------------------------------------
+// PALE_YELLOW above is a pale *accent* on a white surface, which cannot fail: `derive()` emits the
+// accent verbatim and the text clamp searches only against surface/raised/sunken, so on any white
+// surface it returns the same neutral #6a6a6a every white-surface brand gets. HELDER moves the
+// hostile colour onto the SURFACE, which is the axis the clamp actually reads, and is why it is
+// the one brand where a reviewer can see the engine work. [TASKS T11, PRINCIPLES §7]
+test('HELDER: a chromatic surface forces the clamp to tint the muted text, not reach for grey', () => {
+  const css = derive(HELDER).css
+  for (const bg of ['--mx-surface', '--mx-surface-raised', '--mx-surface-sunken'] as const) {
+    expect(ratioFor(css, '--mx-text-muted', bg)).toBeGreaterThanOrEqual(4.5)
+    expect(ratioFor(css, '--mx-text-primary', bg)).toBeGreaterThanOrEqual(4.5)
+  }
+  // The proof it was derived and not picked: on a yellow ground the muted text comes back olive.
+  // This assertion is the one that does the work, and it is NOT redundant with the ratios above —
+  // measured, not assumed. Dropping the surface's chroma from the search (`textChroma = 0` in
+  // `derive.ts`) returns a neutral #606060 which still clears 5.423 / 4.506 / 6.289 against
+  // surface / raised / sunken, so every ratio assertion above stays green while the engine has
+  // stopped reading the brand. Only the hue tint catches it.
+  const { r, g, b } = hexToRgb(css['--mx-text-muted'])
+  expect(r === g && g === b).toBe(false)
+  expect(r).toBeGreaterThan(b)
 })
 
 // --- pathological pale-yellow accent ------------------------------------------------------------
@@ -79,9 +102,21 @@ test('radius 0 emits real zeros', () => {
   expect(css['--mx-radius-lg']).toBe('0px')
 })
 
-test('pill radius emits a large value', () => {
+test('pill is fully round on controls and bounded on boxes that hold text', () => {
   const css = derive({ ...VELDE, radius: 'pill' }).css
-  expect(Number.parseInt(css['--mx-radius-md'], 10)).toBeGreaterThan(100)
+  const px = (name: '--mx-radius-sm' | '--mx-radius-md' | '--mx-radius-lg') =>
+    Number.parseInt(css[name], 10)
+  // Chips and buttons: fully round is what "pill" means.
+  expect(px('--mx-radius-sm')).toBeGreaterThan(100)
+  // Cards, the compare table, and the panel — which is `overflow: hidden`. A 9999px radius here
+  // is an ellipse that eats its own content: this exact regression clipped the merchant's name to
+  // "elder" at 1440px and the compare heading to "y side" at 375px. Bounded, but still the
+  // roundest step in the ramp (`lg` tops out at 22px).
+  expect(px('--mx-radius-md')).toBeLessThanOrEqual(32)
+  expect(px('--mx-radius-lg')).toBeLessThanOrEqual(32)
+  expect(px('--mx-radius-md')).toBeGreaterThan(
+    Number.parseInt(derive({ ...VELDE, radius: 'lg' }).css['--mx-radius-md'], 10),
+  )
 })
 
 test('hairline and soft elevation are distinguishable shadows, not just opacity', () => {
