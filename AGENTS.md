@@ -41,11 +41,18 @@ section is the contract.
 | `TAKE_HOME.md` | The actual brief. Wins over every other doc, including this one. |
 | `PRINCIPLES.md` | Product taste, the token contract, the two brands, the agent's behaviour. |
 | `ENGINEERING.md` | Where logic lives, what "done" means, what is mechanically enforced. |
-| `TASKS.md` | The task graph, each task's scope, DoD and QA box, the cut order, and per-task **status**. |
+| `TASKS.md` | **What we intend to do, keyed by task.** The graph, each task's scope, DoD and QA box, per-task status, the cut order. |
 | `BENCHMARKS.md` | The HARD gates and the SOFT agent scorecard. Gold files are human-owned. |
 | `DECISIONS-LOG.md` | This rule's output. Append-only. |
 | `COMPETITORS.md` | T14's matrix, the three buckets, and the ordered demo list T10 rehearses against. |
-| `PROGRESS.md` | Estimate vs actual per task, and what to re-baseline. |
+| `PROGRESS.md` | **What actually happened, keyed by activity** — estimate vs actual, retries, standing lessons. Plus `## In flight`: which desk owns what right now. |
+
+**`TASKS.md` and `PROGRESS.md` are not two views of one list, and must not be merged.** Nine of
+PROGRESS's sixteen rows are not one-task-one-row — six have no task ID at all (the adversarial plan
+reviews, the H1/H3 benches, the brain↔shell wire, the storefront fix pass). Those rows are where
+"41% of the time spent had no row in `TASKS.md`" comes from, and they are the reason T15 exists.
+Keying that table by task deletes exactly the finding it was written to produce. Status stays in
+`TASKS.md` because it is a property of the plan; how long it took is not.
 
 `.claude/skills/pickup/SKILL.md` is the process for picking up a task.
 
