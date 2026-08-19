@@ -6,14 +6,15 @@ description: >
   refuted, build (Sonnet subagents for mechanical work), get the diff
   adversarially reviewed against the DoD, run the gates, then post a status
   update covering how close the project is to done, whether the task order is
-  still right, and how far the estimate was off. Use when the user says
+  still right, and how far the estimate was off, then have a Sonnet agent log
+  what went wrong in COMPLAINS.md. Use when the user says
   "pickup T3", "let's pick up the next task", "/pickup", names a task ID from
   TASKS.md, or asks what to work on next.
 ---
 
 # pickup
 
-One task at a time, through six steps. Do not skip step 2 or step 5 — they are
+One task at a time, through seven steps. Do not skip step 2 or step 5 — they are
 the two the process exists for.
 
 ## 1. Read before planning
@@ -24,6 +25,13 @@ the task text is a summary, the cited section is the contract.
 
 Confirm the dependencies in the §1 task graph actually landed. If they did not,
 say so and stop; do not build against an imagined interface.
+
+**Then claim the task**, before writing a line of plan: append one row to the
+`## In flight` block at the top of `PROGRESS.md` — task, desk, date, and what it
+is about to touch. Check that block first, too: another desk may already own the
+task, or own a file this one needs. Desks cannot see each other's worktrees
+[ENGINEERING §5.1], so an unclaimed task in flight is invisible except as dirt in
+`git status` — which shows which *files* are hot and never which *task* owns them.
 
 ## 2. Plan, then have it refuted
 
@@ -38,6 +46,12 @@ Sonnet — this one needs judgment). Its only job is to attack:
 > hunt: DoD boxes the plan cannot actually close in this worktree; work that
 > belongs to a different task; a contract invented rather than read; a shortcut
 > that will be discovered during demo rehearsal with no budget left to fix it.
+
+Refute the **task text** too, not just the plan. Check every DoD box for
+satisfiability before building against it, and run every proof-by-grep by hand
+against the state the task will be in once *all* its own boxes are closed — not
+the state it starts in. A box that is impossible, or a grep that forbids strings
+a sibling box mandates, costs more to discover mid-build than to catch here.
 
 Apply survivors only. A high rejection rate is the expected outcome, not a
 failure — log any override in `DECISIONS-LOG.md` the same session.
@@ -74,7 +88,11 @@ green — say so and stop [BENCHMARKS §4.1].
 
 ## 6. Status update — always, in this shape
 
-Append the row to `PROGRESS.md` first (create it if missing), then report:
+Append the row to `PROGRESS.md` first (create it if missing) **and delete this
+task's line from the `## In flight` block in the same edit** — the claim exists
+to be released. Writing the row here rather than in a later batch is also what
+keeps it honest: a row reconstructed from memory days after the fact sounds
+reconstructed [COMPLAINS #3]. Then report:
 
 **Where the project stands.** Tasks landed / total, and honestly what share of
 the *graded* surface that represents — a count of finished tasks is not progress
@@ -94,3 +112,32 @@ whether the miss was the agent or an under-specified task description
 [BENCHMARKS §2].
 
 Keep it short. Numbers and the one recommendation, not an essay.
+
+## 7. Complaints — log what went wrong
+
+Spawn a **Sonnet agent** (`model: "sonnet"`) over this session's work. It
+complains only; it does not propose fixes, and it does not think about how to
+solve anything — `/retro` turns these into action points later.
+
+> Read this session: the task, the diff, and how it went. List what went wrong —
+> friction, wasted rounds, wrong turns, things done twice, gaps in the task text,
+> process steps that did not earn their cost, anything a reviewer would be
+> annoyed by. Short bullets. Each bullet says the harm it already caused and the
+> risk of it recurring. Do NOT propose solutions, fixes, or improvements — only
+> the complaint. If nothing is worth complaining about, say so and return
+> nothing.
+
+Append its output to `COMPLAINS.md` (create if missing) as a new section:
+
+```markdown
+## <TASK-ID> — <date>
+
+**What changed:** one or two sentences on what the task actually did.
+
+**Complaints**
+- <complaint> — harm: <what it cost this session>; risk: <what it costs if it recurs>
+```
+
+Append, never rewrite earlier sections. Nothing to complain about → append the
+heading with `- none` so the ledger shows the task was checked.
+

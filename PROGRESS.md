@@ -4,6 +4,24 @@ Maintained by the `pickup` skill, one row per task, appended when the task close
 Estimates are in two units because nobody types here: **A** = agent wall-clock,
 **R** = human review time. See `TASKS.md` §1 for the current baseline.
 
+## In flight
+
+**Written at pickup [skill step 1], deleted when the task's row lands below [step 6].** Desks cannot
+see each other's worktrees [ENGINEERING §5.1], so this is the only place task ownership is recorded
+while the work is owned. Without it, the only evidence a task is running is dirt in `git status`,
+which says which *files* are hot and never which *task* owns them — that guess has already been
+wrong once this session, and COMPLAINS #1's "needs a decision before T6 starts" arrived during T6
+for exactly this reason.
+
+| Task | Desk | Since | Notes |
+|---|---|---|---|
+| T5 message block renderers | `minimal-assignment-02` (assumed — the only busy peer) | 2026-08-19, **claimed retroactively** | H2 `brand-divergence` green at 0.1719 vs the 0.075 floor. `blocks.ts`, `css.ts`, `converse.ts` dirty. |
+| T6 platform API + snippet delivery | `minimal-assignment-02` (assumed) | 2026-08-19, **claimed retroactively** | `apps/platform/server.ts` + `config/*.json` + H6 `budget` written, uncommitted. `brands.ts` dirty. |
+
+Both rows are retroactive, which is the whole point: nobody wrote them at the time.
+
+---
+
 | Task | Est A | Actual A | Est R | Actual R | Retries to green | Note |
 |---|---|---|---|---|---|---|
 | T0 contracts, guardrails, skeleton | 2.5h | **6m build / 31m incl. review round** | — | pending | 6 | Estimate was in human-typing hours. Six corrections total: Biome v2 deprecated `recommended`; `bunx --bun biome` printed a spawn stack inside the git hook; then the adversarial round found 4 gate defects (organizeImports on by default against §4.9, `apps/**` outside the typecheck, import-boundary glob missing package subpaths, `as`-casts unenforced). |

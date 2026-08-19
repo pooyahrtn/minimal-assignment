@@ -135,7 +135,7 @@ JSON-LD, the ingest ladder, avatar/voice, light-dark.
 **Three things to say when asked how this differs** — each falsifiable:
 
 1. **"We're the only one that guarantees legibility, and we show the guarantee."** Eight products checked, zero documented contrast clamps.
-2. **"Our escape hatch is a deliberate hook, not a hack, because we don't have the option of a hack."** Their merchants reach into an iframe; our shadow root closes that door structurally, so we open a named one on purpose.
+2. **"We closed the escape hatch on purpose, and we know what that costs."** Their merchants hack an iframe with unscoped page CSS; our shadow root closes that door structurally, which makes "no custom CSS" harsher here than anywhere else in the table. We ship no hatch today — the named next step is Stripe's `rules` (named parts, allowlisted properties), and it is a stated ceiling, not a built feature. *(Rewritten 2026-08-19: the original claimed a hook `T7` had explicitly cut.)*
 3. **"We treat a font as a file, not a dropdown."** Five of eight have no font control at all.
 
 ---

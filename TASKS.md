@@ -34,6 +34,8 @@ it is **spent on iteration loops over T2/T5/T7**.
 | 9 | PRINCIPLES §4: MARENNE (warm editorial skincare) + KLYFT (Nordic technical outdoor) | **VELDE** (Amsterdam minimal apparel, EN) + **KRACHT** (Dutch sports nutrition, NL) | The originals were `TAKE_HOME.md`'s own example sentence handed back to its author. Replaced with archetypes of Minimal's published client list (ETQ, XXL Nutrition). Full entry in `DECISIONS-LOG.md`. **Cost, measured and owned:** the old accents stressed the contrast clamp harder (MARENNE sage was 3.23:1 against its surface); the new ones are 16.5:1 and 14.7:1. T11's pale-yellow brand is therefore promoted from stretch to **required** — it is now the only place the clamp visibly does its job. |
 | 10 | A Dutch-language KRACHT, with locale as a fourth brand axis | **Descoped. Both stores ship English; the Dutch *market* furniture stays.** | The signal that reads as "he knows this market" lives in the furniture — iDEAL, the VAT toggle, the delivery cut-off, the score out of 10 — not in the translation. Translated copy was also the one surface no benchmark can check and that a native-speaking reviewer would judge hardest. i18n goes back on the §10 not-building list. What survives is architectural: user-visible strings still travel in the config payload (ENGINEERING §2.1), which is right for one language too. |
 
+| 11 | PRINCIPLES §4: storefront source frozen after the `<script>` tag, "no exceptions" | **Exactly one exemption: the embed line's origin string.** Everything else stays frozen. | Both storefronts hardcode `http://localhost:4003/v1/agent.js` (`9aa8c0b`). Deployed, that line loads nothing — so "deploy for real" and the freeze as written cannot both hold, and T6's cross-origin DoD had no way to close. The freeze exists so *visual* bugs get fixed in the widget; an origin string is not a visual fix and repointing it cannot hide a widget bug. T9/T12's proof narrows from "zero commits to `apps/shop-*`" to "no commit whose diff touches anything but the `src=` origin" — `git log -p` still proves it. [COMPLAINS #1] |
+
 **Additions not in PRINCIPLES:**
 - **T10** makes "what AI suggested that I overrode" a tracked artifact, not an end-of-build reconstruction.
 - **T11** adds a *third brand config as a 10-line object* — because the office session says "extend the build live", and adding a brand on stage in 60 seconds is the rehearsed party trick.
@@ -59,6 +61,37 @@ Truly parallel after T0: **T1, T2, T3, T4, T8**. T5 needs T3's style primitives.
 T8's *build* is parallel; T8's last DoD box (obstacle fires on the real catalog) is a **landing gate** —
 run it once T4's checker is in the tree. T8 is not done before then, and fixing a failure is T8's job, not T4's.
 T7 needs T6 + a running storefront. T9/T10 are last.
+**T15 (deploy) is new and is the seam nobody owned** — it needs T6 landed and the §0 #11 origin
+exemption, and it is the only task that makes T6's cross-origin DoD true in production rather than
+against a synthetic host page.
+
+### 1.1 The remaining schedule — the fan-out is mostly spent
+
+The first wave parallelised well because T1/T2/T3/T4/T8 wrote to five disjoint trees. **The
+remaining eight do not.** Four of them write to `apps/platform` (T6, T7, T13, T15) and three to
+`packages/agent/src` (T5, T9, T13); one task, one desk, one worktree [ENGINEERING §5.1] means those
+queue whatever the graph says. Measured right now, `brands.ts`, `converse.ts` and `css.ts` are all
+dirty in the in-flight T5/T6 trees. And the constraint underneath has not changed: **A parallelises
+across desks, R serialises on one human.** A third desk that produces one more screen to review
+buys nothing.
+
+**Three dependency edges this table was missing:**
+- **T7 ← T11.** T7's DoD requires the signature under *all three brands* and the clamp visibly doing
+  its job — which is the pale-yellow brand's entire job (§3). T11 is 10 minutes and it gates review
+  of the highest-R task in the project. It runs **before** T7, not after.
+- **T10 ← T15.** T10's rehearsal box says "on the deployed links". Deployment cannot be last.
+- **T9 splits in two.** Its harness half (`bench/run.ts` grading, COMPLAINS #2) touches no widget
+  file and blocks on nothing. Only its widget half waits for T5.
+
+| Wave | Runs | Desks | Why |
+|---|---|---|---|
+| **Now**, alongside T5/T6 | T9-harness · T10 draft · T15 prep (Vercel projects, build config — not the origin edit) | 3, zero contention | None touch `packages/agent/src` or `apps/platform/server.ts`. A T10 drafted at the end is how the brief's own named deliverable arrives thin. |
+| **The moment T6 lands** | T11 → T15 deploy → **T7 alone** | serial on one `apps/platform` desk | T11 is blocked today only because `packages/tokens/src/brands.ts` is dirty in T6's tree. T7 then gets a clean tree and the **whole attention window**: 120m R is the long pole and nothing else should compete for the same eyes. |
+| **After T5** | T9-widget · T12's deferred `no-match` specs · T10 final | 2 | Both need renderers that now exist. |
+
+**T13 runs only if R survives T7**, and it is the first thing to cut — 2h A + 45m R for the one
+remaining item the brief itself calls unnecessary (`TAKE_HOME.md:78`), writing into both contended
+trees.
 
 | ID | Task | A (agent) | R (review) | Depends on | Parallel-safe |
 |----|------|-----------|------------|-----------|---------------|
@@ -77,21 +110,29 @@ T7 needs T6 + a running storefront. T9/T10 are last.
 | T12 | E2E critical-flow suite (Playwright) | 40m | 30m | T2 · T3+T4 wired · T5 for the card flows | no |
 | T13 | Real LLM turn behind the AI SDK | 2h | 45m | T6 (stub is enough) | yes |
 | T14 | Competitor scan → feature matrix → demo subset | 40m | **30m** | — (reads the built tree) | yes |
+| T15 | Deploy the three projects on `*.vercel.app` | 40m | 30m | T6 · §0 #11 | no |
 
-**Total: ~8h A + ~10h R ≈ 18h of the 36h window — provisional, one measured data point.**
-The bolded R values are the graded surfaces. Note what "the remaining 18h" actually costs: A
-parallelises across desks, **R serialises on one human**, and 36h is 1.5 calendar days containing
-sleep. Booking all 18h as iteration would restore the 100% utilisation that `DECISIONS-LOG`
-already rejected once for starving criterion #1. Plan iteration against ~8h of real remaining
-attention, not 18.
+**Total, re-baselined against `PROGRESS.md` actuals (2026-08-19): ~5.5h of A spent across the
+landed rows, and the estimates were not wrong the way the last re-baseline assumed.** Of those
+~332 minutes, **135 (41%) went to work with no row in this table** — photography (88m), the
+storefront fix pass (32m), the brain↔shell wire (15m). That is the finding, not the total: the
+schedule risk was never the tasks, it was the **seams between them** [PROGRESS lessons 6/7/9].
+Remaining A (T5, T6, T7, T9, T10, T11, T13, T15) is ~4h on the same evidence. The bolded R values
+are the graded surfaces, and R is still the binding constraint: A parallelises across desks, **R
+serialises on one human**, and 36h is 1.5 calendar days containing sleep. Plan iteration against
+~8h of real remaining attention.
 
-**Two caveats this table must carry.** (1) `PRINCIPLES §4` time-boxes both stores at **6h**; the
-90m here halves the contract's own number on the strength of one config-file task, so treat it as
-unmeasured until T2 actually runs. Sourcing 60–80 coherent product photos is the least
-compressible hour in the project and is *not* in the 90m. (2) The A column excludes the process
-overhead the `pickup` skill mandates — two adversarial agent rounds per task, of which the first
-one on this very re-plan took **~8.5 minutes and 95k tokens**. A-plus-overhead is the real number
-and T1 is the first task that will measure it.
+**Every remaining task must name its seam** — the integration work that only exists once it lands
+(T5→T7's preview, T13→the widget's turn loop, T15→everything). A seam with no row is the single
+most reliable way this plan has already lost time.
+
+**Two caveats, both now measured rather than predicted.** (1) T2 came in at **162m** all-in
+(VELDE 18.5 + KRACHT 24 + photography 88 + the fix pass 32) — inside `PRINCIPLES §4`'s 6h box, but
+**1.8× the 90m row**, and every minute of the overage was in the two lines the row did not contain.
+Asset sourcing is its own task class and still has no baseline [PROGRESS lesson 7]. (2) The A
+column still excludes `pickup`'s two adversarial rounds; measured, they run 7–8.5m and 88–95k
+tokens *each*, which makes process overhead the largest single line in the A column and the reason
+four T0 defects never reached T9. Budget it explicitly for every remaining task.
 
 **What this re-baseline changes.** Pure-logic tasks (T1, T4, T6, T8) collapse to minutes and stop
 being schedule risks. Asset-bound and taste-bound work (T2's photography and Dutch copy, T5's
@@ -282,6 +323,9 @@ the trade-off stated as a choice.
 - [ ] Out-of-stock, sale price, and missing image all render deliberately.
 
 - [ ] **Owns benchmark H2 (`brand-divergence`) — the most important number in the project.**
+- [ ] **Its seam ships with it.** The T12 agent specs deferred for want of a renderer (the
+      `no-match` card flow) land **with this task**, not "later" — an unowned seam is how this plan
+      has already lost 135 minutes [PROGRESS lesson 9, T12 DoD].
 
 **QA (independent).** `bun bench brand-divergence` renders the gallery (all 7 blocks × 2 brands), screenshots at 375px, desaturates, and asserts perceptual distance between the two brand columns is **above** a pinned floor. Pin the floor once, from the first side-by-side that genuinely looks right, and only ever ratchet it up — a threshold tuned down to make a run pass is a lie. [BENCHMARKS §4.4]
 
@@ -297,7 +341,12 @@ the trade-off stated as a choice.
 KV — **no database**.
 
 **DoD**
-- [ ] Fetched **cross-origin** from both storefronts (different `*.vercel.app` origins) with no CORS error in console.
+- [ ] Fetched **cross-origin** with no CORS error in console — in **two** proofs, because the
+      storefront freeze blocks the obvious one locally [COMPLAINS #1]: (a) the H6 check mounts the
+      widget on a synthetic foreign-origin host page and asserts a clean fetch — **this is the box
+      T6 closes**; (b) the real `*.vercel.app` storefront origins are proved by **T15**, once the
+      embed line's origin is repointed under the §0 #11 exemption. Do not edit `apps/shop-*` to
+      close this box.
 - [ ] Unknown `shopKey` returns a safe default config, not a 500 — the widget must never break a merchant's page.
 - [ ] `agent.js` is one file, no source map in prod, gzipped size recorded in DECISIONS.md.
 - [ ] **Owns benchmark H6 (`budget`)** — gzip size and config-fetch-to-first-paint, both under a pinned cap.
@@ -355,7 +404,10 @@ there.
 - [ ] Pasting a merchant's own theme font URL renders that typeface in the widget, under both brands.
 - [ ] Every clamped pair is *visible* as a named before/after, not silently corrected.
 - [ ] A blocked or empty crawl is shown as its own state and routes to the manual fields. Test it against a real Cloudflare-protected shop.
-- [ ] The constant signature is present under all three brands and cannot be removed from this UI.
+- [ ] The constant signature is present under all three brands and cannot be removed from this UI —
+      and it reads as an **AI disclosure at first interaction**, not as a vendor credit line
+      (EU AI Act Art. 50, binding since 2026-08-02; a widget engineered to disappear into the host
+      page is the case least likely to earn the "obvious to the user" exemption) [COMPETITORS §3].
 
 **QA (independent).** Fresh browser, paste the VELDE URL, walk to a copied snippet without touching a hex field. Then set accent to `#FFFF00` and surface to `#FFFFFF` and confirm the preview is still readable. Then 375px — the config page needs to *work* small even though merchants use it on a desktop.
 
@@ -402,9 +454,14 @@ still cross the shadow boundary). Motion, focus rings, loading and empty states,
 - [ ] Opening the widget while the newsletter modal's focus trap is active still works (if that adversary was built).
 - [ ] `prefers-reduced-motion` respected.
 - [ ] **Owns benchmarks H4 (`viewport-375`) and H5 (`isolation`).** H5 mounts the widget on both hostile storefronts and asserts computed styles inside the shadow root are **identical across hosts** — a difference means the host leaked in, and the storefront freeze forbids fixing it at the source.
-- [ ] **Zero commits to `apps/shop-*` after the script tag landed.** `git log` proves it.
+- [ ] **No commit to `apps/shop-*` after the script tag landed touches anything but the embed
+      line's `src=` origin** (§0 #11). `git log -p` proves it — the narrowed claim is still the demo.
+- [ ] **`bench/run.ts` grades a check on the failures it reports, not on `count > 0`.** Every
+      check is verified to actually fail when fed a failing case; a harness that cannot tell
+      "collected 20 cases" from "passed 20 cases" makes every green report in this repo an
+      assumption [COMPLAINS #2, ENGINEERING §3.1]. Nobody owned this; T9 does now.
 
-**QA (independent).** `git log --oneline apps/shop-velde apps/shop-kracht` — no commits after the integration commit. Full flow on both shops at 375px and 1440px, keyboard only.
+**QA (independent).** `git log -p apps/shop-velde apps/shop-kracht` — after the integration commit, the only changed bytes are the `src=` origin. Full flow on both shops at 375px and 1440px, keyboard only.
 
 ---
 
@@ -426,10 +483,14 @@ distils it.
 - [ ] The SOFT-tier agent scorecard (BENCHMARKS §2) run over every landed task, and the two worst-scoring tasks re-read by a human with their own eyes.
 - [ ] A 6-minute demo run twice end to end, on the deployed links, at 375px, **against T14's ordered feature list** — the minutes go to the differentiators, table stakes get a sentence.
 - [ ] One rehearsed live extension for the office session (see T11).
+- [ ] **Every "how this differs" sentence names something that exists in the tree.** `COMPETITORS §6`
+      claim #2 ("our escape hatch is a deliberate hook, not a hack") currently names the fenced
+      `::part()` hatch T7 explicitly **cut** — the honest version says the ceiling and the named next
+      step. A falsifiable claim that is false on stage costs more than the claim buys.
 
 ---
 
-## T11 — Third brand (stretch)
+## T11 — Third brand (**required** — it is demo beat 4, not a stretch)
 **Scope.** A third `MerchantTokens` literal — deliberately ugly/hostile (pale yellow accent,
 pill radius, generous scale, no personification). Ten lines, no new code.
 
@@ -467,7 +528,9 @@ Keyboard: Tab to launcher, Enter, Tab inside the panel, Esc closes, focus return
 
 **DoD**
 - [ ] Every spec asserts rendered state, never "did not throw".
-- [ ] Zero storefront source edits to make the suite pass. `git log apps/shop-*` proves it.
+- [ ] Zero storefront source edits to make the suite pass. `git log apps/shop-*` proves it. (The
+      §0 #11 origin exemption belongs to T15 and is never a suite edit — a spec that needs a
+      storefront byte changed has failed.)
 - [ ] `bunx playwright install chromium` is documented as a setup step — the repo has never run it.
 - [ ] Specs that depend on a T5 renderer are not written yet, and their absence is stated, not stubbed.
 
@@ -540,8 +603,9 @@ prompt caching, rate limiting, cost accounting. The widget's chat UI is **alread
 is not touched: a chat-UI package would ship its own design system into a shadow root on someone
 else's storefront, which is the exact failure the brief describes.
 
-**Depends on** T6 for a real endpoint to hang this off (the stub in `tools/serve-platform.ts` will
-do). **Blocks nothing.** Sits behind T5 and T7 in priority — both are graded surfaces, this is not.
+**Depends on** T6 for a real endpoint to hang this off (`apps/platform/server.ts`, which replaced
+the `tools/serve-platform.ts` stub). **Its seam:** `converse.ts` gains a network path and a 503
+fallback — budget it inside this task, not after it. **Blocks nothing.** Sits behind T5 and T7 in priority — both are graded surfaces, this is not.
 
 ---
 
@@ -602,26 +666,60 @@ contract are not reopened by it.
 
 ---
 
+## T15 — Deploy the three projects
+
+**A seam, promoted to a task.** "Deploy for real" has sat in §3's *back ON the plan* list since the
+re-baseline with no row, no DoD and no estimate — which is exactly the shape of the three lines that
+already ate 135 unbudgeted minutes [PROGRESS lessons 6/9]. The brief lists "a deployed link" first
+under *What to send*.
+
+**Scope.** Three Vercel projects on free `*.vercel.app`: the two storefronts and the platform.
+Repoint each storefront's embed `src=` origin at the deployed platform — the one byte the freeze
+now exempts (§0 #11) — and nothing else. Config and `agent.js` served with the same caching headers
+T6 pinned locally.
+
+**DoD**
+- [ ] Three live URLs, and the widget mounts on both storefronts from one `<script>` line.
+- [ ] **T6's cross-origin box closes for real here**: config fetched from a genuinely different
+      origin, zero CORS errors in a fresh browser console.
+- [ ] `git log -p apps/shop-*` shows this commit changed the `src=` origin and nothing else.
+- [ ] The full obstacle flow walked on the deployed links at 375px, on a phone, not an emulator.
+- [ ] Custom DNS **stays cut** (§3 item 4). `*.vercel.app` is genuinely cross-origin, which is the
+      only property the demo argues from.
+
+**QA (independent).** Fresh browser, no localhost running anywhere: open both deployed storefronts
+and reach the obstacle. If any part needs a local server, this task is not done.
+
+**Not in scope.** DNS, CI/CD, preview environments, analytics.
+
+---
+
 ## 3. Cut order, decided in advance
 
 **The re-baseline puts every previous cut candidate back on the table.** At ~18h of planned work
 in a 36h window, cutting `product-compare` to save 20 minutes of agent time is not a trade worth
 making. The list below is now an *order of last resort*, not a plan:
 
-1. `product-compare` block (T5)
+0. **T13, the real LLM turn.** New head of the list, and the list predates it: 2h A + 45m R,
+   explicitly not graded, writing into the two contended trees, behind the two highest-R tasks.
+   Cutting it costs a demo sentence; cutting anything below it costs a demo beat.
+1. ~~`product-compare` block (T5)~~ — already built (`blocks.ts:24`); nothing left to cut here.
 2. Mind-change / second obstacle (T4)
 3. Stretch adversaries — focus-trap modal, junk scripts, third-party bubble (T2)
 4. `releashed.io` custom DNS (ship on `*.vercel.app`)
-5. Third brand (T11)
+5. ~~Third brand (T11)~~ — **off the cut list.** Promoted to required; it is demo beat 4 and the
+   only place the clamp is visible.
 6. T12's desktop project (keep `mobile` — 375px is never cut)
 7. NL refinement field (T7) — **last resort only.** It is a differentiator; losing it costs real points.
 
 **Never cut:** the obstacle flow, the two-brand proof, 375px, DECISIONS.md.
 
 **Back ON the plan, funded by the re-baseline** — in the order they earn points:
-1. **Deploy for real** on `*.vercel.app`. The brief lists "a deployed link" first under What to
-   send. **Custom DNS stays cut** — it is item 4 above, the brief explicitly exempts deployment,
-   and using that same sentence as a licence in §0 #7 and ignoring it here would be selective.
+1. **Deploy for real** on `*.vercel.app` — **now T15, with its own DoD**, because a line in this
+   list is not a task and this project has now proved twice what an unowned seam costs. The brief
+   lists "a deployed link" first under What to send. **Custom DNS stays cut** — it is item 4 above,
+   the brief explicitly exempts deployment, and using that same sentence as a licence in §0 #7 and
+   ignoring it here would be selective.
 2. **T11's third brand — promoted from stretch to required.** It is no longer a party trick: with
    VELDE at 16.5:1 and KRACHT at 14.7:1, the pale-yellow brand is the only place a reviewer can
    *see* the contrast clamp do its job. It also has to pass its own DoD, which currently fails —

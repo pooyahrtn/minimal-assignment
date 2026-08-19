@@ -16,6 +16,10 @@
 
 1. **Never edit storefront source after the `<script>` tag lands.** Any visual bug on a storefront
    is a bug in the widget, fixed in the widget. This rule *is* the demo. [PRINCIPLES §4]
+   **One exemption, and only this one:** the embed line's `src=` origin, changed once by T15 to
+   point at the deployed platform. An origin string is not a visual fix and cannot hide a widget
+   bug. The proof narrows, it does not lapse — `git log -p apps/shop-*` must show no changed byte
+   outside that origin. [TASKS §0 #11, COMPLAINS #1]
 2. **Never invent a token.** No component authors a colour, radius, spacing value, or font size.
    A missing token is a conversation, not a local `#hex`. [PRINCIPLES §2]
 3. **Never import from `apps/` inside `packages/agent`.** It is shipped software that happens to
@@ -115,6 +119,11 @@ here exists to make "done" mechanically checkable by someone who did not write t
 12. **An uncalibrated judge never blocks.** Every LLM-scored axis is SOFT tier — advisory, printed,
     never a gate. Calibrating one needs a human gold set this project has no time to build, so the
     honest move is to say so rather than to trust it.
+13. **Assert against the artifact that ships, and derive expected values from the source of
+    truth.** A check that measures a value before it is serialized, rounded or rebuilt is testing
+    a state the pipeline never ships — measure the hex byte, not the float; the built bundle, not
+    the source. And an expected value that legitimately moves with the data is read from that data
+    at assert time, never pinned as a literal, or the test fails for being right.
 
 ---
 
