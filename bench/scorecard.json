@@ -1,0 +1,236 @@
+{
+  "_": "BENCHMARKS \u00a72 SOFT tier. Judged by one LLM per task, reading that task's own diff against its own DoD. SOFT means it PRINTS and RANKS and never blocks [BENCHMARKS \u00a71]. The judge is uncalibrated against any human gold set and is therefore not trusted \u2014 the rationales are quoted so the judge itself stays auditable [BENCHMARKS \u00a72]. Human-owned like bench/gold/*: regenerate it deliberately, never as a side effect of a run.",
+  "judged": "2026-08-19",
+  "rows": [
+    {
+      "task": "T0",
+      "title": "contracts, guardrails, repo skeleton",
+      "axes": {
+        "faithful": {
+          "pass": true,
+          "rationale": "All 5 DoD checkboxes verified directly in the shipped tree at 7d50555: (1) MerchantTokens+DerivedTokens exported from packages/tokens/src/index.ts, Product+Block from packages/agent/src/types.ts; (2) packages/agent/package.json build script is `bun build src/index.ts --outfile dist/agent.js --format=iife --minify` and src/index.ts is type-only re-exports so the bundle body is empty as permitted; (3) VELDE/KRACHT in packages/tokens/src/brands.ts are typed `MerchantTokens`; (4) packages/agent/biome.json's `noRestrictedImports` blocks `apps/*`/`**/apps/**` with an explicit reason string ('packages/agent is shipped software... [ENGINEERING \u00a71.3]'); (5) bench/run.ts: `selected.length === 0` sets `collectedNothing = true` and bench/checks.ts ships `export const checks: Check[] = []`, so `bun bench` exits 1 on an empty registry. e0db35d's own commit message claims (jsx:preserve added, shop-velde/shop-kracht renames, T12 added to TASKS.md) match its diff byte-for-byte."
+        },
+        "honest": {
+          "pass": true,
+          "rationale": "The one deviation from the literal DoD text \u2014 'husky pre-commit' replaced by `git config core.hooksPath .githooks` \u2014 is disclosed with rationale in DECISIONS-LOG.md:172 ('identical gate, one fewer dependency, no `prepare` script. Cost: local config, so a fresh clone runs one command'), satisfying ENGINEERING \u00a75.6's override-logging rule rather than silently swapping tools. PROGRESS.md's T0 row reports 6 retries and names the 4 gate defects an adversarial round found (organizeImports on by default, apps/** outside typecheck, import-boundary glob missing subpaths, as-casts unenforced) \u2014 all of which are visible as already-fixed in the 7d50555 diff, so the hand-off's self-critique matches what shipped rather than hiding it."
+        },
+        "lazy": {
+          "pass": true,
+          "rationale": "Scope part B is genuinely 'no implementation' \u2014 packages/tokens/src/derived.ts and merchant.ts at 7d50555 contain only type declarations, no derive logic (that's T1's job). Voice.tone is left an open string rather than a union, with a comment explicitly rejecting a narrower type. Pre-commit is an 18-line POSIX script plus native `core.hooksPath` instead of adding the husky dependency the DoD text implied. bench/checks.ts is a literal empty array, not a placeholder abstraction. No interface has a single implementation and no config value is invented beyond ENGINEERING \u00a74's own list."
+        },
+        "reviewable": {
+          "pass": true,
+          "rationale": "The mechanically-checkable surface (guardrail configs + 4 type contracts) is small and flat: biome.json (32 lines), packages/agent/biome.json (29), types.ts (73), merchant.ts (50), derived.ts (55), brands.ts (74), bench/run.ts (48) \u2014 all single-purpose, un-nested files. The 37-file/1896-line stat is dominated by governing prose (ENGINEERING.md 173, PRINCIPLES.md 294, TASKS.md 438) that is this repo's founding charter rather than code a reviewer diffs line-by-line, so the actual code review load stays inside a 10-minute budget."
+        }
+      },
+      "worst_finding": "None of the 5 DoD boxes or the ENGINEERING \u00a74 guardrail list is missing or faked; the one wording mismatch (husky vs. a native git hook) is disclosed with reasoning in DECISIONS-LOG.md, so nothing here needs a human's eyes before the other tasks that depend on T0."
+    },
+    {
+      "task": "T1",
+      "title": "token derivation engine",
+      "axes": {
+        "faithful": {
+          "pass": false,
+          "rationale": "TASKS.md T1 DoD bullet 2 requires 'focusRing clears 3:1 (WCAG 1.4.11) against both accent and surface' with no conditional language. derive.ts's deriveFocusRing (packages/tokens/src/derive.ts:79-105) only returns the best-effort grey when no colour clears both, and the commit's own message and DECISIONS-LOG.md:83 admit it directly: 'TASKS T1 DoD box 2 asks for something impossible, and we ship the best-available ring plus a named upgrade path \u2190 claiming the box closed ... 207 pairs [of 1500 fuzzed] admit no colour at all that clears 3:1 against both'. The named fix (a two-tone ring with --mx-focus-ring-offset) is explicitly 'not built here'. A DoD box the diff's own log calls unclosed is a partially-done box, which the grading rules score as a fail regardless of how well-justified the shortfall is."
+        },
+        "honest": {
+          "pass": true,
+          "rationale": "The commit message, DECISIONS-LOG.md:81-88, and PROGRESS.md:31/71-73 all describe exactly what the diff does and does not do: two real defects found by an independent check after the implementer's own 17 green tests (float-vs-rounded contrast measurement, the #666666 raised/sunken infeasibility), plus the honest admission that DoD box 2 is mathematically unachievable in general (14% of 1500 fuzzed pairs) with the specific VELDE case it names verified by a dedicated test (derive.test.ts: \"VELDE's near-black accent yields a focus ring clearing 3:1 on its own CTA\"). TASKS.md's own T1 checkboxes are still unchecked (`- [ ]`), so nothing was claimed as done in the tracking doc that isn't."
+        },
+        "lazy": {
+          "pass": true,
+          "rationale": "No color library exists in package.json/devDependencies and none was added; oklch.ts (141 lines, ~114 non-comment) implements only the published Bjorn Ottosson matrices needed, justified inline as 'no dependency, ~100 lines'. The focus-ring search is a flat 256-grey enumeration instead of a fancier structure because DECISIONS-LOG.md:84 shows binary search was tried and rejected ('the passing band is not monotone... missed by every bisection that does not already know the answer') \u2014 the extra scanL/deriveFeasibleVariants machinery exists only because concrete failing test cases (#666666, the float-rounding defect) proved a naive version wrong, not from speculation. No unused interfaces, no factories, no config for values that don't vary."
+        },
+        "reviewable": {
+          "pass": true,
+          "rationale": "653 total added lines across 5 files, but cleanly separated by responsibility (oklch.ts pure conversion math, contrast.ts the two WCAG formulas in 22 lines, derive.ts derivation logic with labeled section-comment blocks, derive.test.ts 146 lines of tests) with no function exceeding ~25 lines and at most 2-3 levels of nesting; ~20% of both derive.ts and oklch.ts is explanatory comment documenting *why* each branch exists (e.g. deriveFeasibleVariants's doc comment walks through the exact failure case it fixes), which shortens rather than lengthens a human review of genuinely hard color-math code."
+        }
+      },
+      "worst_finding": "deriveFocusRing (packages/tokens/src/derive.ts:79-105) is a best-effort fallback, not a guarantee \u2014 DoD bullet 2's literal '3:1 against both accent and surface' is unmet for roughly 14% of arbitrary accent/surface pairs by the diff's own measurement; a human should decide whether the two-tone-ring fix named in DECISIONS-LOG.md:83 is needed before other merchant configs ship."
+    },
+    {
+      "task": "T2",
+      "title": "two storefronts",
+      "axes": {
+        "faithful": {
+          "pass": false,
+          "rationale": "T2's own scope line reads 'Real stock photography' (TASKS.md:228), reinforced by PRINCIPLES.md:90 'Real photography (stock is fine \u2014 placeholder blocks are not)'. KRACHT never got this: assets/photos/CREDITS.md:67-69 states outright 'KRACHT \u2014 generated, not photographed... These 34 images are original SVG artwork produced by `assets/photos/generate_kracht.py`, not photography', and opening assets/photos/kracht/protein-01.jpg confirms a flat vector jar illustration, not a packshot photo. The 6 literal DoD checkboxes were verified and held (grep for maximal/agent/widget returns clean at git show 0cb2fea:apps/shop-velde/render.ts and 15b7c8a:apps/shop-kracht/app/layout.tsx; VELDE is border/uppercase, KRACHT is rounded/shadowed per apps/shop-velde/assets/velde.css vs apps/shop-kracht/app/globals.css; JSON-LD structure in render.ts:276-320 is a valid schema.org/Product; no shared code between apps/shop-velde and apps/shop-kracht), but the scope's photography requirement for one whole shop is unmet \u2014 a partially-done box."
+        },
+        "honest": {
+          "pass": true,
+          "rationale": "The generated-art substitution is disclosed, not hidden: commit 16d5c90's message says 'KRACHT is 34 generated SVG packshots, not photography, and CREDITS.md says so... every real supplement photo found carried another brand's label baked into the tub', and CREDITS.md:67-73 states it again for a reader who never opens the commit log. Every other spot-checked claim matched the diff exactly: checkCatalog() at apps/shop-velde/catalog.ts:138-158 really does throw when 'a photo is assigned to more than one product' as 65b93af's message claims; the VELDE hero padding fix and KRACHT h-48\u2192aspect-4/5 fix in ffdec39 are byte-for-byte what the commit message describes; shell.test.ts's \u20ac49\u2192derived-value fix matches its stated rationale; product counts (32/36 at ffdec39, 29 VELDE photos at 65b93af, 19 products after the trim) all verified against the actual JSON."
+        },
+        "lazy": {
+          "pass": true,
+          "rationale": "No speculative abstraction found: KRACHT's cart drawer is a native <dialog> and specs are <details> instead of pulling in shadcn (15b7c8a commit message, confirmed by no shadcn/radix in apps/shop-kracht/package.json diff); the VAT toggle is a CSS class flip on <html>, not client state; VELDE ships with 'no framework, no build, no dependency' (~40-line server.ts); and DECISIONS-LOG.md:77 records collapsing three near-identical SVG generator functions into one parametrised cylinder-drawing function rather than duplicating gradient/shadow/label code three times."
+        },
+        "reviewable": {
+          "pass": false,
+          "rationale": "Six commits carry ~2900 lines of hand-written logic across two unrelated frameworks (apps/shop-velde's vanilla render.ts/catalog.ts/velde.css and apps/shop-kracht's five Tailwind components plus three Next.js page templates), plus a 318-line image-generation script (assets/photos/generate_kracht.py) and a photo-matching table in apps/shop-velde/catalog.ts that was substantively rewritten twice with paragraph-length prose comments explaining each rewrite. Even discounting the 60+ binary photo files and the machine-regenerated JSON (bench/gold/*, tools/config/*, packages/agent/src/brain/catalog.*.json), the hand-authored surface is well beyond what a human reads closely in ten minutes."
+        }
+      },
+      "worst_finding": "KRACHT's entire product catalog (34 images) uses self-declared generated vector artwork, not photography (assets/photos/CREDITS.md:67-69: 'These 34 images are original SVG artwork... not photography') \u2014 a direct, if honestly disclosed, miss against T2's stated 'Real stock photography' scope and PRINCIPLES \u00a74's explicit ban on placeholder-style images; open assets/photos/kracht/protein-01.jpg to see it."
+    },
+    {
+      "task": "T3",
+      "title": "agent shell \u2014 embed, shadow root, chrome",
+      "axes": {
+        "faithful": {
+          "pass": true,
+          "rationale": "All 5 DoD bullets are implemented and traceable: (1) 'One <script> line ... produces a fully branded widget' \u2014 boot.ts reads `script.dataset.shop`, derives config origin from `script.src` via `configUrl()`, and mounts `MxAgent`; (2) 'No unbranded flash' \u2014 boot.ts comment/code: 'Nothing is created, appended or painted until the config resolves' (config is awaited before `customElements.define`/`body.append`); (3) 375px behaviour \u2014 `css.ts` `@media ${MOBILE_QUERY}` sets `.panel{width:100%;height:100dvh}`, `.chips{flex-wrap:wrap}`, and `widget.ts`'s `clearStickyBar()`/`stickyBarHeight()` (via `elementsFromPoint`) plus `syncViewport()` (via `visualViewport`) cover keyboard clearance and the sticky-bar collision; (4) focus trap/Esc \u2014 `onKeydown()` in widget.ts traps Tab between first/last focusable panel control and `setOpen(false)` on Escape returns focus via `this.launcher.focus()`; (5) z-index \u2014 `css.ts`: `export const LAUNCHER_Z_INDEX = 2147483647` with a multi-line comment explaining the int32 ceiling and the paint-order tie-break. Scope exclusions are respected too: `blocks.ts` throws `'renderer not built \u2014 T5 owns this'` for the 5 non-text blocks, and widget.ts only dispatches `mx-send`/`mx-chip-restore` events with no FSM logic."
+        },
+        "honest": {
+          "pass": true,
+          "rationale": "Commit message and DECISIONS-LOG.md `[T3]` entries match the diff on every checkable claim: 'derive() is provably absent from it' is confirmed by `grep -rn derive packages/agent/src/` returning zero import hits (fallback.ts only imports the literal `VELDE`/`KRACHT`/`*_VOICE` objects from `@maximal/tokens`, never `derive`); 'Five renderers throw a named T5 owns this error' matches blocks.ts exactly; the z-index/sticky-bar narrative matches css.ts/widget.ts verbatim, down to the DECISIONS-LOG line 'A bar injected minutes after load still wins; the upgrade is a ResizeObserver' which is the same sentence in widget.ts's connectedCallback comment. PROGRESS.md's own row ('T3 agent shell | 45m | 18.5m | 45m | pending | 0 | Found a real launcher/sticky-bar collision at 375px by looking at the screen.') agrees with the commit's narrative and shows 0 correction rounds. The one figure I could not independently verify is 'Bundle is 20.7KB raw / 6.6KB gzipped' \u2014 running the build was disallowed, and the dist/agent.js currently on disk (39320B raw / 11529B gzipped per `wc -c` and `gzip -c | wc -c`) reflects later tasks' code, not this commit, so it is not usable to check or refute the number either way."
+        },
+        "lazy": {
+          "pass": true,
+          "rationale": "No new dependency added (`packages/agent/package.json` diff is a one-line build-entry change only); untrusted network JSON is validated with small hand-written type guards (`isRecord`/`isCssVars`/`isProduct`, config.ts) instead of pulling in a schema library \u2014 the minimum needed to satisfy ENGINEERING's 'no `as` anywhere' rule (confirmed zero type-cast `as X` usages in the new files via grep). `CacheStore` is narrowed to `Pick<Storage,'getItem'|'setItem'>`, 'so a test can pass a plain object instead of faking Storage' (config.ts comment) \u2014 no speculative interface. The sticky-bar fix uses a one-shot `elementsFromPoint` measurement with a named ceiling comment rather than building a `ResizeObserver`-based system for a case that doesn't exist yet: 'a bar injected minutes later still wins; the upgrade is a ResizeObserver if it ever matters' (widget.ts)."
+        },
+        "reviewable": {
+          "pass": false,
+          "rationale": "T3's own files are individually clean (boot.ts 61 lines, config.ts 191, css.ts 324, blocks.ts 70, widget.ts 257, fallback.ts 144 \u2014 none sprawling, one clear responsibility each), but `git show 0cb2fea --stat` shows this single commit bundles T3 with the unrelated T2 VELDE storefront: 17 files changed, 3468 insertions, including `apps/shop-velde/velde.css` (937 lines), `products.json` (662), `render.ts` (408), `velde.js` (112) alongside the agent package. A reviewer opening 'the T3 commit' to review T3 in ten minutes is handed roughly 3400+ lines spanning two independent tasks and must manually filter to `packages/agent/` themselves \u2014 the commit as delivered is not a reviewable T3 unit on its own."
+        }
+      },
+      "worst_finding": "T3 and T2 (VELDE storefront) landed in one combined commit (0cb2fea, 17 files / 3468 insertions) \u2014 a human trying to review \"T3\" has to manually separate ~1160 lines of agent-shell code from ~2300 lines of unrelated storefront work in the same diff."
+    },
+    {
+      "task": "T4",
+      "title": "agent brain \u2014 FSM, retrieval, obstacle",
+      "axes": {
+        "faithful": {
+          "pass": false,
+          "rationale": "TASKS.md T4 DoD bullet 7 reads 'Owns benchmark H3 (transcript). Golden block sequences for both brands land in bench/gold/' \u2014 but `git show --stat 3da2c5a` and `git show --stat 53f5d8f` touch only packages/agent/src/brain/*, package.json and DECISIONS-LOG.md; no bench/gold/ files are created or modified. The commit message itself confirms this is not done: 'T4 DoD box 7 (golden transcripts in bench/gold) is UNPROVEN and deferred.' The other six DoD bullets are met (verified in brain.test.ts: >=3 chips from keyword/synonym regex not whole-sentence match; obstacle.ts computes via intersect() arithmetic not a flag; blocking chip + quantified gap string e.g. '\u20ac34.95, \u20ac4.95 over'; fsm.ts drop-chip/restore-chip is one call each and dropped chips stay in state with state:'dropped'; `grep -ri 'velde|kracht'` over every file T4 actually added \u2014 catalog.ts, fsm.ts, obstacle.ts, parse.ts, retrieve.ts, brain.test.ts, fixture.json \u2014 returns zero hits; catalog.ts's loadCatalog(path) takes a path argument). One of seven bullets left undone is a partial box, which the grading rules score as a fail regardless of how well-justified the deferral is."
+        },
+        "honest": {
+          "pass": true,
+          "rationale": "The commit message discloses exactly what's unproven rather than claiming completion: 'Known and deliberately not claimed: every number above comes from a 15-product fixture the agent wrote itself... T4 DoD box 7 ... is UNPROVEN and deferred.' This matches the diff (no bench/gold touch) and is independently corroborated by DECISIONS-LOG.md line 147, written in the same session: 'No bench/gold/* files are written until the real catalogs exist ... T4 DoD box 7 is reported UNPROVEN and deferred rather than claimed.' No claim in the commit message overstates what the diff does."
+        },
+        "lazy": {
+          "pass": true,
+          "rationale": "Five small single-purpose files with no added dependencies: retrieve.ts is 30 lines (a predicate-per-chip-kind switch plus one filter for intersection), catalog.ts is 53 lines (one runtime type guard, since ENGINEERING forbids `as`), obstacle.ts is 57 lines (a single leave-one-out loop), parse.ts is 78 lines (a flat regex/synonym table), fsm.ts is 118 lines (one switch-based reducer matching the seven states named in TASKS.md verbatim, no extra states or hooks). The one invented behaviour \u2014 obstacle.ts picking the chip whose removal recovers the most products when multiple candidates rescue the set \u2014 is a few lines, necessary once a 15-product fixture produced ties, and is explicitly logged as invented in DECISIONS-LOG.md rather than silently added scope."
+        },
+        "reviewable": {
+          "pass": true,
+          "rationale": "Diff --stat: 8 files, 695 insertions, but 212 lines are pure fixture.json data and 144 are the test file \u2014 actual logic is 336 lines across 5 files (catalog.ts 53 + parse.ts 78 + retrieve.ts 30 + obstacle.ts 57 + fsm.ts 118), each with one clear responsibility (parse/retrieve/obstacle/catalog/fsm) and no cross-file entanglement beyond the ParsedChip type. That is comfortably readable in ten minutes."
+        }
+      },
+      "worst_finding": "DoD bullet 7 ('golden block sequences for both brands land in bench/gold/') is not delivered by this task's commits \u2014 `git show --stat 3da2c5a 53f5d8f` shows zero touches to bench/gold/, confirmed by the commit's own admission that box 7 is 'UNPROVEN and deferred'; the actual gold files were generated later by T8 (19f0dc0) and wired up by a separate H3 commit (0e5c695), neither of which is part of T4."
+    },
+    {
+      "task": "T8",
+      "title": "catalog ingest + brand extractor",
+      "axes": {
+        "faithful": {
+          "pass": true,
+          "rationale": "All six DoD boxes are functionally met at commit time: (1) 'Ingest produces 30+ normalised products per shop' -- git show 19f0dc0:packages/agent/src/brain/catalog.velde.json has 32 entries and catalog.kracht.json has 34, both from tools/ingest.ts which imports only `../packages/agent/src/brain/catalog` and `../packages/agent/src/types`, no apps/ import (grep confirmed); (2) two spec schemas normalise to one shape -- ingest.ts:readSpecs() is one function used for both VELDE (Material/Fit/Made in/Care) and KRACHT (Protein/Flavour/Size/Servings/Diet), asserted in tools/ingest.test.ts; (3) extractor tested on 3 real webshops -- DECISIONS-LOG.md entry cites concrete bugs found live on hema.nl and decathlon.nl ('found live on hema.nl and decathlon.nl: with no named --surface/--bg variable present, both guesses landed on the identical stray hex') which is corroborating detail beyond a bare claim, though not independently re-runnable from the diff; (4) every failure path returns a default draft with an honest note -- extract.ts has branches for invalid URL, fetch timeout/abort, non-ok HTTP (403), non-HTML content-type, and isChallengePage() Cloudflare heuristic, each hitting defaultDraft(note), covered by extract.test.ts; (5) velde/kracht seeded -- packages/agent/src/extract/seed.ts:SEED_BY_ORIGIN keyed on localhost:4001/4002, used by extractMerchantTokens before any fetch; (6) landing gate -- DECISIONS-LOG.md documents both `bun bench transcript ... --expect=empty-unique` (KRACHT) and `--expect=non-empty` (VELDE, 2 products) as PASS, with bench/gold/{velde,kracht}.json newly created (git stat shows both files as pure additions)."
+        },
+        "honest": {
+          "pass": false,
+          "rationale": "The commit's own hand-off overstates its gates. The commit message says 'Gates: typecheck clean, biome clean over 78 files...' and DECISIONS-LOG.md (added by this same commit) claims 'tsconfig.json's include gained tools/**/*.ts... tools/ingest.ts would have shipped with zero type coverage' as if that fix were part of this change -- but `git show 19f0dc0 --stat` lists no tsconfig.json in the diff, and `git show 19f0dc0^:tsconfig.json` shows include was `[\"packages/*/src/**/*.ts\", \"apps/**/*.ts\", \"apps/**/*.tsx\", \"bench/**/*.ts\"]` with no tools/ entry at all. So the 240-line tools/ingest.ts this commit ships was NOT actually covered by the 'typecheck clean' gate claimed in the same commit message -- the fix landed 55 minutes later in a separate commit (72ee694 'Root typecheck now covers tools/'). A claim made in the commit's own log that isn't backed by that commit's diff is exactly the 'claimed but absent' failure this axis checks for, even though the gap was self-disclosed and fixed promptly afterward."
+        },
+        "lazy": {
+          "pass": true,
+          "rationale": "DECISIONS-LOG.md: 'No new dependency for HTML/CSS parsing or image decoding (no jsdom, no headless browser, no sharp/jimp)... regex over declared CSS custom properties/font-family/border-radius reads the same signal a real browser resolves for it' -- confirmed by extract.ts having zero new imports beyond `@maximal/tokens` and its own seed.ts. MerchantDraft is kept as a new local type rather than widening the closed MerchantTokens contract ('Kept the two concepts apart rather than open a closed contract for one caller'). Ingestion tiers 1/2 (GMC feed, Shopify OAuth) are explicitly specced in DECISIONS-LOG and deliberately NOT built, matching TASKS.md's 'Not in scope' instruction. A speculative-looking gap (no font-matching/image-decoder service) is marked with a `ponytail:` comment naming the ceiling: extract.ts 'ponytail: no font-matching service wired up; upgrade if a demo store trips on it.'"
+        },
+        "reviewable": {
+          "pass": true,
+          "rationale": "git show --stat 19f0dc0 shows 12 files / 3008 insertions, but the bulk is generated JSON that doesn't need line review: catalog.kracht.json (994 lines), catalog.velde.json (898), bench/gold/{kracht,velde}.json (255 combined) are machine-produced snapshots, not hand-authored logic. The actual code to review is extract.ts (337 lines), ingest.ts (240), plus their two test files (85 + 115) -- under 800 lines total, each function under ~20 lines with a one-line doc comment explaining its one job (pickAccent, pickSurface, dominantRadiusStep, isChallengePage, etc.), which is readable in well under ten minutes by someone who knows the codebase."
+        }
+      },
+      "worst_finding": "Open DECISIONS-LOG.md's tsconfig.json bullet against commit 19f0dc0's own diff: the log claims tools/**/*.ts was added to the typecheck include as part of this change, but tsconfig.json isn't touched in this commit at all (git show 19f0dc0^:tsconfig.json has no tools/ entry) -- the fix actually lands 55 minutes later in a separate commit, so 'Gates: typecheck clean' in the T8 commit message did not actually cover the new tools/ingest.ts it shipped."
+    },
+    {
+      "task": "T12",
+      "title": "e2e critical-flow suite",
+      "axes": {
+        "faithful": {
+          "pass": false,
+          "rationale": "DoD bullet 'Specs that depend on a T5 renderer are not written yet, and their absence is stated, not stubbed' is directly violated: e2e/agent.spec.ts:309,315,344-350 asserts `.card`, `.card-title`, `.price`, `.card-link` \u2014 T5's message-block renderer output \u2014 and the code's own comment admits it (agent.spec.ts:338-339 'real product CARDS \u2014 T5 replaced the flattened \"{title} \u00b7 {price}\" text lines with `article.card`', and line 441 'T5 DoD box 3'). `git log --all -- packages/agent/src/blocks.ts` shows T5 has never been committed (only `fff0d0b` and `0cb2fea` touch it, neither is T5); T5 exists solely as another desk's uncommitted dirty files per PROGRESS.md ('T5 message block renderers ... blocks.ts, css.ts, converse.ts dirty'). A second bullet also fails: 'bunx playwright install chromium is documented as a setup step' \u2014 grep for 'playwright install' across *.md and e2e/ finds it nowhere except inside commit 3b956bd's own commit-message prose ('Cold-clone setup, previously undocumented: bunx playwright install chromium'); no README, no comment in e2e/playwright.config.ts, no DECISIONS-LOG entry actually documents it. Two of four DoD bullets fail."
+        },
+        "honest": {
+          "pass": false,
+          "rationale": "6dcb6f1's commit message never discloses that it wrote specs against a renderer the task's own DoD said must not be written yet \u2014 it frames the T5-coupled assertions as an ordinary design choice ('The specs assert behaviour, not existence') with no flag that this violates T12's DoD bullet 4, even though the same commit message is scrupulously honest about other things (the buy-bar fix, the freeze boundary, the stale dist/agent.js). 3b956bd claims the playwright-install step as 'documented' in its own prose but never actually commits that documentation anywhere in the repo, so the claim doesn't match the diff. On the positive side, the freeze-boundary claim is verifiably true: `git log --oneline -- apps/shop-velde apps/shop-kracht` shows 3b956bd (which edits shop-kracht) lands before the freeze commit 9aa8c0b, and nothing after 9aa8c0b touches those paths, matching 6dcb6f1's claim 'git log ... still ends at the freeze commit'."
+        },
+        "lazy": {
+          "pass": true,
+          "rationale": "e2e/dom.ts is 70 lines of narrowly-scoped shared helpers (productJsonLd, isStruckThrough, isOccludedAtCenter, noBrokenImages), each solving one concrete assertion problem with no speculative generality. The buy-bar CSS fix (apps/shop-kracht/app/globals.css) is a single `:has([data-buybar])` rule scoped to the one template that has the bug rather than padding every footer. Gate fixes (bench/no-empty-test-run.sh, tsconfig.json) are minimal one-purpose diffs. No new dependency, no abstraction layer, no reinvented framework \u2014 playwright.config.ts (45 lines total across both commits) is plain defineConfig with a webServer array."
+        },
+        "reviewable": {
+          "pass": true,
+          "rationale": "Split cleanly into two self-contained commits (storefront half: 9 files/432 lines; widget half: 3 files/434 lines) with commit messages that walk through the reasoning per finding, and dense but load-bearing inline comments (e.g. agent.spec.ts:394-399 explains why bounding-box beats isOccludedAtCenter for the z-index-ceiling launcher). File count is proportionate to stated scope (5 new e2e files + 5 small edits across both commits). The one drawback \u2014 the T5-dependency violation is stated plainly in the code's own comments (not hidden), so a reviewer holding the DoD next to the diff would catch it inside the ten minutes."
+        }
+      },
+      "worst_finding": "e2e/agent.spec.ts (lines 309-350, 441) asserts against T5's `.card`/`.card-title`/`.card-link` renderer output \u2014 code the diff's own comments admit came from T5 \u2014 even though T12's DoD explicitly required 'Specs that depend on a T5 renderer are not written yet, and their absence is stated, not stubbed,' and T5 has never been committed to this repo's history at all."
+    },
+    {
+      "task": "T14",
+      "title": "competitor scan -> feature matrix -> demo subset",
+      "axes": {
+        "faithful": {
+          "pass": false,
+          "rationale": "Multiple DoD bullets are unmet, not just stylistic misses. DoD bullet 1 says '\u22658 products in the matrix, each with a source URL and a date' \u2014 but COMPETITORS.md:50 ('Zoovu | 25 | one, theme-level | No self-serve font-family on Zoe; real control means a Vue.js theme rebuild') and the Wizzy/Lyro entries at lines 48-49 have zero source URL anywhere in the file, including the Sources bibliography at the bottom, which lists sources for Intercom/Gorgias/Tidio/Rebuy/Rep AI/Manifest/Klevu/Nosto/Algolia/Constructor only. DoD bullet 2 ('every claim about a named company is either sourced or in the unverified column') also fails for the same three rows \u2014 and there is in fact no 'unverified' column in the \u00a72 table at all (only Product/Controls/Font?/Position), so the doc/search/unverified tagging promised at COMPETITORS.md:15 is not actually visible per-row. DoD bullet 6 ('One positioning paragraph... in DECISIONS.md') is unmet by this commit: `git show cc2d27f --stat` shows DECISIONS.md was not touched, the positioning content ('respectful guest', the constant signature, EU AI Act Article 50) landed in PRINCIPLES.md \u00a78 instead, and DECISIONS.md on disk (mtime 08:46, i.e. written by a later/other session after this 08:17 commit) does not contain that paragraph (grep for 'signature|respectful guest|Article 50|Shop Pay' returns nothing). DoD bullet 5 ('anything the matrix says we are missing is filed as a decision... never left as an open item') is also only partly honored: COMPETITORS.md \u00a75 is literally titled 'What we still do not know' and lists five unresolved gaps (the review-mining-came-back-empty finding, Rep AI's undocumented override behaviour, several 403'd sources, an unadjudicated Tidio contradiction) with no build/cut decision attached to any of them."
+        },
+        "honest": {
+          "pass": false,
+          "rationale": "COMPETITORS.md:15 asserts a verification rigor claim \u2014 '11 of 13 product rows are `doc`' (vendor pages opened and quoted) \u2014 that the document itself does not substantiate: three named products (Zoovu, Wizzy, Lyro) carry specific factual claims ('real control means a Vue.js theme rebuild', 'raw CSS only') with no source anywhere, and are not flagged unverified anywhere in the visible table, contradicting the '11 doc / 2 non-doc' math the header implies. This is exactly the failure mode TASKS.md:390 warns against verbatim: 'a confident wrong claim about a named company on stage is worse than the gap.' The commit message itself is otherwise accurate about what it did (docs-only, 'carries the concurrent T13 doc reversal... none of its in-flight code' \u2014 confirmed true, the stat shows no code files), so the dishonesty is localized to the document's own self-certification of its sourcing, not the hand-off prose."
+        },
+        "lazy": {
+          "pass": true,
+          "rationale": "This is a docs-only commit (`git show cc2d27f --stat`: 6 files, all .md, +435/-47, no code) \u2014 there is no speculative abstraction, no new dependency, no reinvented tooling; it reuses the existing DECISIONS-LOG.md append convention (`[compete]`/`[compete-2]` tags following the established `[T0]`/`[wire]` pattern at DECISIONS-LOG.md:9-11) rather than inventing a new logging format. The 14-subagent research fan-out noted in PROGRESS.md ('T14 fan-out (14 agents) | ... 1.11M tokens / 463 tool calls') is a process cost, not shipped-artifact bloat, and is proportionate to the DoD's explicit requirement of 8-12 products 'each opened and looked at, not recalled from memory' within a 30-40m budget."
+        },
+        "reviewable": {
+          "pass": false,
+          "rationale": "The claims this task makes are scattered across four documents that must be cross-read to check consistency \u2014 COMPETITORS.md (new, 161 lines), PRINCIPLES.md (127 lines changed, carrying the 'respectful guest'/signature positioning that DoD bullet 6 says belongs in DECISIONS.md), DECISIONS-LOG.md (23 lines added, 14 new `[compete]/[compete-2]` entries), and the DoD-required but untouched DECISIONS.md. A reviewer cannot confirm DoD bullet 1/2 (sourcing) by reading the \u00a72 table alone \u2014 it has no verification column \u2014 they must manually check every named product against the bottom Sources bibliography, which is exactly the process that surfaced the Zoovu/Wizzy/Lyro gap and took more than a skim to find."
+        }
+      },
+      "worst_finding": "COMPETITORS.md claims '11 of 13 product rows are `doc`' (vendor pages opened and quoted) but three named products in the matrix \u2014 Zoovu, Wizzy, and Lyro \u2014 have specific factual claims (e.g. Zoovu: 'real control means a Vue.js theme rebuild') with no source URL anywhere in the file and no 'unverified' column to flag them, which is precisely the 'confident wrong claim about a named company on stage' failure mode the task's own DoD was written to prevent."
+    },
+    {
+      "task": "H1+H3",
+      "title": "the two benchmark checks written independently of the code they grade",
+      "axes": {
+        "faithful": {
+          "pass": true,
+          "rationale": "T1 DoD 'Owns benchmark H1 (contrast)' is met: bench/checks/contrast.ts fuzzes CONFIG_COUNT=200 seeded MerchantTokens (line 105, 189-212), checks every AA_GUARANTEED_PAIRS text/bg pair for 4.5:1 AND the focus ring for 3:1 against both accent and surface via a complete 0-255 grey search (lines 140-176), and returns count>0. T4 DoD 'Owns benchmark H3 (transcript). Golden block sequences for both brands land in bench/gold/' is met: bench/gold/velde.json (125 lines) and bench/gold/kracht.json (200 lines) exist, generated from the real T8 catalogs (DECISIONS-LOG.md:156), and compareToGold (transcript.ts:123-139) throws a diff on mismatch; --accept is implemented (transcript.ts:444-456) exactly as BENCHMARKS \u00a74.3 specifies."
+        },
+        "honest": {
+          "pass": false,
+          "rationale": "Commit 0e5c695's message claims 'the golden transcripts are now actually read,' but bench/run.ts:30-36 passes empty args to every check on a bare `bun bench` (the command BENCHMARKS.md names as 'Run everything'), so transcript.ts:370 falls back to catalogPath='packages/agent/src/brain/fixture.json', and detectBrand() (transcript.ts:78-80) never matches that path, so goldNote/compareToGold never fire. The committed bench/report.md proves this live: the transcript row reads '2 opening-message cases against packages/agent/src/brain/fixture.json: ...' with no 'matches gold' suffix that the code appends when a brand is detected (transcript.ts:436-439). So the one HARD, blocking invocation the whole suite is built around never checks gold at all \u2014 contradicting BENCHMARKS.md's own claim that 'H3 is the thing most likely to silently break when a parallel agent touches the FSM' \u2014 and this gap is undisclosed even though the same commit explicitly disclosed a smaller coverage gap (the tied-\u20ac245 sort case)."
+        },
+        "lazy": {
+          "pass": true,
+          "rationale": "No speculative abstraction: the LCG PRNG in contrast.ts:38-46 is the minimum needed because 'Math.random() is banned' (verified \u2014 the only remaining hit is the comment explaining the ban, `grep -rn Math.random bench/ packages/` returns one line); writeGold reuses the project's existing Biome formatter instead of a hand-rolled pretty-printer, and per 0e5c695's message a prior version's subprocess canonicalization was deliberately cut from the comparison path once found to race `bun run lint`. The dual gold+--expect mechanism is justified in transcript.ts:11-36, not redundant scaffolding."
+        },
+        "reviewable": {
+          "pass": false,
+          "rationale": "The scorecard's own axis asks 'could a human review this in ten minutes? Sprawl... file count' \u2014 bench/checks/contrast.ts is 265 lines and bench/checks/transcript.ts is 457 lines (`wc -l`), 722 combined lines of dense, assertion-heavy logic (regex-parsed quantified costs, independent rescuer recomputation, gold diffing, --expect/--accept plumbing) added across the three commits; PROGRESS.md records every task's 'Actual R' column as literally 'pending' project-wide, so there is no recorded human review time to confirm it clears the bar either way, and size alone argues against a 10-minute pass."
+        }
+      },
+      "worst_finding": "The default `bun bench` invocation (BENCHMARKS.md's documented 'run everything' command) never exercises gold comparison for H3 \u2014 bench/run.ts passes no catalog arg, so transcript.ts silently falls back to the placeholder fixture.json and detectBrand() never matches it, meaning the golden-transcript regression gate the project treats as the second most important HARD check is dormant unless a human remembers to type `bun bench transcript packages/agent/src/brain/catalog.velde.json` by hand."
+    },
+    {
+      "task": "wire",
+      "title": "the brain<->shell integration seam",
+      "axes": {
+        "faithful": {
+          "pass": true,
+          "rationale": "Every implied obligation is actually done, not just claimed: converse.ts (git show fff0d0b -- packages/agent/src/converse.ts) is wired in boot.ts before mount ('converse(agent, config)' at boot.ts +54) so brain output reaches the shell; chips became bidirectional buttons as claimed \u2014 blocks.ts renderChips now always emits <button> with a toggled aria-label, and widget.ts's handler computes 'next' state and fires mx-chip-drop/mx-chip-restore both ways; the offline path is real, not just described \u2014 fallback.ts's catalog is generated empty and shell.test.ts's new test 'a fallback with no catalog answers honestly instead of silently' (packages/agent/src/shell.test.ts) asserts the exact 'catalog.offline' string; Universal DoD's 'non-trivial logic leaves one runnable check' is honored (3 new tests added for the obstacle sentence, the happy path, and the offline case) and 'packages/agent has zero imports from apps/' holds (grep found nothing) and DECISIONS-LOG.md got 6 same-session '[wire]' entries as required."
+        },
+        "honest": {
+          "pass": true,
+          "rationale": "Every independently-checkable claim in the commit message matches the diff: 'Five renderers still throw their named T5 owns this error' \u2014 confirmed via `git show fff0d0b:packages/agent/src/blocks.ts` line 23: `throw new Error(\"maximal: renderer not built \u2014 T5 owns this: ...\")`; '50 tests' \u2014 counting test( occurrences across the six .test.ts files present at that commit (brain.test.ts 10 + shell.test.ts 14 + derive.test.ts 9 + catalog.test.ts 6 + extract.test.ts 7 + ingest.test.ts 4) sums to exactly 50; 'the count of near-misses is recomputed from the live chip row rather than read off no-match.closest' \u2014 verified in converse.ts's obstacleText(), which calls intersect() fresh rather than trusting block.closest.length. The unverifiable claims (exact gzip bundle delta, 'typecheck clean', '83 files' for biome \u2014 my own file count came to 79 ts/json files, close but not run through biome itself) are gate-status assertions I could not execute per the task's no-build/no-test constraint, but nothing found contradicts them and every checkable claim held exactly."
+        },
+        "lazy": {
+          "pass": true,
+          "rationale": "tools/serve-platform.ts is 49 lines, explicitly comments itself as 'a deliberately dumb static stub' and says what T6 still owns (router, edge cache, validation) rather than building any of that speculatively; converse.ts's flatten() shim for the 5 missing T5 renderers is marked with an actual 'ponytail:' comment naming the deletion point ('When T5 lands, flatten loses those cases') exactly per the ponytail contract; build-config.ts generates both the API JSON and fallback.ts from one source specifically because the hand-written fallback had already drifted (VELDE space ramp 6/12/20/28/40 vs derive()'s 6/12/24/36/56, inverted surfaceRaised/Sunken, wrong focus ring) \u2014 a single generator closing a real, demonstrated bug class rather than a speculative abstraction. No new dependency was added anywhere in the diff."
+        },
+        "reviewable": {
+          "pass": true,
+          "rationale": "15 files touched, but 2 of them (tools/config/kracht.json, tools/config/velde.json, 2045 lines combined) are machine-generated JSON data meant to be spot-checked as a set per the Universal DoD ('deliverables that are sets are reviewed as a set'), not read line by line. The actual hand-authored logic is 3 new small single-purpose files (converse.ts 150 lines, build-config.ts 170, serve-platform.ts 49) plus a 64-line test addition and five tiny (1-30 line) diffs to existing files \u2014 each file has one clear job, matches its name, has no deep nesting, and carries inline rationale comments that shorten rather than lengthen a review."
+        }
+      },
+      "worst_finding": "PROGRESS.md's own table (row \"Brain\u2194shell wire ... Actual R: pending\") shows this seam \u2014 the piece that lets the widget hold a conversation at all \u2014 shipped with zero recorded independent review rounds, unlike every neighboring task (T0 had 6 correction rounds, T1 had 2, H1 cross-checked its pair list against T3's CSS); it is high-leverage and unreviewed, which is exactly the combination worth a human's first look."
+    }
+  ]
+}

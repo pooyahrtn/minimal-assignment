@@ -17,8 +17,9 @@ for exactly this reason.
 |---|---|---|---|
 | T5 message block renderers | `minimal-assignment-02` (assumed — the only busy peer) | 2026-08-19, **claimed retroactively** | H2 `brand-divergence` green at 0.1719 vs the 0.075 floor. `blocks.ts`, `css.ts`, `converse.ts` dirty. |
 | T6 platform API + snippet delivery | `minimal-assignment-02` (assumed) | 2026-08-19, **claimed retroactively** | `apps/platform/server.ts` + `config/*.json` + H6 `budget` written, uncommitted. `brands.ts` dirty. |
+| T11 third brand (**required** — demo beat 4) | `minimal-assignment` (this desk) | 2026-08-19 08:59, claimed at pickup | Writes `packages/tokens/src/brands.ts` + `src/index.ts` + `tools/build-config.ts`, and regenerates `apps/platform/config/*.json` + `packages/agent/src/fallback.ts` via `bun run build:config`. All five were cold (35m+) at claim and are now committed at `d222edb`. **Does not touch** `bench/checks.ts`, `DECISIONS.md`, `bench/scorecard.*`, `PROGRESS`-adjacent T10 files — all hot with a peer desk right now. |
 
-Both rows are retroactive, which is the whole point: nobody wrote them at the time.
+Both rows above T10 are retroactive, which is the whole point: nobody wrote them at the time.
 
 ---
 
@@ -39,6 +40,7 @@ Both rows are retroactive, which is the whole point: nobody wrote them at the ti
 | Brain↔shell wire | not estimated | **15m** | — | pending | 0 | Not a task in TASKS.md at all — T3 and T4 were parallel-safe precisely because nothing joined them, and nothing was scheduled to. |
 | Storefront fix pass | not estimated | **32m** | — | pending | 0 | Merchandising + 2 layout defects + photo mapping, all forced before the freeze. |
 | T14 competitor scan | 40m | **~12m** | 30m | pending | 0 | 12 products, 3 families. Two findings moved buckets: URL brand-ingest is table stakes (Intercom has shipped it since Dec 2023), and the no-custom-CSS decision went from taste to evidence (Rebuy's own docs warn merchants to hand-scope selectors). Only 1 of 12 rows was opened directly rather than read through a search summary — the DoD's `unverified` column is doing real work here. |
+| T10 draft half (DECISIONS.md + the SOFT scorecard) | 20m draft | **~75m agent over 2 review rounds / ~1.1M tokens** | 90m | pending | 3 | Two of eight DoD boxes were dead on arrival (demo on deployed links, live extension — T7/T11/T15 unbuilt) and were known so from reading `TASKS.md`. The plan round returned **14 findings, 3 BLOCKERs**, all of them the plan misreading the tree it was summarising: box 4 declared uncloseable closes in one command, box 3's "with dates" declared unsatisfiable is one `git log -S` away, and **four of five chosen override entries failed the brief's own direction test** (AI suggests, human overrides) — three were the AI overriding itself. The diff round found the new SOFT check passing on three malformed scorecards; fixed and fault-injected five ways. Box 1 ("one page") is still open at 1565 words, after six editing passes and a three-way edit collision on the file. |
 | T14 fan-out (14 agents) | 40m | **~14m wall / 1.11M tokens / 463 tool calls** | 30m | pending | 1 | Pilot on one product first, then fan out — the pilot paid for itself: it exposed three missing schema fields (preview target, merchant complaints, vocabulary count) that would have cost a full re-run at 13x the tokens. One script parse error (backticks inside a template literal). Three of five attacks on our own design landed. |
 
 ## Standing lessons
@@ -80,3 +82,23 @@ Both rows are retroactive, which is the whole point: nobody wrote them at the ti
    lists T1/T2/T3/T4/T8 as "truly parallel", which was true and useful. What it does not say is that
    after they land the widget still cannot hold a conversation, because nothing owns the seam. That
    was 15 minutes of work and zero minutes of plan.
+
+10. **A shared working tree costs the docs task most.** T10 ran with three other desks live in the
+    same tree: ~20 files dirty that were not its own, `bench/report.md` mutated under it twice by a
+    peer's filtered `bun bench` run, a peer commit (`770889b`, then `d222edb`) landing mid-task on
+    files it had already read, and a peer **rewriting `DECISIONS.md` while T10 was editing it** —
+    which deleted the dated log citations DoD box 3 depends on and had to be restored by hand. Build
+    tasks own disjoint trees; a docs task reads *everything*, so it is the one task whose inputs
+    cannot be held still. Schedule it after the wave it describes, or accept that every "the tree
+    says X" claim in it has a shelf life measured in minutes.
+11. **The adversarial round is now unambiguously the highest-yield step in the process, and its
+    yield is in the plan, not the diff.** T0's round found 6 defects; T10's plan round found 14 with
+    3 BLOCKERs — and every BLOCKER was the same species: *the plan asserted something about the repo
+    without running the command that would check it* ("the log has no dates", "committing the report
+    commits another desk's state", "box 8 is already closed"). None was a coding error. The cheapest
+    possible fix is to run the greps while writing the plan rather than while defending it.
+12. **A DoD box can be wrong, and T10's box 3 was.** It demands citations "with dates" from a log
+    whose own documented format (line 8) carries a `[session]` tag and no date field. It is
+    satisfiable only by reconstructing dates from git per entry. The box was written by whoever
+    wrote the task, not by whoever built the log — the two never met, and the `pickup` skill's
+    step-2 instruction to refute the *task text* is what caught it.

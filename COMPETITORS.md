@@ -127,16 +127,17 @@ Six minutes. Minutes go to the differentiators and nowhere else.
 | 3 | 2:30–4:00 | **Config page: domain first, five fields, confirm-don't-apply.** Say the Gorgias line out loud | 🔨 `apps/platform` has a server + per-shop config, uncommitted |
 | 4 | 4:00–5:00 | **Third brand typed live** — the clamp visibly refusing to render it illegibly | ❌ T11 |
 | 5 | 5:00–5:40 | Preview **against the real storefront**, not a mock — with Rebuy's own warning as the reason | ⚠️ |
-| 6 | 5:40–6:00 | What we refuse, and why. Font-as-file. The signature that is never overridable | ✅ |
+| 6 | 5:40–6:00 | What we refuse, and why: no custom CSS, and the font taken from their own theme | ✅ |
+| — | — | *The constant, non-overridable AI signature (EU AI Act Art. 50) is **decided, not built** — do not point at it* | ❌ |
 
 **One sentence each, only if asked:** shadow-root isolation, hostile-page adversaries, e2e suite,
 JSON-LD, the ingest ladder, avatar/voice, light-dark.
 
 **Three things to say when asked how this differs** — each falsifiable:
 
-1. **"We're the only one that guarantees legibility, and we show the guarantee."** Eight products checked, zero documented contrast clamps.
-2. **"We closed the escape hatch on purpose, and we know what that costs."** Their merchants hack an iframe with unscoped page CSS; our shadow root closes that door structurally, which makes "no custom CSS" harsher here than anywhere else in the table. We ship no hatch today — the named next step is Stripe's `rules` (named parts, allowlisted properties), and it is a stated ceiling, not a built feature. *(Rewritten 2026-08-19: the original claimed a hook `T7` had explicitly cut.)*
-3. **"We treat a font as a file, not a dropdown."** Five of eight have no font control at all.
+1. **"We're the only one that guarantees legibility, and we can prove it on 1400 pairs."** Eight products checked, zero documented contrast clamps; ours is enforced in `derive.ts` and measured by `bun bench contrast` — 200 seeded configs, 1400 pairs, worst ratio 4.500:1. The *merchant-facing* half — the config page naming the adjusted pair and showing before/after [PRINCIPLES §7] — is **T7 and is not built**, so today the guarantee is provable and not yet visible. Say the measured version on stage until T7 lands. *(Narrowed 2026-08-19 [T10]: the original said "and we show the guarantee", which named a surface no file in the tree renders.)*
+2. **"We closed the escape hatch on purpose, and we know what that costs."** Their merchants are handed raw CSS and told to scope it themselves — Rebuy's own guide warns that widget CSS "styles any element on the page that your selector matches," and Tidio moved a selector and told merchants to update their styles. Our shadow root closes that door structurally, which makes "no custom CSS" harsher here than anywhere else in the table. We ship no hatch today — the named next step is Stripe's `rules` (named parts, allowlisted properties), and it is a stated ceiling, not a built feature. *(Rewritten 2026-08-19: the original claimed a hook `T7` had cut. Narrowed again the same day [T10]: it then said merchants "hack an iframe with unscoped page CSS", and `grep -in iframe COMPETITORS.md` matched only that sentence — the scan records leaking page CSS, which is the opposite direction of travel, and one competitor's iframe selector name. Neither supports the claim as written.)*
+3. **"The font comes from the merchant's own theme, not from our dropdown."** Five of eight have no font control at all; we take the stylesheet URL their theme already serves and inject it on the host page (`boot.ts`), because `@font-face` cannot resolve inside the shadow root. Accepting a raw `.woff2` — the literal "font as a file" — is decided and **not built** (`DECISIONS-LOG.md` → Scope, 19 Aug); the named next step, not a claim. *(Narrowed 2026-08-19 [T10]: "as a file" described an upload path the tree does not have.)*
 
 ---
 
