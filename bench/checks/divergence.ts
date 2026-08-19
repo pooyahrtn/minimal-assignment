@@ -29,11 +29,11 @@ const VIEWPORT_WIDTH = 375
  * message list on every push, so a 667px-high shot captures the LAST two blocks and the two brands
  * land at different scroll offsets — the metric would be measuring which blocks happened to be
  * visible. 375 is what DoD box 3 is about; the height only has to be enough to hold every block
- * under the more generous of the two type ramps — VELDE needs 4301px of message list, KRACHT
- * 3157px, measured. `assertNothingCut` below turns "all 7 blocks are in the shot" into something
+ * under the more generous of the two type ramps — VELDE needs 4863px of message list, KRACHT
+ * 3500px, measured after the 40-character word was pushed into every block. `assertNothingCut` below turns "all 7 blocks are in the shot" into something
  * mechanical rather than something this constant is assumed to be big enough for.
  */
-const VIEWPORT_HEIGHT = 5000
+const VIEWPORT_HEIGHT = 5600
 
 /**
  * The shared ground for assertion 1. Every text and surface variable derives from `surface`, so
@@ -49,10 +49,10 @@ const NORMALISED_SURFACE = '#FFFFFF'
  * it was looked at, not just measured, and two real defects came out of that look — see the
  * hand-off.
  *
- * MEASURED: 0.1507, stable across runs (the render has no network, no webfont and no timing input).
+ * MEASURED: 0.1410, stable across runs (the render has no network, no webfont and no timing input).
  * PINNED at 0.11, which is ~27% headroom. The headroom is not timidity: T9 is a polish pass over
  * exactly these surfaces, the rule forbids ever lowering this number, and a HARD gate that goes red
- * on legitimate polish has no legal repair. A run that comes in materially above 0.1507 is the
+ * on legitimate polish has no legal repair. A run that comes in materially above 0.1410 is the
  * moment to ratchet.
  *
  * For scale, the same measurement was 0.0724 while a flex-shrink bug was crushing every product
@@ -171,52 +171,68 @@ async function render(
   }, STRUCTURAL_SELECTORS)
 
   /*
-   * `.messages` and each block root, never `.panel`: the panel is `overflow: hidden`, so it reports
-   * `scrollWidth === clientWidth` while clipping content that overflows by any amount. The compare
-   * table's own `overflow-x: auto` scroller is a scroll container BY DESIGN — three columns cannot
-   * fit at 375px and swiping beats clipping — so the measurement is on block ROOTS, which must
-   * never be wider than the list that holds them.
+   * `.messages` and every DESCENDANT, not just the block roots. A block root can be exactly
+   * panel-width while clipping its own heading by 107px, because the card wrappers are
+   * `overflow: hidden` — which is precisely how a 40-character word survived this assertion while
+   * rendering as "CLOSEST WITHOUT “RIJKSMUSEUMSTRAATVERLICHTINGSPROJE" cut at the card edge.
+   * Measuring `scrollWidth > clientWidth` on each element catches content that overflows its own
+   * box; measuring outer width against the list catches a block that widens the panel. Both are
+   * needed and neither substitutes for the other.
+   *
+   * `.compare-scroll` and its subtree are exempt BY DESIGN: three columns cannot fit at 375px and
+   * a swipe beats clipping, so that one container is allowed to scroll horizontally.
    */
-  const overflow = await page.evaluate(() => {
-    const root = document.querySelector('mx-agent')?.shadowRoot
-    const list = root?.querySelector('.messages')
+  const measurements = await page.evaluate(() => {
+    const list = document.querySelector('mx-agent')?.shadowRoot?.querySelector('.messages')
     if (!(list instanceof HTMLElement)) return []
-    const found: { element: string; scrollWidth: number; clientWidth: number }[] = []
-    if (list.scrollWidth > list.clientWidth) {
-      found.push({
-        element: '.messages',
-        scrollWidth: list.scrollWidth,
-        clientWidth: list.clientWidth,
-      })
-    }
-    for (const child of Array.from(list.children)) {
-      if (!(child instanceof HTMLElement)) continue
-      if (child.getBoundingClientRect().width > list.clientWidth + 0.5) {
-        found.push({
-          element: child.className,
-          scrollWidth: Math.round(child.getBoundingClientRect().width),
-          clientWidth: list.clientWidth,
-        })
-      }
-    }
-    return found
+    const nodes = [list, ...Array.from(list.querySelectorAll('*'))]
+    return nodes.flatMap((node) =>
+      node instanceof HTMLElement
+        ? [
+            {
+              element: node.className || node.tagName.toLowerCase(),
+              scrollWidth: node.scrollWidth,
+              clientWidth: node.clientWidth,
+              scrollHeight: node.scrollHeight,
+              clientHeight: node.clientHeight,
+              outerWidth: Math.round(node.getBoundingClientRect().width),
+              isBlockRoot: node.parentElement === list,
+              exempt: node.closest('.compare-scroll') !== null,
+              listWidth: list.clientWidth,
+            },
+          ]
+        : [],
+    )
   })
+
+  // The browser side only measures; the judgement is made here, where it reads plainly and where a
+  // serialisable callback does not have to carry it.
+  //
+  // Two different failures, and neither substitutes for the other. `scrollWidth > clientWidth` on
+  // EVERY descendant catches content overflowing its own box — the case that let a 40-character
+  // word render as "CLOSEST WITHOUT “RIJKSMUSEUMSTRAATVERLICHTINGSPROJE", clipped at the card edge,
+  // while every block root sat exactly at panel width because the card wrappers are
+  // `overflow: hidden`. Outer width against the list catches a block that widens the panel.
+  const overflow = measurements
+    .filter((m) => !m.exempt)
+    .filter(
+      (m) =>
+        m.scrollWidth > m.clientWidth + 0.5 || (m.isBlockRoot && m.outerWidth > m.listWidth + 0.5),
+    )
+    .map((m) => ({ element: m.element, scrollWidth: m.scrollWidth, clientWidth: m.clientWidth }))
 
   /*
    * H2 says "render all 7 message blocks ... screenshot". A list that scrolls has blocks the camera
-   * never saw, and the two brands would clip at different places because their type ramps differ —
-   * so the number would be measuring which blocks happened to fit. This is the assertion that makes
-   * the claim true instead of assumed.
+   * never saw, and the two brands clip at different places because their type ramps differ — so the
+   * number would measure which blocks happened to fit. This makes the claim mechanical.
    */
-  const cut = await page.evaluate(() => {
-    const list = document.querySelector('mx-agent')?.shadowRoot?.querySelector('.messages')
-    if (!(list instanceof HTMLElement)) return null
-    return { scrollHeight: list.scrollHeight, clientHeight: list.clientHeight }
-  })
-  if (cut === null) throw new Error(`${brand.name}: no message list rendered`)
-  if (cut.scrollHeight > cut.clientHeight) {
+  const list = measurements.find((m) => m.element.includes('messages'))
+  if (list === undefined) throw new Error(`${brand.name}: no message list rendered`)
+  // Height, not width: the list scrolls vertically, so "a block the camera never saw" is a
+  // scrollHeight that exceeds the visible clientHeight.
+  if (list.scrollHeight > list.clientHeight) {
     throw new Error(
-      `${brand.name}: the gallery does not fit the canvas (${cut.scrollHeight}px of blocks in ${cut.clientHeight}px), so the screenshot is missing blocks. Raise VIEWPORT_HEIGHT.`,
+      `${brand.name}: the gallery does not fit the canvas (${list.scrollHeight}px of blocks in ${list.clientHeight}px), so the screenshot is missing blocks. Raise VIEWPORT_HEIGHT.`,
     )
   }
 
@@ -270,11 +286,44 @@ async function distance(page: Page, a: string, b: string): Promise<number> {
   )
 }
 
-/** Counts the five properties that differ on at least one shared element. */
+/**
+ * Counts the five properties that differ on at least one shared element — but only over the
+ * elements T5 actually owns. Counting over every selector let `.launcher` alone carry all five,
+ * so a build that themed the shell chrome and hardcoded every message block would still have
+ * reported 5/5. The claim being made is about the BLOCKS.
+ */
+const BLOCK_SELECTORS = ['.msg', '.chip', '.card', '.card-title', '.label', '.nomatch']
+
 function differingProperties(a: Record<string, string>, b: Record<string, string>): string[] {
   return STRUCTURAL_PROPERTIES.filter((property) =>
-    Object.keys(a).some((key) => key.endsWith(`|${property}`) && a[key] !== b[key]),
+    Object.keys(a).some(
+      (key) =>
+        key.endsWith(`|${property}`) &&
+        BLOCK_SELECTORS.some((selector) => key.startsWith(`${selector}|`)) &&
+        a[key] !== b[key],
+    ),
   )
+}
+
+/**
+ * The side-by-side both brands are reviewed on. TASKS §2 requires deliverables that are SETS to be
+ * reviewed as a set — a per-block checklist cannot see repetition or incoherence — and a sheet
+ * composed by hand goes stale the first time anyone reruns the check without remembering to redo
+ * it. So the check that produces the two columns produces the sheet too.
+ */
+async function writeContactSheet(browser: Browser): Promise<void> {
+  const page = await browser.newPage({ viewport: { width: 900, height: 1400 } })
+  const encode = async (name: string): Promise<string> =>
+    Buffer.from(await Bun.file(`bench/gallery/${name}.png`).arrayBuffer()).toString('base64')
+  const [velde, kracht] = await Promise.all([encode('velde'), encode('kracht')])
+  await page.setContent(
+    `<body style="margin:0;display:flex;gap:8px;background:#777">
+      <img src="data:image/png;base64,${velde}" style="width:440px">
+      <img src="data:image/png;base64,${kracht}" style="width:440px">
+    </body>`,
+  )
+  await page.screenshot({ path: 'bench/gallery/contact-sheet.png', fullPage: true })
+  await page.close()
 }
 
 async function openBrowser(): Promise<Browser> {
@@ -338,6 +387,7 @@ async function run(): Promise<CheckResult> {
     const metrics = await browser.newPage()
     const measured = await distance(metrics, first.shot, second.shot)
     await metrics.close()
+    await writeContactSheet(browser)
     if (measured < DISTANCE_FLOOR) {
       throw new Error(
         `perceptual distance ${measured.toFixed(4)} is below the pinned floor ${DISTANCE_FLOOR}. Never lower the floor to make this pass [BENCHMARKS §4.1/§4.4].`,

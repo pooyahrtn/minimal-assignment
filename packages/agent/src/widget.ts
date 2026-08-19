@@ -240,6 +240,11 @@ export class MxAgent extends HTMLElement {
     const id = drop.dataset.dropChip
     if (id === undefined) return false
     drop.disabled = true
+    // Gate on the CHIP's current state, not on this button's own disabled flag. The chip row can
+    // drop the same constraint first, which leaves this card sitting in the scrollback still
+    // enabled — tapping it then re-dropped an already-dropped chip and the brain answered with a
+    // duplicate set of recommendations. Found by a reviewer doing it in the other order.
+    if (this.chips.find((chip) => chip.id === id)?.state === 'dropped') return true
     this.setChip(id, 'dropped')
     return true
   }

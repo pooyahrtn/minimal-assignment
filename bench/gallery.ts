@@ -114,14 +114,23 @@ function gallery(config: ConfigResponse): Block[] {
     { kind: 'product-card', product: noImage, reason: '' },
     { kind: 'product-card', product: soldOut, reason: '' },
     { kind: 'product-card', product: stress, reason: '' },
-    { kind: 'product-compare', products: comparable, rows: compareRows(comparable) },
+    // The stress product rides along in the compare table so a 40-character word has to survive a
+    // table cell too, not only a card body.
+    {
+      kind: 'product-compare',
+      products: [...comparable.slice(0, 2), stress],
+      rows: compareRows([...comparable.slice(0, 2), stress]),
+    },
     {
       kind: 'no-match',
-      blocking: { id: 'chip-1', label: 'under €30', state: 'active' },
+      // The blocking label is the unbreakable word ON PURPOSE: it lands in the no-match HEADING,
+      // which is the surface that was clipping. Every block gets the stress input, not just the
+      // convenient ones.
+      blocking: { id: 'chip-1', label: UNBREAKABLE, state: 'active' },
       closest: catalog.slice(0, 3).map((product) => ({ product: withStandIn(product), gap: '' })),
       alternatives: [],
     },
-    { kind: 'cta', label: first.title, href: first.url },
+    { kind: 'cta', label: `${first.title} ${UNBREAKABLE}`, href: first.url },
   ]
 }
 

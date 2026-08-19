@@ -65,12 +65,49 @@ function cachedResponse(
 /**
  * `dist/` is gitignored and rebuilt from source, so a long-lived server (Playwright reuses one)
  * will happily serve a bundle from before the last source change — the exact drift T12 caught in
- * `6dcb6f1`. Rebuild on request instead of trusting whoever last remembered to. 8ms, and only on
- * page load. Shells out to the package's own build script so the flags — including "no source
- * map" — have one definition. [ENGINEERING §3.13]
+ * `6dcb6f1`. Rebuild on request instead of trusting whoever last remembered to.
+ *
+ * But only when the sources are actually newer, and only once at a time. Rebuilding on EVERY
+ * request forks a `bun build` per request: the e2e suite loads the embed on dozens of pages across
+ * two workers, and those builds compete with the KRACHT storefront's own Next.js compilation for
+ * CPU — which made a storefront spec fail under full-suite load while passing in isolation. The
+ * mtime comparison turns N builds into one; the in-flight promise stops concurrent requests from
+ * racing each other into N more. [ENGINEERING §3.13 — still the shipped artifact, just not rebuilt
+ * for nothing]
  */
+const SOURCE_DIRS = [`${root}/packages/agent/src`, `${root}/packages/tokens/src`]
+
+async function newestSourceMtime(): Promise<number> {
+  let newest = 0
+  for (const dir of SOURCE_DIRS) {
+    for await (const name of new Bun.Glob('**/*.{ts,json}').scan({ cwd: dir })) {
+      const stat = await Bun.file(`${dir}/${name}`).stat()
+      if (stat.mtimeMs > newest) newest = stat.mtimeMs
+    }
+  }
+  return newest
+}
+
+let inFlight: Promise<void> | null = null
+
+async function runBuild(): Promise<void> {
+  // `.nothrow()` matters: without it a broken build throws inside `fetch` and this endpoint answers
+  // 500 — on the one route whose whole contract is that it never breaks a merchant's page. A failed
+  // rebuild serves the last good bytes instead, which is the correct degradation: stale beats gone.
+  const built = await Bun.$`bun run --filter '@maximal/agent' build`.cwd(root).quiet().nothrow()
+  if (built.exitCode !== 0) {
+    console.error(`platform: agent build failed, serving last good bundle\n${built.stderr}`)
+  }
+}
+
 async function rebuildBundle(): Promise<void> {
-  await Bun.$`bun run --filter '@maximal/agent' build`.cwd(root).quiet()
+  const bundle = Bun.file(BUNDLE)
+  const builtAt = (await bundle.exists()) ? (await bundle.stat()).mtimeMs : 0
+  if (builtAt > (await newestSourceMtime())) return
+  inFlight ??= runBuild().finally(() => {
+    inFlight = null
+  })
+  await inFlight
 }
 
 export function serve(port = 4003) {

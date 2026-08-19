@@ -1,8 +1,9 @@
+import { fill, money } from './blocks'
 import type { Action, BrainState } from './brain/fsm'
 import { createBrain, step } from './brain/fsm'
 import { intersect } from './brain/retrieve'
 import { isRecord, str } from './config'
-import type { Block, ConfigResponse, Product } from './types'
+import type { Block, ConfigResponse } from './types'
 import type { MxAgent } from './widget'
 
 /**
@@ -29,21 +30,6 @@ function detailString(event: Event, key: string): string | null {
 
 function text(value: string): Block {
   return { kind: 'text', text: value }
-}
-
-/** `{placeholder}` interpolation. An unknown placeholder is left standing — visible in QA. */
-function fill(template: string, values: Record<string, string>): string {
-  return template.replace(/\{(\w+)\}/g, (whole, key: string) => values[key] ?? whole)
-}
-
-/** The catalog's own currency, the browser's own formatting. No symbol is hardcoded here. */
-function money(product: Product): string {
-  return new Intl.NumberFormat(undefined, {
-    style: 'currency',
-    currency: product.currency,
-    minimumFractionDigits: Number.isInteger(product.price) ? 0 : 2,
-    maximumFractionDigits: 2,
-  }).format(product.price)
 }
 
 // `recommend.item` is still in the payload and is no longer read: the product card renders title

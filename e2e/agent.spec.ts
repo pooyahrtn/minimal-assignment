@@ -266,8 +266,14 @@ test.describe('the graded flow — KRACHT reaches the obstacle', () => {
     const chips = page.locator('.chip')
     await expect.poll(() => chips.count()).toBeGreaterThanOrEqual(3)
 
+    // The obstacle SENTENCE is still a text bubble (PRINCIPLES §8: template + arithmetic); the
+    // designed card that follows it is `.nomatch` and is not a `.msg`, so `.last()` is unambiguous.
     const obstacle = page.locator('.msg[data-from="agent"]').last()
     await expect(obstacle).toContainText('under €30')
+    const card = page.locator('.nomatch')
+    await expect(card).toBeVisible()
+    // The near misses the shopper is being kept away from, priced from the catalog's own currency.
+    await expect.poll(() => card.locator('.nomatch-item').count()).toBeGreaterThan(0)
     // Cheapest KRACHT product carrying both `no-sweeteners` and `lactose-free`, computed from
     // catalog.kracht.json above — not the literal "€32.95" a prior merchandising pass happened to
     // produce. [ENGINEERING §2.3 self-check requirement: re-derive, don't hardcode.]
@@ -300,7 +306,14 @@ test.describe('drop and restore the blocking chip — KRACHT', () => {
     await expect(chips).toHaveCount(chipCountBefore)
 
     await expect(page.getByText("Here's what fits:", { exact: true })).toBeVisible()
-    await expect(page.getByText(cheapestKrachtMatch.title, { exact: false })).toBeVisible()
+    await expect.poll(() => page.locator('.card').count()).toBeGreaterThan(0)
+    // Scoped to the recommendation CARD's own heading. A bare text match is ambiguous now that the
+    // no-match card above it lists the same product as a near miss — the rescued product appearing
+    // as a card is the actual claim, and matching loose text could be satisfied by the obstacle
+    // screen the drop was supposed to replace.
+    await expect(
+      page.locator('.card-title').filter({ hasText: cheapestKrachtMatch.title }),
+    ).toBeVisible()
 
     await droppedChip.click()
     const restoredChip = page.getByRole('button', { name: 'Drop under €30', exact: true })
@@ -314,6 +327,49 @@ test.describe('drop and restore the blocking chip — KRACHT', () => {
   })
 })
 
+test.describe('the no-match card acts, once', () => {
+  test("the card's own drop control resolves the obstacle, disables itself, and does not re-fire after the chip row already dropped the same constraint", async ({
+    page,
+  }) => {
+    await page.goto(`${KRACHT.base}${KRACHT.pdp}`)
+    await openPanel(page, KRACHT)
+    await ask(page, KRACHT, KRACHT.opening)
+
+    // The designed screen's own action — distinct from the chip row's `Drop under €30`, which the
+    // spec above already covers. Its accessible name is deliberately different so the two controls
+    // never collide.
+    const cardAction = page.getByRole('button', { name: /and show me those/ })
+    await expect(cardAction).toBeVisible()
+    await cardAction.click()
+
+    // It rescued the set, and the chip row shows the constraint struck through rather than evicted.
+    await expect(page.getByText("Here's what fits:", { exact: true })).toBeVisible()
+    await expect(
+      page.locator('.card-title').filter({ hasText: cheapestKrachtMatch.title }),
+    ).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: 'Put under €30 back', exact: true }),
+    ).toBeVisible()
+    // Done its one job. A message block lives in the scrollback forever, so it must not stay armed.
+    await expect(cardAction).toBeDisabled()
+
+    // The other order is the one that actually regressed: drop from the chip row FIRST, then tap a
+    // still-enabled card action from an earlier obstacle. It must not answer twice.
+    const leadIns = page.getByText("Here's what fits:", { exact: true })
+    const before = await leadIns.count()
+    await page.getByRole('button', { name: 'Put under €30 back', exact: true }).click()
+    const secondCardAction = page.getByRole('button', { name: /and show me those/ }).last()
+    await page.getByRole('button', { name: 'Drop under €30', exact: true }).click()
+    await expect(
+      page.getByRole('button', { name: 'Put under €30 back', exact: true }),
+    ).toBeVisible()
+    const afterChipDrop = await leadIns.count()
+    await secondCardAction.click()
+    await expect.poll(() => leadIns.count()).toBe(afterChipDrop)
+    expect(afterChipDrop).toBeGreaterThan(before)
+  })
+})
+
 test.describe('VELDE resolves happily', () => {
   test('the verbatim opening message returns a non-empty recommendation and no obstacle sentence', async ({
     page,
@@ -322,11 +378,19 @@ test.describe('VELDE resolves happily', () => {
     await openPanel(page, VELDE)
     await ask(page, VELDE, VELDE.opening)
 
-    // greeting + "Matches:" lead-in + at least one product line, with no clarify/obstacle wording
-    // ever taking one of those slots.
+    // greeting + "Matches:" lead-in as prose, then real product CARDS — T5 replaced the flattened
+    // "{title} · {price}" text lines with `article.card`, so the recommendation is asserted on the
+    // element that now carries it rather than on a bubble count that happened to include it.
     const agentMessages = page.locator('.msg[data-from="agent"]')
-    await expect.poll(() => agentMessages.count()).toBeGreaterThanOrEqual(3)
+    await expect.poll(() => agentMessages.count()).toBeGreaterThanOrEqual(2)
     await expect(page.getByText('Matches:', { exact: true })).toBeVisible()
+    await expect.poll(() => page.locator('.card').count()).toBeGreaterThan(0)
+    // The card is the whole claim of the block: a photograph or a stated absence, a title, a price,
+    // generic spec rows, and a link out. Assert rendered state, never "did not throw" [T12 DoD].
+    const firstCard = page.locator('.card').first()
+    await expect(firstCard.locator('.card-title')).toBeVisible()
+    await expect(firstCard.locator('.price')).toBeVisible()
+    await expect(firstCard.locator('.card-link')).toBeVisible()
 
     // The asymmetry is deliberate: VELDE's catalog clears jacket + office-ready + bike-ready +
     // black + matte finish + under €250 all at once, KRACHT's has nothing under both
@@ -416,6 +480,17 @@ test.describe('375px', () => {
       await expect.poll(() => page.locator('.chip').count()).toBeGreaterThan(0)
       const noOverflow = await chipRow.evaluate((el) => el.scrollWidth <= el.clientWidth)
       expect(noOverflow).toBe(true)
+
+      // T5 DoD box 3, on the real storefront rather than in the bench gallery: no message block
+      // may be wider than the list that holds it at 375px. `.messages`, not `.panel` — the panel
+      // is `overflow: hidden` and would report no overflow while clipping.
+      const listOverflow = await page.locator('.messages').evaluate((list) => {
+        const wide = Array.from(list.children).filter(
+          (child) => child.getBoundingClientRect().width > list.clientWidth + 0.5,
+        )
+        return { self: list.scrollWidth - list.clientWidth, wide: wide.length }
+      })
+      expect(listOverflow).toEqual({ self: 0, wide: 0 })
     })
   }
 })

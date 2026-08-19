@@ -273,15 +273,23 @@ export function styles(tokens: DerivedTokens): string {
 
   /* ------------------------------------------------------------------------------------------
      The five blocks T5 owns. Every colour, radius, spacing step and font size below resolves from
-     a --mx-* custom property; there is not one length literal in this section. The card image is
-     sized by 'aspect-ratio' and the compare columns by flex, precisely so neither needs a number
-     no token can supply. [ENGINEERING §1.2]
+     a --mx-* custom property. The card image is sized by 'aspect-ratio' and the compare columns by
+     flex, precisely so neither needs a length no token can supply. [ENGINEERING §1.2]
+
+     The literals that DO appear here are the same three classes the file already carries, and
+     nothing else: 'min-height: 44px' (WCAG 2.5.5 target floor), '1px' borders (device hairline),
+     and one 'opacity: 0.55' on an out-of-stock photograph — a paint value with no token, and the
+     state is also stated in words so opacity is never the only signal.
      ------------------------------------------------------------------------------------------ */
 
   /* The one place 'labelCase' becomes visible outside the shell chrome — every block that has a
      label draws it here, so 'upper-tracked' changes all of them at once. */
   .label {
     display: block;
+    /* The card wrappers are overflow:hidden, so a label without this is CLIPPED mid-word rather
+       than widened — invisible to any assertion that measures a block's outer width. Found by a
+       reviewer pushing the 40-character word through the no-match heading. */
+    overflow-wrap: anywhere;
     color: var(--mx-text-muted);
     font-family: var(--mx-font-display);
     font-size: var(--mx-text-xs);
@@ -303,6 +311,10 @@ export function styles(tokens: DerivedTokens): string {
     font-family: var(--mx-font-body);
     font-size: var(--mx-text-sm);
     line-height: var(--mx-line-height);
+    /* Same label treatment as every other control (.card-link/.cta-link/.nomatch-drop). Without
+       these two, quick-replies was a second block where 'labelCase' did nothing. */
+    text-transform: var(--mx-label-transform);
+    letter-spacing: var(--mx-label-tracking);
     text-align: start;
     overflow-wrap: anywhere;
     cursor: pointer;
@@ -428,7 +440,17 @@ export function styles(tokens: DerivedTokens): string {
   /* The table scrolls inside the card instead of widening the panel: three columns cannot fit at
      375px and clipping them would be worse than a swipe. */
   .compare-scroll { overflow-x: auto; overscroll-behavior-x: contain; }
-  .compare-table { border-collapse: collapse; font-size: var(--mx-text-xs); }
+  /* Sized by content, not by the container. Without this the table is squeezed into the panel
+     width and a long product title starves the row-label column until it breaks one character per
+     line — which is what VELDE's generous type ramp did to 'MATERIAL' on the contact sheet. The
+     wrapper already scrolls horizontally, so letting columns take the width they need is the whole
+     point of putting them in a scroller. */
+  .compare-table {
+    border-collapse: collapse;
+    width: max-content;
+    font-size: var(--mx-text-xs);
+  }
+  .compare-key { white-space: nowrap; }
   .compare-product, .compare-key, .compare-value, .compare-corner {
     padding: var(--mx-space-1) var(--mx-space-2);
     border-bottom: 1px solid var(--mx-border);

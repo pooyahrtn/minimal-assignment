@@ -15,9 +15,9 @@ for exactly this reason.
 
 | Task | Desk | Since | Notes |
 |---|---|---|---|
-| T5 message block renderers | `minimal-assignment-02` (assumed — the only busy peer) | 2026-08-19, **claimed retroactively** | H2 `brand-divergence` green at 0.1719 vs the 0.075 floor. `blocks.ts`, `css.ts`, `converse.ts` dirty. |
-| T6 platform API + snippet delivery | `minimal-assignment-02` (assumed) | 2026-08-19, **claimed retroactively** | `apps/platform/server.ts` + `config/*.json` + H6 `budget` written, uncommitted. `brands.ts` dirty. |
-| T11 third brand (**required** — demo beat 4) | `minimal-assignment` (this desk) | 2026-08-19 08:59, claimed at pickup | Writes `packages/tokens/src/brands.ts` + `src/index.ts` + `tools/build-config.ts`, and regenerates `apps/platform/config/*.json` + `packages/agent/src/fallback.ts` via `bun run build:config`. All five were cold (35m+) at claim and are now committed at `d222edb`. **Does not touch** `bench/checks.ts`, `DECISIONS.md`, `bench/scorecard.*`, `PROGRESS`-adjacent T10 files — all hot with a peer desk right now. |
+| ~~T5 message block renderers~~ **released** | this desk | 2026-08-19 | **Landed** — see the rows below. The in-flight note read "0.1719 vs the 0.075 floor"; both numbers were mid-build snapshots. Final: **0.1410 against a pinned floor of 0.11**, deterministic across runs. |
+| ~~T6 platform API + snippet delivery~~ **released** | this desk | 2026-08-19 | **Landed** — see the rows below. H6 `budget` green: 12217B gzipped against a 15975B cap. |
+| T7 configuration page | `minimal-assignment` (this desk) | 2026-08-19, claimed at pickup | New: `apps/platform/config-page/*` (HTML/CSS/TS), `packages/tokens` read-only. Edits `apps/platform/server.ts` (adds routes — file already dirty with T5/T6 close-out on this same desk, no peer). **Does not touch** `packages/agent/src`, `bench/checks.ts`, storefront source [§0 #11]. |
 
 Both rows above T10 are retroactive, which is the whole point: nobody wrote them at the time.
 
@@ -42,6 +42,11 @@ Both rows above T10 are retroactive, which is the whole point: nobody wrote them
 | T14 competitor scan | 40m | **~12m** | 30m | pending | 0 | 12 products, 3 families. Two findings moved buckets: URL brand-ingest is table stakes (Intercom has shipped it since Dec 2023), and the no-custom-CSS decision went from taste to evidence (Rebuy's own docs warn merchants to hand-scope selectors). Only 1 of 12 rows was opened directly rather than read through a search summary — the DoD's `unverified` column is doing real work here. |
 | T10 draft half (DECISIONS.md + the SOFT scorecard) | 20m draft | **~75m agent over 2 review rounds / ~1.1M tokens** | 90m | pending | 3 | Two of eight DoD boxes were dead on arrival (demo on deployed links, live extension — T7/T11/T15 unbuilt) and were known so from reading `TASKS.md`. The plan round returned **14 findings, 3 BLOCKERs**, all of them the plan misreading the tree it was summarising: box 4 declared uncloseable closes in one command, box 3's "with dates" declared unsatisfiable is one `git log -S` away, and **four of five chosen override entries failed the brief's own direction test** (AI suggests, human overrides) — three were the AI overriding itself. The diff round found the new SOFT check passing on three malformed scorecards; fixed and fault-injected five ways. Box 1 ("one page") is still open at 1565 words, after six editing passes and a three-way edit collision on the file. |
 | T14 fan-out (14 agents) | 40m | **~14m wall / 1.11M tokens / 463 tool calls** | 30m | pending | 1 | Pilot on one product first, then fan out — the pilot paid for itself: it exposed three missing schema fields (preview target, merchant complaints, vocabulary count) that would have cost a full re-run at 13x the tokens. One script parse error (backticks inside a template literal). Three of five attacks on our own design landed. |
+| T11 third brand | 10m | **~55m over 2 rounds** | 10m | pending | 1 | The task text was wrong and the plan refutation caught it: T11's whole justification is "the one place the clamp is visible", and the pale-yellow **accent** it specified cannot do that — `derive()` emits accent verbatim and clamps text only against surface/raised/sunken, so a pale accent on white derives the same `#6a6a6a` grey as any white-surface brand. Moved the hostile colour to the **surface**: `#F7F0B8` derives `textMuted #646147`, hue-tinted olive. **2 of 3 DoD boxes are unclosable and are reported, not claimed** — box 1 ("one object in one file") needs 2 objects across 4 hand-edited files, and box 3 ("typed live on stage") has no render surface until T7, since both storefronts, `budget.ts:37` and H2's brand list all pin `data-shop`. The diff review then refused sign-off and was right: I had filed the `pill`-radius defect and shipped anyway, and at 1440px the panel clipped the merchant's name to "elder". Fixed at source (`RADIUS_MAP.pill`), plus a fabricated contrast ratio in a test comment, borrowed typography, and a `clarify` line duplicating the greeting. |
+| T5 message renderers | 60m | **~95m over 2 rounds** | 90m | pending | 3 | Five renderers, the H2 gallery and the divergence check. Two rounds of adversarial review returned 63 findings on the plan and 13 on the diff. The diff review found a box I had reported CLOSED and it was **false** — a 40-character word clipped the no-match heading, invisible to my own overflow assertion because the card wrappers are `overflow: hidden` and the assertion measured block *roots*. |
+| T6 platform API | 15m | **~9m (Sonnet, both slices)** | 10m | pending | 1 | Server + H6 budget check delegated whole to Sonnet against a written contract; both came back green and both survived external `curl` verification. The one retry was a `Uint8Array<ArrayBuffer>` vs `ArrayBufferLike` typing the gate caught. |
+| — plan review for T5/T6 | — | **11.6m agent / 455k tokens** | — | pending | — | 63 findings, 3 refuters. Killed the plan's central risk model (it claimed gold would catch a `Product` change; gold is never compared on a bare `bun bench`) and 4 further blocking items, including three landed T12 assertions the plan would have broken. |
+| — diff review for T5/T6 | — | **25.8m agent / 536k tokens** | — | pending | — | 13 findings, 3 reviewers, all three driving real browsers. Found the clipped heading, a second block where `labelCase` did nothing, a duplicated `fill`/`money` in the size-capped bundle, a stale-card double-fire, and a **false accusation in my own DECISIONS-LOG** (the import-boundary lint rule does exist — it is a nested `packages/agent/biome.json`). |
 
 ## Standing lessons
 
@@ -102,3 +107,27 @@ Both rows above T10 are retroactive, which is the whole point: nobody wrote them
     satisfiable only by reconstructing dates from git per entry. The box was written by whoever
     wrote the task, not by whoever built the log — the two never met, and the `pickup` skill's
     step-2 instruction to refute the *task text* is what caught it.
+
+10. **The most expensive defect of the session was invisible to the check written to catch it.** T5's
+    box 3 says every block survives a 40-character unbroken word. I wrote the assertion, ran it,
+    got "no overflow at 375px", and reported the box closed — while the no-match heading was
+    rendering as `CLOSEST WITHOUT “RIJKSMUSEUMSTRAATVERLICHTINGSPROJE`, clipped at the card edge.
+    The assertion measured each block's OUTER width against the list, and the card wrappers are
+    `overflow: hidden`, so a block that clips its own contents is exactly the case that cannot
+    widen. A measurement that can only fail one way is not evidence. The fix — also measure
+    `scrollWidth > clientWidth` on every descendant — was six lines, and it fails loudly now
+    (verified by reverting the CSS fix and watching it go red).
+11. **The fixture decided what the benchmark could see.** The same box was reported closed while the
+    stress string reached only 4 of the 7 blocks — `product-compare`, `no-match` and `cta` were
+    built from ordinary catalog data. The check was honest about what it measured; what it measured
+    was chosen to be easy without anyone deciding that. Stress input belongs in EVERY case of a set,
+    not the convenient ones.
+12. **Delegating to Sonnet worked exactly where the contract was written down first.** Both T6 slices
+    came back green, externally verifiable, and needed no rework — because the prompt carried the
+    route table, the header values, the exported signature and the verification commands. The parts
+    that stayed on the main model were the ones where the task text had NOT already decided the
+    answer: the no-match screen, the copy, the H2 metric and its floor.
+13. **Two adversarial rounds cost 37 minutes of agent time and 991k tokens — more than the build —
+    and both paid.** The plan round killed a risk model that was simply wrong about how the gold
+    files work. The diff round found a box reported closed that was false. Neither was findable by
+    running the gates, because the gates were green the whole time.

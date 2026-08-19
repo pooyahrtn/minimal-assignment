@@ -87,16 +87,20 @@ function el<K extends keyof HTMLElementTagNameMap>(
   return node
 }
 
-/** `{placeholder}` interpolation. An unknown placeholder is left standing — visible in QA. */
-function fill(template: string, values: Record<string, string>): string {
+/**
+ * `{placeholder}` interpolation. An unknown placeholder is left standing — visible in QA.
+ * Exported because `converse.ts` fills the obstacle template with it: one transformation, one
+ * place [ENGINEERING §2.4], and one copy in a bundle H6 caps.
+ */
+export function fill(template: string, values: Record<string, string>): string {
   return template.replace(/\{(\w+)\}/g, (whole, key: string) => values[key] ?? whole)
 }
 
 /**
  * The catalog's own currency, the browser's own formatting — no symbol and no decimal separator is
- * authored here. Same rule the obstacle sentence follows in `converse.ts`.
+ * authored anywhere. Shared with the obstacle sentence in `converse.ts`.
  */
-function money(product: Product): string {
+export function money(product: Product): string {
   return new Intl.NumberFormat(undefined, {
     style: 'currency',
     currency: product.currency,

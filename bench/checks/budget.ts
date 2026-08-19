@@ -13,7 +13,7 @@ const BUNDLE_PATH = `${REPO_ROOT}/packages/agent/dist/agent.js`
 const MAP_PATH = `${BUNDLE_PATH}.map`
 
 /**
- * measured gzip size = 11465 bytes (bun bench budget, 2026-08-19, real build of packages/agent —
+ * measured gzip size = 12146 bytes (bun bench budget, 2026-08-19, real build of packages/agent —
  * stable across repeat builds). Cap: round up to the next whole kB (12288) then +30% headroom,
  * per the task's pinning rule — enough to absorb normal bundle growth without masking a real
  * regression. [BENCHMARKS §4.1: ratchets up only, never down]
@@ -168,6 +168,27 @@ async function measurePaint(
         .find((e) => e.name.includes('/v1/config/'))
       return entry && isResourceTiming(entry) ? entry.responseEnd : null
     })
+
+    /*
+     * Prove the FETCHED payload was consumed, not just that a widget appeared. `loadConfig` falls
+     * back to the bundled `FALLBACK` on any failure — a 500, a wrong path, a malformed body — and
+     * that fallback still mounts a widget, still leaves a `/v1/config/` resource-timing entry, and
+     * still logs no CORS error. Every other assertion here would pass on a broken endpoint.
+     * The discriminator is the catalog: `FALLBACK` ships EMPTY by design, so a cached config with
+     * products in it can only have come off the wire.
+     */
+    const cachedCatalogSize = await page.evaluate<number>(() => {
+      const raw = localStorage.getItem('mx-config-velde')
+      if (raw === null) return -1
+      const parsed: unknown = JSON.parse(raw)
+      if (typeof parsed !== 'object' || parsed === null) return -1
+      const catalog = Reflect.get(parsed, 'catalog')
+      return Array.isArray(catalog) ? catalog.length : -1
+    })
+    assert(
+      cachedCatalogSize > 0,
+      `the widget did not consume the fetched config (cached catalog size ${cachedCatalogSize}) — it silently fell back to the bundled one, so this would pass against a broken endpoint`,
+    )
 
     assert(widgetStampMs !== null, 'mx-agent never appeared in the DOM')
     assert(configResponseEndMs !== null, 'no /v1/config/ resource timing entry was recorded')
