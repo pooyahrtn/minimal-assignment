@@ -92,18 +92,26 @@ if (pages < 2) throw new Error(`expected at least a home page and one PDP, wrote
 if (copied === 0)
   throw new Error('no photographs were copied — the store would render as grey tiles')
 
-// An origin is a leak only if it is one we did NOT ask for. On a bare run the defaults ARE
-// localhost, so a blanket "no localhost" rule would fail the parity build this tool exists to make
-// possible; on a deploy run SITE and PLATFORM are https, so every localhost match is a real leak.
+// DEPLOY MODE, not per-origin exemption. The first version of this exempted any origin equal to
+// SITE or PLATFORM, which meant that passing --site but forgetting --platform — the archetypal
+// mis-set env var, and the exact failure the comment above claims to catch — exempted every
+// localhost:4003 occurrence and reported zero leaks while shipping a laptop origin on every page.
+// If ANY origin is remote we are deploying, and then nothing may point at a laptop.
+const deploying = [SITE, PLATFORM].some((origin) => !origin.includes('localhost'))
+const scanned = deploying
+  ? [...written, ...(await Array.fromAsync(new Bun.Glob('assets/*').scan({ cwd: OUT })))]
+  : []
 const leaked: string[] = []
-for (const path of written) {
+for (const path of scanned) {
   const body = await Bun.file(`${OUT}/${path}`).text()
   for (const match of body.matchAll(/https?:\/\/localhost:\d+/g)) {
     const entry = `${path}: ${match[0]}`
-    if (match[0] !== SITE && match[0] !== PLATFORM && !leaked.includes(entry)) leaked.push(entry)
+    if (!leaked.includes(entry)) leaked.push(entry)
   }
 }
-console.log(`origin check — ${written.length} files scanned, ${leaked.length} leaks`)
+console.log(
+  `origin check — ${deploying ? `${scanned.length} files scanned` : 'parity build, not deploying'}, ${leaked.length} leaks`,
+)
 if (leaked.length > 0) {
   throw new Error(`frozen localhost origin survived into the build:\n  ${leaked.join('\n  ')}`)
 }

@@ -27,6 +27,30 @@ const OUT = `${ROOT}/dist/platform`
 const CONFIG_DIR = `${ROOT}/apps/platform/config`
 const BUNDLE = `${ROOT}/packages/agent/dist/agent.js`
 
+const arg = (name: string, fallback: string): string =>
+  process.argv
+    .find((a) => a.startsWith(`--${name}=`))
+    ?.split('=')
+    .slice(1)
+    .join('=') ?? fallback
+
+/**
+ * THE OTHER ORIGIN SURFACE, and much the larger one. Each config's `catalog` carries an absolute
+ * `url` and `image` per product, built by `tools/build-config.ts` against the storefront's own
+ * origin — 119 `http://localhost` URLs across the four files. The widget renders those directly, so
+ * on a deployed page every product card requests its photograph from the shopper's OWN machine:
+ * the browser blocks it as a cross-origin failure, the card shows a blank tile, and the "see the
+ * piece" CTA is a dead link. The storefront HTML was clean and I checked only that, which is why
+ * this shipped once — the payload is not the page.
+ *
+ * Keyed by PORT rather than by shop, because a config's catalog can point at a storefront that is
+ * not its own: HELDER has no store of its own and borrows VELDE's.
+ */
+const ORIGIN_BY_PORT: Record<string, string> = {
+  '4001': arg('velde', 'http://localhost:4001'),
+  '4002': arg('kracht', 'http://localhost:4002'),
+}
+
 // Same CORS values `apps/platform/server.ts:41-43` sends, character for character. Two
 // implementations of one contract is the cost of deploying static; stating it here is what keeps
 // the divergence visible rather than discovered.
@@ -55,8 +79,13 @@ for await (const name of new Bun.Glob('*.json').scan({ cwd: CONFIG_DIR })) {
   // disk of whoever ran the build, and several share the extractor's neutral fallback accent, which
   // is indistinguishable from the config-collision bug the check below exists to catch.
   if (shop.startsWith('shop-')) continue
+  const body = await Bun.file(`${CONFIG_DIR}/${name}`).text()
+  const repointed = body.replaceAll(
+    /http:\/\/localhost:(\d+)/g,
+    (whole, port: string) => ORIGIN_BY_PORT[port] ?? whole,
+  )
   // Extensionless on purpose — see the header comment. This is the whole fix.
-  await Bun.write(`${OUT}/v1/config/${shop}`, Bun.file(`${CONFIG_DIR}/${name}`))
+  await Bun.write(`${OUT}/v1/config/${shop}`, repointed)
   shops.push(shop)
 }
 
@@ -101,6 +130,29 @@ for (const shop of shops) {
   accents.set(shop, accent)
 }
 console.log(`accents — ${[...accents].map(([s, a]) => `${s}:${a}`).join(' ')}`)
+
+// Blanket, over every byte staged — not over the fields someone thought to name. The first version
+// of this tool asserted the configs were DISTINCT and said nothing about what was IN them, so 119
+// localhost URLs went out under a green check. An allow-list of surfaces to inspect is a list of
+// the failures already imagined; scanning the whole output is the only version that catches the
+// next one. Deploy mode = any origin is remote, and then no localhost may survive anywhere.
+const deploying = Object.values(ORIGIN_BY_PORT).some((origin) => !origin.includes('localhost'))
+if (deploying) {
+  const leaks: string[] = []
+  for await (const name of new Bun.Glob('**/*').scan({ cwd: OUT })) {
+    if (name.endsWith('.js')) continue // the bundle legitimately carries a localhost fallback
+    const body = await Bun.file(`${OUT}/${name}`).text()
+    const found = [...new Set([...body.matchAll(/https?:\/\/localhost:\d+/g)].map((m) => m[0]))]
+    if (found.length > 0)
+      leaks.push(`${name}: ${found.join(', ')} (${body.split('localhost').length - 1}x)`)
+  }
+  console.log(`origin check — ${leaks.length} file(s) still carrying a localhost origin`)
+  if (leaks.length > 0) {
+    throw new Error(
+      `a frozen localhost origin survived into the deployed payload:\n  ${leaks.join('\n  ')}`,
+    )
+  }
+}
 const brands = [...accents].filter(([shop]) => shop !== 'default')
 if (new Set(brands.map(([, accent]) => accent)).size !== brands.length) {
   throw new Error(

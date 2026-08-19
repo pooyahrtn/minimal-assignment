@@ -5,8 +5,10 @@
 # that only works if someone remembers which checkbox they ticked is not reproducible from a clean
 # clone [ENGINEERING §3.4]. Re-running this is safe and idempotent.
 #
-#   bun run tools/deploy.sh          # build, deploy, verify
-#   bun run tools/deploy.sh verify   # verify the live deployments only
+#   bash tools/deploy.sh          # build, deploy, verify
+#   bash tools/deploy.sh verify   # verify the live deployments only
+#
+# `bash`, not `bun run`: Bun Shell cannot parse the arrays below and fails at parse time.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -20,7 +22,9 @@ deploy() {
   # The two Bun servers become static output: their routes are pure functions of committed JSON
   # plus files, and `apps/platform/server.ts:103` rebuilds the bundle by shelling out to `bun
   # build`, which no serverless host can do. See tools/build-platform.ts for the full reasoning.
-  bun run tools/build-platform.ts
+  # The storefront origins go IN: each config's catalog carries absolute product `url` and
+  # `image` fields built against localhost, and the widget renders them on the deployed page.
+  bun run tools/build-platform.ts --velde="$VELDE" --kracht="$KRACHT"
   bunx vercel deploy dist/platform --prod --yes --project maximal-platform
 
   bun run tools/build-velde.ts --site="$VELDE" --platform="$PLATFORM"
@@ -33,8 +37,10 @@ deploy() {
   #  - the build command, which dereferences that symlink into real files. Vercel's static collector
   #    cannot follow it: the first deploy died with `ENOENT: mkdir '/vercel/output/static/photos'`.
   bunx vercel project update maximal-kracht --root-directory apps/shop-kracht --framework nextjs
+  #  - robots.txt is a static file Next serves verbatim, so the env-var exemption cannot reach the
+  #    `Sitemap:` line inside it. VELDE's prerenderer rewrites its copy; this is KRACHT's equivalent.
   bunx vercel project update maximal-kracht --build-command \
-    'rm -rf public/photos && cp -RL ../../assets/photos/kracht public/photos && next build'
+    'rm -rf public/photos && cp -RL ../../assets/photos/kracht public/photos && sed -i "s|http://localhost:4002|$NEXT_PUBLIC_SITE_ORIGIN|g" public/robots.txt && next build'
   # Origins travel as env vars so the frozen localhost defaults stay in source [TASKS §0 #11].
   bunx vercel env rm NEXT_PUBLIC_SITE_ORIGIN production --project maximal-kracht --yes 2>/dev/null || true
   bunx vercel env rm NEXT_PUBLIC_PLATFORM_ORIGIN production --project maximal-kracht --yes 2>/dev/null || true
@@ -85,6 +91,20 @@ verify() {
     map=$(curl -sf "$site/sitemap.xml") || fail "$site served no sitemap"
     grep -q "$site" <<<"$map" || fail "$site sitemap does not use its own origin"
     grep -q localhost <<<"$map" && fail "$site sitemap still points at localhost"
+    robots=$(curl -sf "$site/robots.txt") || fail "$site served no robots.txt"
+    grep -q localhost <<<"$robots" && fail "$site robots.txt still points at localhost"
+  done
+
+  echo "— platform: the config PAYLOAD carries no localhost either"
+  # The surface that shipped broken once. The storefront HTML was clean and only that was checked,
+  # while each config's catalog held absolute product url/image fields pointing at localhost — so
+  # every card on the deployed widget requested its photograph from the shopper's own machine and
+  # rendered a blank tile. The page is not the payload.
+  for shop in velde kracht helder default; do
+    body=$(curl -sf "$PLATFORM/v1/config/$shop") || fail "$shop config did not fetch"
+    if grep -q 'localhost' <<<"$body"; then
+      fail "$shop config still carries $(grep -o 'http://localhost:[0-9]*' <<<"$body" | sort -u | tr '\n' ' ')"
+    fi
   done
 
   echo "— KRACHT: photographs survived the symlink"

@@ -51,7 +51,9 @@ async function run(
   // Every console error and every failed request, from before the first byte of the page.
   const errors: string[] = []
   page.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
-  page.on('requestfailed', (r) => errors.push(`REQUEST FAILED ${r.url()} ${r.failure()?.errorText}`))
+  page.on('requestfailed', (r) =>
+    errors.push(`REQUEST FAILED ${r.url()} ${r.failure()?.errorText}`),
+  )
 
   // The proof that the config really came from the OTHER origin, recorded from the wire rather
   // than inferred from the widget looking right.
@@ -62,7 +64,10 @@ async function run(
 
   await page.goto(`${brand.base}${brand.pdp}`, { waitUntil: 'networkidle' })
 
-  const launcher = page.getByRole('button', { name: brand.launcher, exact: true })
+  // Substring, not exact: the launcher's accessible name carries the constant AI-disclosure suffix
+  // ("Help me choose — AI assistant by Maximal"). An exact matcher made this script time out on its
+  // very first assertion, and it was cited as evidence while never having completed a single run.
+  const launcher = page.getByRole('button', { name: brand.launcher, exact: false }).first()
   await launcher.waitFor({ state: 'visible', timeout: 15_000 })
   note(true, `${brand.name} ${width}px: launcher "${brand.launcher}" mounted from ${PLATFORM}`)
 
@@ -85,18 +90,30 @@ async function run(
     const items = await card.locator('.nomatch-item').count()
     note(items > 0, `${brand.name} ${width}px: obstacle card visible with ${items} near misses`)
     const drop = page.getByRole('button', { name: /^Drop /, exact: false }).first()
-    note(await drop.isVisible(), `${brand.name} ${width}px: the blocking chip is droppable in one tap`)
+    note(
+      await drop.isVisible(),
+      `${brand.name} ${width}px: the blocking chip is droppable in one tap`,
+    )
   } else {
     const cards = await page.locator('.card').count()
     note(cards > 0, `${brand.name} ${width}px: ${cards} product card(s) recommended`)
   }
 
-  note(configHits.length > 0, `${brand.name} ${width}px: config fetched cross-origin — ${configHits.join(', ')}`)
-  note(errors.length === 0, `${brand.name} ${width}px: ${errors.length} console/network errors${errors.length ? ` → ${errors.slice(0, 3).join(' | ')}` : ''}`)
+  note(
+    configHits.length > 0,
+    `${brand.name} ${width}px: config fetched cross-origin — ${configHits.join(', ')}`,
+  )
+  note(
+    errors.length === 0,
+    `${brand.name} ${width}px: ${errors.length} console/network errors${errors.length ? ` → ${errors.slice(0, 3).join(' | ')}` : ''}`,
+  )
 
   // Nothing may overflow the viewport horizontally — the failure 375px exists to catch.
   const scrollW = await page.evaluate(() => document.documentElement.scrollWidth)
-  note(scrollW <= width + 1, `${brand.name} ${width}px: no horizontal overflow (scrollWidth ${scrollW})`)
+  note(
+    scrollW <= width + 1,
+    `${brand.name} ${width}px: no horizontal overflow (scrollWidth ${scrollW})`,
+  )
 
   await page.screenshot({ path: `${OUT}/${brand.name}-${width}.png`, fullPage: false })
   await context.close()
@@ -114,5 +131,7 @@ for (const brand of [VELDE, KRACHT]) {
 }
 await browser.close()
 
-console.log(`\n${problems.length === 0 ? 'DEPLOYED QA PASSED' : `DEPLOYED QA FAILED — ${problems.length} problem(s)`}`)
+console.log(
+  `\n${problems.length === 0 ? 'DEPLOYED QA PASSED' : `DEPLOYED QA FAILED — ${problems.length} problem(s)`}`,
+)
 if (problems.length > 0) process.exit(1)
