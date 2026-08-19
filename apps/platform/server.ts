@@ -31,10 +31,21 @@ const CONFIG_DIR = `${import.meta.dir}/config`
  * two directories a read comes from — the four committed brands are never in `/tmp`, and nothing
  * minted is ever in `config/`.
  *
- * ponytail: `/tmp` is per-instance and lost on redeploy, so a published key survives the demo
- * session and no longer. That is the same lifetime `firstServedAt` already documents for the
- * install poll. Upgrade path if a published config must outlive a deploy: Vercel Blob, one
- * `put`/`head` pair replacing the two `node:fs` calls here.
+ * ponytail: `/tmp` is per-instance, and the sentence above understated that by a wide margin —
+ * measured on the deployed platform, 24 of 24 PARALLEL reads of a freshly minted key served the
+ * default brand, because the instance answering had never minted it. So a published key does not
+ * survive the demo session; it does not reliably survive the next request. Nothing on stage
+ * depends on it — every brand in the six-beat demo comes from a committed config, which deploys as
+ * a static CDN file and never reaches this function [COMPETITORS §6] — so this is left standing
+ * deliberately [T16, DECISIONS-LOG §Scope].
+ *
+ * Upgrade path, when a published config must outlive a request: the Upstash KV store
+ * `upstash-kv-celeste-castle` is already provisioned and connected to `maximal-platform`, so
+ * `KV_REST_API_URL`/`KV_REST_API_TOKEN` are present in production. Two `fetch` calls against its
+ * REST API replace the `Bun.write`/`Bun.file` pair, and `SHOPS`/`MINTED` stop being the oracle for
+ * "does this key exist". NOT Vercel Blob, which this comment used to name: its public URLs are
+ * CDN-cached and overwriting a pathname does not purge the edge, so republish would keep serving
+ * the pre-edit brand.
  */
 const MINT_DIR = process.env.VERCEL === undefined ? CONFIG_DIR : '/tmp/config'
 const MINTED = new Set<string>()
@@ -338,16 +349,51 @@ function isPrivateIpv4(hostname: string): boolean {
   if (first === 172 && second >= 16 && second <= 31) return true // 172.16.0.0/12
   if (first === 192 && second === 168) return true // 192.168.0.0/16
   if (first === 169 && second === 254) return true // 169.254.0.0/16 link-local
+  // `0.0.0.0` was the live hole, and it was reachable before any of this: the field is `type=url`,
+  // so a merchant could always type the scheme themselves. Measured against the DEPLOYED route on
+  // 2026-08-19 — `{"url":"https://0.0.0.0"}` returned a draft whose note read "could not be
+  // reached", i.e. the platform attempted the outbound request and reported the result back. What
+  // that address resolves to is stack-dependent; that the guard let it start is the defect.
+  if (first === 0) return true // 0.0.0.0/8 "this network" — loopback on many stacks
+  if (first === 100 && second >= 64 && second <= 127) return true // 100.64.0.0/10 CGNAT [RFC 6598]
+  if (first >= 224) return true // 224.0.0.0/4 multicast + 240.0.0.0/4 reserved
   return false
 }
 
-function isPrivateIpv6(bracketed: string): boolean {
-  const host = bracketed.slice(1, -1) // strip the `[` `]` `URL#hostname` wraps an IPv6 literal in
-  if (host === '::1') return true // loopback
-  const firstHextet = host.split(':')[0]
-  if (firstHextet === undefined || !/^[0-9a-f]{1,4}$/i.test(firstHextet)) return false
-  const value = Number.parseInt(firstHextet, 16)
-  return value >= 0xfe80 && value <= 0xfebf // fe80::/10 link-local
+/**
+ * Every IPv6 literal is refused — this replaced a function that tried to enumerate the private
+ * ranges and let three past: `[::]`, `[::ffff:127.0.0.1]` (loopback in IPv4-mapped form, which
+ * `URL` re-spells as `[::ffff:7f00:1]`, so a leading-hextet test never sees it) and `[fc00::1]`
+ * (unique-local, outside the `fe80::/10` range it checked). Enumerating hostile forms of an
+ * address family is a list of the ones already imagined; a merchant's storefront is a NAME, and
+ * no shop is addressed by a bare IPv6 literal, so the whole family is refusable for nothing.
+ */
+function isIpv6Literal(hostname: string): boolean {
+  return hostname.startsWith('[')
+}
+
+/**
+ * A merchant types `your-store.com`; `new URL` demands a scheme and 400s without one. Prepend one
+ * only when there is NO scheme at all, so anything carrying one — `javascript:`, `file:`,
+ * `mailto:`, and `localhost:4001`, whose port reads as a scheme to this test — passes through
+ * untouched and is still refused by `isFetchableUrl` below. Never `http:`, so this can only
+ * upgrade, and it therefore cannot mint a match against `ALLOWED_PRIVATE_ORIGINS`, whose keys
+ * carry an explicit `http:`.
+ *
+ * `.trim()` first, and it is load-bearing rather than tidy: `new URL(' https://x')` SUCCEEDS today
+ * (the parser strips leading whitespace), so prepending in front of the space would newly reject
+ * input this route accepts — a fix whose whole purpose is to reject less.
+ *
+ * The ceiling, said out loud: `[a-z0-9+.-]` is a superset of the domain charset, so a scheme-less
+ * `my-store.com:8080` reads as scheme `my-store.com:` and is left alone, i.e. still refused. That
+ * is the same tension that keeps `localhost:4001` refusable, and a merchant on a non-standard port
+ * is the rarer case of the two.
+ *
+ * Exported for `apps/platform/withScheme.test.ts`.
+ */
+export function withScheme(raw: string): string {
+  const typed = raw.trim()
+  return /^[a-z][a-z0-9+.-]*:/i.test(typed) ? typed : `https://${typed}`
 }
 
 /**
@@ -361,9 +407,15 @@ function isPrivateIpv6(bracketed: string): boolean {
 function isFetchableUrl(target: URL): boolean {
   if (target.protocol !== 'http:' && target.protocol !== 'https:') return false
   if (ALLOWED_PRIVATE_ORIGINS.has(target.origin)) return true
-  const host = target.hostname.toLowerCase()
+  // Trailing dots stripped FIRST, or the three tests below read a different name than the resolver
+  // does. `localhost.` is the root-terminated form of `localhost` — `URL` keeps the dot verbatim,
+  // `endsWith('.localhost')` does not match it, and `ping localhost.` answers from 127.0.0.1. It
+  // reached the outbound fetch on the deployed platform, measured 2026-08-19; an adversarial review
+  // of this diff found it, after the task text had already committed to "four addresses fell
+  // through". It was five, and the fifth is the one the IPv4 side still enumerates by hand.
+  const host = target.hostname.toLowerCase().replace(/\.+$/, '')
   if (host === 'localhost' || host.endsWith('.localhost')) return false
-  if (host.startsWith('[')) return !isPrivateIpv6(host)
+  if (isIpv6Literal(host)) return false
   return !isPrivateIpv4(host)
 }
 
@@ -401,7 +453,7 @@ async function handleExtract(request: Request, url: URL): Promise<Response> {
 
   let target: URL
   try {
-    target = new URL(body.url)
+    target = new URL(withScheme(body.url))
   } catch {
     return jsonError(400, 'url is not a valid URL', headers)
   }
@@ -414,7 +466,12 @@ async function handleExtract(request: Request, url: URL): Promise<Response> {
   }
 
   try {
-    const draft = await extractMerchantTokens(body.url)
+    // `target.href`, not the raw string. The extractor does its own `new URL` [extract.ts:298]
+    // and returns a "not a valid URL" draft on failure — so handing it the un-normalised text
+    // would let a bare address clear the guard here and then fail one layer down, answering 200
+    // with the merchant still blocked. It also keeps the URL we vetted and the URL we fetch
+    // provably the same one.
+    const draft = await extractMerchantTokens(target.href)
     return Response.json({ ...draft, state: classifyExtractState(draft) }, { headers })
   } catch (error) {
     // `extractMerchantTokens` is documented [extract.ts:13] as never throwing — this is the
@@ -638,7 +695,7 @@ function handleFontCss(url: URL, request: Request): Response {
 
   let srcUrl: URL
   try {
-    srcUrl = new URL(src)
+    srcUrl = new URL(withScheme(src))
   } catch {
     return jsonError(400, 'src is not a valid URL')
   }

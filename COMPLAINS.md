@@ -301,4 +301,57 @@ to be unnecessary once the scorecard covered every landed task.
   a file it finished in about two minutes — harm: half an hour of wall clock on a suite that takes
   two, and I twice reported it as "still running, it drives real browsers", which was wrong and
   sounded reasonable; risk: `pgrep -f` matching the waiter's own command line then hid the finish,
-  so the diagnosis was wrong in both directions at once.
+  so the diagnosis was wrong in both directions at once.---
+
+## T16 — 2026-08-19
+
+**What changed:** Normalised merchant-typed URLs at the `apps/platform/server.ts` HTTP boundary
+(`POST /v1/extract`, `GET /v1/font.css`), closed five SSRF holes in the fetch guard, cut the planned
+KV-storage half, and committed all of it as `c67deed`. The other four of the six reported defects
+landed in the main tree.
+
+**Complaints**
+- The task was marked `✅ landed` in `TASKS.md` before anything was committed and while the deployed
+  QA curl still returned the pre-fix responses — harm: a false status had to be caught and corrected
+  by the diff review rather than being true when written; risk: this is the same
+  self-reported-status failure `AGENTS.md` names ("never report done off an exit code") recurring on
+  the status field itself, not just on a test.
+- A DoD box claimed `withScheme` "lives once" when a byte-identical copy already existed in
+  `apps/platform/ui/main.ts` in the main tree — harm: a false uniqueness claim shipped in the DoD and
+  was only caught by adversarial diff review, requiring a rewritten box explaining why two copies are
+  legitimate; risk: writing DoD boxes about a file the task never opened (`ui/main.ts` lives in the
+  sibling tree from the two-tree split) recurs any time work is split across trees without
+  cross-checking the other half.
+- The first draft of the SSRF regression test and its DoD box listed only inputs that already carried
+  a scheme (`javascript:`, `file:`, `mailto:`, `localhost:4001`) — every one bypasses `withScheme`
+  untouched and fails exactly as before, so the box could not fail by construction — harm: a full
+  rewrite of the box was needed after review; risk: logged twice already this session (T5's clipped
+  heading, T9's fault injections) and recurred a third time in the task nominally *about* catching
+  invisible defects.
+- The task text called the guard's address list exhaustive before a second adversarial review found a
+  fifth hole, `localhost.` (root-terminated form, resolves to 127.0.0.1, reachable on the deployed
+  platform) — harm: a review round had already signed off on a list that was wrong, requiring a second
+  full pass; risk: "exhaustive" keeps being asserted about enumerations of hostile input forms instead
+  of measured — the same pattern this task's own DoD box criticises in the IPv6 enumeration it deleted.
+- The plan review framed the four addresses `withScheme` newly reaches as newly-opened holes, when
+  `https://0.0.0.0` was already reaching the outbound fetch on the deployed platform beforehand (the
+  field is `type="url"`, so the scheme could always be typed by hand) — harm: the review's risk framing
+  was wrong and needed an extra production probe to correct mid-task; risk: an adversarial review that
+  asserts something about production without checking production is PROGRESS lesson 11 again, aimed at
+  the deployed system instead of the repo.
+- A full KV store (Upstash Redis) was designed, provisioned and connected to the Vercel project before
+  a plan review refuted the design on five counts and Pooya asked whether it was needed at all — at
+  which point `COMPETITORS.md §6` showed none of the six demo beats touch a minted config — harm:
+  provisioning and a design pass were sunk into a piece a five-second check against the existing demo
+  script would have ruled out; risk: the store is now connected and idle, live infrastructure nobody
+  uses, and the same "build first, check the demo script second" ordering can repeat.
+- `PROGRESS.md` was left with a stale claim row still naming the KV work as if it shipped — harm:
+  needed a manual correction pass; risk: a cut decided outside the normal review flow (Pooya asking
+  directly) is the change least likely to propagate to tracking docs that assume review rounds are the
+  only source of change.
+- `§Scope` described the fix as closing "the SSRF gaps", which the diff review narrowed to "the gaps at
+  the boundary" after finding `extract.ts` still follows redirects unguarded and fetches stylesheet
+  `<link>` hrefs with no guard at all — a live path onto `169.254.169.254` this task did not touch —
+  harm: the task text overclaimed its own coverage; risk: scope language describing a fix as complete
+  against a bug *class* rather than the call sites actually touched reads as done to anyone who does
+  not re-derive it.

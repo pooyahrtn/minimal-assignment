@@ -114,6 +114,7 @@ actually happened.
 | T13 | ✅ landed (**box 7 reported, not claimed**) | Real LLM turn behind the AI SDK | 2h | 45m | T6 (stub is enough) | yes |
 | T14 | ✅ landed | Competitor scan → feature matrix → demo subset | 40m | **30m** | — (reads the built tree) | yes |
 | T15 | ◐ landed | Deploy the three projects on `*.releashed.io` — **box 4 (phone) needs Pooya** | 40m | **45m** | T6 · §0 #11 | no |
+| T16 | ◐ built, **not deployed** (**KV half cut — see below**) | Defects a first real use of the deployed studio found | 30m | **40m** | T15 · T6 · T7 | yes |
 
 T12 is `◐` not `✅`: both halves are committed, but its `no-match` card specs are deferred and land
 **with T5**, not later — see T5's DoD.
@@ -772,6 +773,101 @@ and reach the obstacle. If any part needs a local server, this task is not done.
 
 **Not in scope.** CI/CD, preview environments, analytics. The apex `releashed.io` and `www` —
 three subdomains is the whole DNS surface.
+
+---
+
+## T16 `◐ built, not deployed` — Defects a first real use of the deployed studio found
+
+**Not a feature task — a bug row, and it exists because the bugs arrived as one message from Pooya
+rather than from any gate.** All six had shipped under green checks. That is the finding: T15's
+box 2 ("every route of all three, not the ones this task remembered to name") was closed by a
+`deploy.sh verify` that walks the config page and round-trips mint → read back, and it is
+**vacuous** — it asserts HTTP 200 and never looks at a response body or a rendered pixel.
+
+Split across two trees because `apps/platform/server.ts` was hot when the report arrived. The four
+studio-side defects landed in the main tree; this worktree owns the server file.
+
+**Scope.** A merchant-typed address without a scheme is normalised once, at the HTTP boundary, so
+`POST /v1/extract` **and** `GET /v1/font.css` both stop rejecting it — the font field is the worse
+of the two because it fails *silently*, the typeface simply never changes. Plus the SSRF gaps that
+normalising made reachable a second way, and that were **already reachable a first way**.
+
+~~**Durable storage for minted configs (KV).**~~ **Cut, 2026-08-19, by Pooya, and correctly.**
+Checked against `COMPETITORS.md §6`, the six-beat ordered demo list that is the deliverable: not
+one beat touches a minted config. Every brand on stage comes from the four committed configs, which
+are static CDN files that never reach the function. The cost of not doing it is narrower than the
+demo — a reviewer who clicks Publish on the deployed studio gets a tag serving the neutral default.
+The Upstash store provisioned for it stays connected and idle; wiring it is the same ~20 lines
+whenever a published config has to outlive a request. See `DECISIONS-LOG.md`.
+
+**DoD**
+- [x] **Both** server-side merchant-string parse sites route through one helper next to
+      `isFetchableUrl` — `new URL(body.url)` and `new URL(src)`. Fixing only the route the complaint
+      named leaves the silent one broken.
+- [x] ~~`withScheme` lives once~~ — **false as written, corrected after review.** A byte-identical
+      copy lives at `apps/platform/ui/main.ts` in the main tree, and deliberately: the browser copy
+      exists to write the scheme back into the field so the merchant sees it and `storefrontFor`
+      matches on the same string, while this one guards direct API callers and `/v1/font.css`,
+      which no browser normalises for. They are two jobs, not one parser duplicated — but the box
+      claimed a property the tree does not have, and a shared module for two lines would pull a URL
+      helper into the widget's bundle graph for nothing.
+- [x] `extractMerchantTokens` is handed `target.href`, not the raw string. Without it a bare
+      address clears the guard and then fails the extractor's *own* `new URL`, answering 200 with a
+      "not a valid URL" note — the merchant still blocked, with a prettier status code.
+- [x] `withScheme` is **not** pushed down into `extractMerchantTokens`. `server.ts:290` and
+      `classify.test.ts:14` both call it with `'not-a-url'` *because* it fails offline at
+      `new URL`; prefixing there turns a module-load constant and a unit test into a live DNS
+      lookup. The HTTP boundary is the floor.
+- [x] **The guard is measured in the direction that can regress, not the one that cannot.** The
+      first draft of this box listed `javascript:`, `file:`, `mailto:` and `localhost:4001` — every
+      one carries a scheme, so `withScheme` leaves them untouched and they fail exactly where they
+      failed before. A box built only from those cannot fail. The direction that can is *input
+      `new URL` used to reject and now parses*, and four addresses fell through it: `0.0.0.0`,
+      `[::]`, `[::ffff:127.0.0.1]` and `[fc00::1]`.
+- [x] **It was five.** An adversarial review of the finished diff found `localhost.` — the
+      root-terminated form, which `URL` keeps verbatim, `endsWith('.localhost')` does not match,
+      and every resolver answers from `127.0.0.1`. It reached the outbound fetch on the deployed
+      platform. Trailing dots are now stripped before the host tests. Two reviews, two rounds, and
+      the second one found a hole the first had written up as exhaustively enumerated.
+- [x] **`https://0.0.0.0` was live on the deployed platform before this task**, and is the reason
+      the box above is worded that way. `POST /v1/extract {"url":"https://0.0.0.0"}` against
+      `maximal.releashed.io` returned a draft — the server had made the outbound request. The field
+      is `type="url"`, so a merchant could always supply the scheme themselves; normalising adds a
+      second route to a door that was already open. Closed here, with `0.0.0.0/8`, CGNAT and
+      multicast/reserved added to the IPv4 test.
+- [x] Every IPv6 literal is refused outright, replacing a function that enumerated private ranges
+      and let three past. A storefront is addressed by a name; enumerating hostile forms of an
+      address family is a list of the ones already imagined.
+- [x] One runnable check that **fails against the guard as it shipped** —
+      `apps/platform/withScheme.test.ts`, asserting through `handleRequest` so it exercises the
+      real HTTP boundary and stays offline (a refused host answers 400 before any fetch).
+- [x] `publish()` cannot report a failed publish as a success — landed in the main tree, restated
+      here because it is what turned this defect into "I believe" rather than a bug report.
+
+**QA (independent), and NOT YET RUN — this is why the status is `◐`.** Both halves still answer
+the old way on the deployed link, because nothing here is deployed:
+`curl -X POST .../v1/extract -d '{"url":"velde.releashed.io"}'` → still `400 url is not a valid
+URL`; `-d '{"url":"https://0.0.0.0"}'` → still `200` with a draft. The QA is: those two become a
+draft and a 400 respectively, and typing `velde.releashed.io` into the deployed studio reaches the
+review screen. **The scheme-less half cannot pass on this branch alone** — `index.html`'s
+`type="url"` blocks the submit in the browser before any request exists, and that fix is in the
+main tree. T16 needs both trees deployed together.
+
+**Not in scope.** Auth on republish and rate limiting (T6 §Not in scope). Versioning and
+publish/draft (T7 §Not in scope). Persisting studio editor state across a refresh — **not covered
+by any existing §Not in scope**, which the first draft of this entry wrongly attributed to T7; it
+is out because the `?store=` resume that landed in the main tree is the whole of what this task
+does about refresh, and restoring the edits themselves needs `MerchantTokens` serialised somewhere,
+which is a design question nobody has asked for yet. DNS rebinding — the guard reads literal
+hostnames and does not resolve, which `isFetchableUrl`'s own comment already states.
+
+**Named, not fixed, and not covered by the exemption above** [found by the diff review]: the guard
+vets only the FIRST hop. `extract.ts:60` fetches without `redirect: 'manual'`, and `:106` fetches
+up to three `<link rel=stylesheet>` hrefs with no guard at all — so a public host the guard approves
+can redirect the platform onto `169.254.169.254` and have those bytes read back into the response.
+Demonstrated end to end against a stubbed network. It is pre-existing, lives in `packages/agent`
+rather than in this task's file, and is a bigger change than a boundary fix; it belongs to whoever
+owns the extractor next, and §Scope's "the SSRF gaps" should have said "the gaps at the boundary".
 
 ---
 
