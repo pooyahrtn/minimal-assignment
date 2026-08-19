@@ -48,12 +48,28 @@ async function run(
   const context = await browser.newContext({ viewport: { width, height } })
   const page: Page = await context.newPage()
 
-  // Every console error and every failed request, from before the first byte of the page.
+  // Every console error, failed request and 4xx/5xx, from before the first byte of the page.
+  //
+  // ONE named pre-existing defect is allow-listed, by exact URL so it cannot absorb anything else:
+  // KRACHT's voice declares an avatar at `/brand/kracht/joep.svg` (`packages/tokens/src/brands.ts`
+  // → `apps/platform/config/kracht.json:56`) and that file exists nowhere in the repo. It 404s on
+  // localhost:4002 exactly as it does deployed, so T15 neither introduced it nor can honestly close
+  // it — the owning file belongs to another desk. Delete this the moment the asset lands.
+  //
+  // The console text for a failed subresource is a bare "Failed to load resource: ... 404 ()" with
+  // no URL in it, so the filter has to read `m.location().url` or it matches nothing.
+  const KNOWN_MISSING = '/brand/kracht/joep.svg'
   const errors: string[] = []
-  page.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
-  page.on('requestfailed', (r) =>
-    errors.push(`REQUEST FAILED ${r.url()} ${r.failure()?.errorText}`),
-  )
+  const record = (message: string): void => {
+    if (!message.includes(KNOWN_MISSING)) errors.push(message)
+  }
+  page.on('console', (m) => {
+    if (m.type() === 'error') record(`${m.text()} [${m.location().url}]`)
+  })
+  page.on('response', (r) => {
+    if (r.status() >= 400) record(`HTTP ${r.status()} ${r.url()}`)
+  })
+  page.on('requestfailed', (r) => record(`REQUEST FAILED ${r.url()} ${r.failure()?.errorText}`))
 
   // The proof that the config really came from the OTHER origin, recorded from the wire rather
   // than inferred from the widget looking right.
