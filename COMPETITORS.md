@@ -130,7 +130,7 @@ Six minutes. Minutes go to the differentiators and nowhere else.
 | # | Time | Beat | Built? |
 |---|---|---|---|
 | 1 | 0:00–0:30 | Two stores, one `<script>` tag, side by side | ✅ |
-| 2 | 0:30–2:30 | **The obstacle at 375px.** Names the blocking constraint *and the number*, offers the drop | 🔨 brain ✅, `no-match` renderer **in the working tree, uncommitted** |
+| 2 | 0:30–2:30 | **The obstacle at 375px.** Names the blocking constraint *and the number*, offers the drop | ✅ T4 + T5 — the `no-match` renderer landed with T5 |
 | 3 | 2:30–4:00 | **Config page: domain first, five fields, confirm-don't-apply.** Say the Gorgias line out loud | ✅ T7 |
 | 4 | 4:00–5:00 | **Third brand typed live** — the clamp visibly refusing to render it illegibly | ✅ T11 + T7. HELDER had no storefront and so no render surface until T7; the config page's preview is it, and `#E8D44D` on `#F7F0B8` measures **1.30:1** — the clamp's refusal is now a thing you point at |
 | 5 | 5:00–5:40 | Preview **against the real storefront**, not a mock — with Rebuy's own warning as the reason | ✅ T7 — a real cross-origin iframe of `:4001`/`:4002`, mutated live over an origin-checked `postMessage` |

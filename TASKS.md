@@ -287,7 +287,7 @@ quantified cost ("closest is €48"). Chip removal is reversible.
 
 ---
 
-## T5 `🔄 in flight` — Message block renderers
+## T5 `✅ landed` — Message block renderers
 7 renderers: `text` · `quick-replies` · `chips-update` · `product-card` · `product-compare` · `no-match` · `cta`.
 
 **Scope.** One renderer per block type, each consuming derived tokens only. The product card
@@ -504,12 +504,16 @@ Closed: boxes 2, 3, 4, 5 (agent half), 7 and 8. Still open:
   floor with all ten mandated topics present (the brief's six bullets plus T10's four disclosures)
   is about that; going lower means dropping mandated content. **This box needs a human call, not
   another trim pass** — six passes across three desks moved it 1959 → 1445 and no further.
-- **Box 5's human half** — the two worst-scoring tasks re-read by a human. `bun bench scorecard`
-  names **T14 at 1/4**, then a three-way tie at 2/4 (T2, T12, H1+H3), so "the two" needs a tiebreak
-  nobody specified. T14's top finding is already fixed (its unsourced rows are now marked
-  `unverified`); the re-read itself is Pooya's and cannot be delegated to another agent.
-- **Box 6** — the 6-minute demo, twice, on the deployed links. **Blocked on T15**, which is
-  unstarted. Everything else in the box (375px, T14's ordered list) is ready.
+- **Box 5's human half** — the two worst-scoring tasks re-read by a human. **The pair is `T14` and
+  `T9`, both at 1/4, and no tiebreak is needed** — the earlier three-way tie at 2/4 was an artefact
+  of a row set bounded to `T0…T11`, which left seven landed tasks unjudged. Widened to all 17 rows
+  by `56bc96d`: 44/68 axes green, an exact two at the bottom. (A human tiebreak of T14 + T2 was taken
+  on the stale ranking half an hour earlier and is superseded by the measurement; T2 sits at 2/4 with
+  three others.) T14's top finding is already fixed (its unsourced rows are now marked `unverified`);
+  both re-reads are Pooya's and cannot be delegated. T13 is held out of the judging run and named on
+  every run rather than quietly omitted.
+- **Box 6** — the 6-minute demo, twice, on the deployed links. **Unblocked** — T15 landed and all
+  three origins are live. Everything else in the box (375px, T14's ordered list) is ready. Not run.
 
 Also open across the suite, found by T10 and owned elsewhere: a bare `bun bench` never reaches the
 golden transcripts (T9 owns `run.ts`'s grading). **`bun run test:e2e` is green again** — the
@@ -582,7 +586,7 @@ Keyboard: Tab to launcher, Enter, Tab inside the panel, Esc closes, focus return
 - [ ] Zero storefront source edits to make the suite pass. `git log apps/shop-*` proves it. (The
       §0 #11 origin exemption belongs to T15 and is never a suite edit — a spec that needs a
       storefront byte changed has failed.)
-- [ ] `bunx playwright install chromium` is documented as a setup step — the repo has never run it.
+- [x] `bunx playwright install chromium` is documented as a setup step — `README.md` → Checks, 19 Aug. The repo had no README at all until then, so the step had nowhere to live.
 - [ ] Specs that depend on a T5 renderer are not written yet, and their absence is stated, not stubbed.
 
 **QA (independent).** `bun run test:e2e` from a clean clone after the two documented installs.

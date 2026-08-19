@@ -35,6 +35,25 @@ deploy() {
   # makes it answer only on the platform. Set here, so a clean clone does not have to know.
   bunx vercel env rm PLATFORM_API production --project maximal-platform --yes 2>/dev/null || true
   printf '1' | bunx vercel env add PLATFORM_API production --project maximal-platform
+  # T13's live intake turn, which this script did not wire and so ran dark in production: `/v1/chat`
+  # 503'd every turn and the widget answered from the local brain — correct, and invisible, which is
+  # exactly the state a rehearsal "on the deployed links" would not have surfaced. The KEY IS NEVER
+  # IN THIS FILE: it comes from the deploying shell, so a clean clone with no key deploys the same
+  # deterministic demo it always did, and says so.
+  # Both removes live INSIDE the branch on purpose: an unset key means "this shell has nothing to
+  # say about the model", not "turn it off". Removing unconditionally would let any routine deploy
+  # silently strip a key someone added by hand and put production back to 503 with no output.
+  if [ -n "${ANTHROPIC_API_KEY:-}" ]; then
+    bunx vercel env rm MAXIMAL_LLM production --project maximal-platform --yes 2>/dev/null || true
+    bunx vercel env rm ANTHROPIC_API_KEY production --project maximal-platform --yes 2>/dev/null || true
+    printf '1' | bunx vercel env add MAXIMAL_LLM production --project maximal-platform
+    printf '%s' "$ANTHROPIC_API_KEY" \
+      | bunx vercel env add ANTHROPIC_API_KEY production --project maximal-platform
+    echo "— live intake turn: ON in production (key from this shell)"
+  else
+    echo "— live intake turn: left as-is (no ANTHROPIC_API_KEY in this shell). Whatever the project"
+    echo "  already holds stays; with nothing set, /v1/chat 503s and the widget uses the local brain."
+  fi
   bunx vercel deploy --prod --yes --project maximal-platform
 
   bunx vercel project update maximal-velde --build-command \
