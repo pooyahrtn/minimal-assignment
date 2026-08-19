@@ -76,6 +76,7 @@
     "nomatch.heading": "Closest without “{blocking}”",
     "nomatch.drop": "Drop “{blocking}” and show these",
     "compare.heading": "Side by side",
+    "chips.cannot": "I cannot filter on {labels}. The rest of the brief is applied.",
     "no-results": "Nothing matches all of that. Drop a filter and I will look again.",
     "catalog.offline": "I cannot reach the catalogue right now, so I cannot show you anything. Your filters are kept — try again in a moment."
   },

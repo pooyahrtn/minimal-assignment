@@ -81,7 +81,12 @@ function evaluate(current: BrainState): StepResult {
       prompt: 'What are you looking for?',
       options: [],
     }
-    return { state: { ...current, state: 'clarify' }, blocks: [prompt] }
+    // `chipsBlock` goes out here too. The widget refreshes its row ONLY on a `chips-update`, so a
+    // turn that left no chip active — every constraint negated, or nothing understood but
+    // something disclosed — used to leave the row on screen showing the old chips as live filters
+    // while the agent asked what the shopper wanted. The row was a lie for one turn, and tapping
+    // it took two taps to undo.
+    return { state: { ...current, state: 'clarify' }, blocks: [chipsBlock, prompt] }
   }
 
   // Cheapest first. The obstacle sentence has just quoted the closest price, so leading the list
@@ -128,7 +133,7 @@ export function step(current: BrainState, action: Action): StepResult {
       // be strictly worse than no LLM at all, which is the opposite of "degrade, never break".
       const intake: Intake =
         action.chips !== undefined && action.chips.length > 0
-          ? { chips: action.chips, dropped: [] }
+          ? { chips: action.chips, dropped: [], unsupported: [] }
           : parseIntake(action.text, current.catalog)
       const merged = mergeChips(current.chips, intake.chips, intake.dropped)
       return evaluate({ ...current, state: 'intake', chips: merged })

@@ -28,7 +28,14 @@ export type Product = {
 export type Chip = {
   id: string
   label: string
-  state: 'active' | 'dropped'
+  /**
+   * `unsupported` is a constraint the shopper stated that this catalog has no field for. It is
+   * inert by construction: every consumer of the row filters on `state === 'active'`, so an
+   * unsupported chip reaches no predicate and no obstacle without a line of code being written to
+   * let it. It is in the row to be SEEN — a brief that silently omits what was asked for is not a
+   * receipt. [ENGINEERING §2.10]
+   */
+  state: 'active' | 'dropped' | 'unsupported'
 }
 
 /** The 7 message blocks of PRINCIPLES §8, one renderer each, closed with a `never` default. */

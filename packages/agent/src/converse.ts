@@ -84,8 +84,15 @@ function obstacleText(
  */
 function voice(block: Block, state: BrainState, strings: Record<string, string>): Block[] {
   switch (block.kind) {
+    // The row carries the disclosure; the sentence is what makes it legible. Built here rather
+    // than in the FSM for the same reason the clarify prompt is: the words are the merchant's.
+    case 'chips-update': {
+      const unsupported = block.chips.filter((chip) => chip.state === 'unsupported')
+      if (unsupported.length === 0) return [block]
+      const labels = unsupported.map((chip) => `“${chip.label}”`).join(', ')
+      return [block, text(fill(str(strings, 'chips.cannot'), { labels }))]
+    }
     case 'text':
-    case 'chips-update':
     case 'product-card':
     case 'product-compare':
     case 'cta':
@@ -113,9 +120,13 @@ export function reply(
   strings: Record<string, string>,
 ): Block[] {
   const out: Block[] = []
+  let led = false
   for (const block of blocks) {
-    // The lead-in goes once, above the first product line.
-    if (block.kind === 'product-card' && !out.some((b) => b.kind === 'text')) {
+    // The lead-in goes once, above the first product line. Tracked with a flag rather than by
+    // scanning `out` for a text block: the disclosure sentence a `chips-update` can now emit is
+    // also text, and scanning made it swallow the lead-in on exactly the turns that need both.
+    if (block.kind === 'product-card' && !led) {
+      led = true
       out.push(text(str(strings, 'recommend.lead')))
     }
     out.push(...voice(block, state, strings))

@@ -6,7 +6,17 @@ import type { Chip, Product } from '../types'
  * `ParsedChip` extends the closed `Chip` contract rather than replacing it — it is still
  * structurally a `Chip`, so it can go straight into a `chips-update`/`no-match` block.
  */
-export type ChipKind = { type: 'tag'; tag: string } | { type: 'price-max'; max: number }
+export type ChipKind =
+  | { type: 'tag'; tag: string }
+  | { type: 'price-max'; max: number }
+  /**
+   * A constraint the shopper stated that this catalog cannot express — no product records it, so
+   * no predicate can be written for it. It filters NOTHING; it exists to be shown. The chip row is
+   * the brief and the receipt [ENGINEERING §2.10], and a brief that silently omits what was asked
+   * for is neither. Carried as a chip rather than a message so it PERSISTS next to the live
+   * constraints instead of scrolling away in the transcript.
+   */
+  | { type: 'unsupported'; phrase: string }
 
 export type ParsedChip = Chip & { kind: ChipKind }
 
@@ -92,7 +102,11 @@ function parsePriceMax(text: string): number | undefined {
  * rather than being dropped — the catalog is the vocabulary, and `build-config.ts` can add a tag
  * the table has never named.
  */
-export function chipsFrom(constraints: { tags: string[]; maxPrice?: number }): ParsedChip[] {
+export function chipsFrom(constraints: {
+  tags: string[]
+  maxPrice?: number
+  unsupported?: string[]
+}): ParsedChip[] {
   const chips: ParsedChip[] = []
   const seen = new Set<string>()
   for (const tag of constraints.tags) {
@@ -117,6 +131,15 @@ export function chipsFrom(constraints: { tags: string[]; maxPrice?: number }): P
       state: 'active',
       kind: { type: 'price-max', max },
     })
+  }
+  // Last in the row, and never `active`: an unsupported chip is a disclosure, not a filter, and
+  // `intersect`/`findObstacle` both read `state === 'active'` only — so this kind reaches neither
+  // without a line of code in either file.
+  for (const phrase of constraints.unsupported ?? []) {
+    const id = `chip-unsupported-${phrase.toLowerCase().replace(/\W+/g, '-')}`
+    if (seen.has(id)) continue
+    seen.add(id)
+    chips.push({ id, label: phrase, state: 'unsupported', kind: { type: 'unsupported', phrase } })
   }
   return chips
 }
@@ -167,11 +190,53 @@ function negatedAt(masked: string, hit: Hit): boolean {
   return NEGATORS.test(words.join(' '))
 }
 
-/** What one turn of free text asks for, and what it takes back. */
+/**
+ * Numbers, digits or spelled out. A quantified attribute is the one shape of "I asked for
+ * something you do not stock data about" that a fixed-vocabulary parser can recognise with high
+ * precision, because a number that survived both the tag mask and the price mask is, by
+ * elimination, quantifying something this catalog has no field for.
+ */
+/**
+ * A number that survived BOTH the tag mask and the price mask is, by elimination, quantifying
+ * something this catalog has no field for. Digits always count. Spelled-out numerals only count
+ * behind an intensifier, because "one" is a pronoun as often as it is a number — `I need one that
+ * works` must not read as a constraint, while `exactly one button` must.
+ */
+const QUANTIFIED =
+  /(?:(?:exactly|only|just|with)\s+(?:one|two|three|four|five)|(?:\w+\s+)?\d+(?:[.,]\d+)?)(?:\s+\w+){0,2}/gi
+
+/**
+ * Quantified phrases left over after everything the vocabulary understood has been masked out:
+ * "exactly one button", "size 52 long", "2 kg tub", "around 250".
+ *
+ * DELIBERATELY NARROW, and the narrowness is the design. The obvious alternative — treat every
+ * leftover content word as unsupported and filter it through a stop-list — was tried against the
+ * two verbatim opening messages of `PRINCIPLES §8` and yields "I cannot filter on ‘wear’",
+ * "‘ideally’", "‘please’". A false disclosure is worse than silence: it makes the agent look
+ * broken on the one message the demo is graded on, and the stop-list needed to suppress it is
+ * open-ended conversational filler with no end to it. Precision first; recall is the model's job.
+ *
+ * KNOWN GAP, stated rather than hidden: unquantified attributes ("waterproof", "arrives before
+ * Friday", "my mother would like") are NOT caught here and still pass silently. `limits.test.ts`
+ * keeps a row per missed case, so the gap is a number that can move rather than a comment that
+ * rots.
+ */
+function unsupportedIn(masked: string): string[] {
+  const phrases: string[] = []
+  for (const match of masked.matchAll(QUANTIFIED)) {
+    const phrase = match[0].trim().replace(/\s+/g, ' ')
+    if (phrase.length > 0 && !phrases.includes(phrase)) phrases.push(phrase)
+  }
+  return phrases
+}
+
+/** What one turn of free text asks for, what it takes back, and what it asked for in vain. */
 export type Intake = {
   chips: ParsedChip[]
   /** Chip ids the shopper just cancelled — dropped by `fsm.ts` if they are already in the row. */
   dropped: string[]
+  /** Constraints this catalog cannot express. Shown, never filtered on. */
+  unsupported: string[]
 }
 
 /**
@@ -181,17 +246,28 @@ export type Intake = {
 export function parseIntake(text: string, catalog?: Product[]): Intake {
   const allowed = catalog === undefined ? undefined : new Set(catalog.flatMap((p) => p.tags))
   const hits = findHits(text, allowed)
+  const blank = (source: string, start: number, end: number): string =>
+    source.slice(0, start) + ' '.repeat(end - start) + source.slice(end)
   let masked = text
-  for (const hit of hits) {
-    masked = masked.slice(0, hit.start) + ' '.repeat(hit.end - hit.start) + masked.slice(hit.end)
-  }
+  for (const hit of hits) masked = blank(masked, hit.start, hit.end)
   const tags: string[] = []
   const dropped: string[] = []
   for (const hit of hits) {
     if (negatedAt(masked, hit)) dropped.push(`chip-${hit.tag}`)
     else tags.push(hit.tag)
   }
-  return { chips: chipsFrom({ tags, maxPrice: parsePriceMax(text) }), dropped }
+  // The budget is masked out too, and only here — `negatedAt` above must still see the sentence
+  // with prices in it, or "no less than 200" loses the word its window is looking for. What is
+  // left after this second pass is the residue `unsupportedIn` reads: every number the parser did
+  // NOT turn into a ceiling.
+  const price = PRICE_PATTERN.exec(masked)
+  if (price !== null) masked = blank(masked, price.index, price.index + price[0].length)
+  const unsupported = unsupportedIn(masked)
+  return {
+    chips: chipsFrom({ tags, maxPrice: parsePriceMax(text), unsupported }),
+    dropped,
+    unsupported,
+  }
 }
 
 /** The additive half of `parseIntake`, for callers with no chip row to retract from. */

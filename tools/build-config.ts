@@ -65,6 +65,7 @@ const NEUTRAL_STRINGS: Record<string, string> = {
   'nomatch.heading': 'Closest without “{blocking}”',
   'nomatch.drop': 'Drop “{blocking}” and show these',
   'compare.heading': 'Side by side',
+  'chips.cannot': 'I cannot filter on {labels}. The rest of the brief is applied.',
   'no-results': 'Nothing matches all of that. Drop a filter and I will look again.',
   'catalog.offline':
     'This shop is not set up yet, so I cannot show you products. Tell the shop owner their embed key does not match a configured shop.',
@@ -109,6 +110,7 @@ const SHOPS: Record<string, ShopSpec> = {
       'nomatch.heading': 'Closest without “{blocking}”',
       'nomatch.drop': 'Drop “{blocking}” and show these',
       'compare.heading': 'Side by side',
+      'chips.cannot': 'I cannot filter on {labels}. The rest of the brief is applied.',
       'no-results': 'Nothing in the range does all of that. Drop a filter and I will look again.',
       'catalog.offline':
         'I cannot reach the catalogue right now, so I cannot show you pieces. Your brief is kept. Try again in a moment.',
@@ -142,6 +144,7 @@ const SHOPS: Record<string, ShopSpec> = {
       'nomatch.heading': 'Closest if you drop “{blocking}”',
       'nomatch.drop': 'Drop “{blocking}” and show me those',
       'compare.heading': 'Side by side',
+      'chips.cannot': "I can't filter on {labels} — it's not in the product data.",
       'no-results': "Nothing in the range does all that. Drop one filter and I'll look again.",
       'catalog.offline':
         "I can't reach the catalogue right now, so I can't check what's in stock. Your filters are saved — try me again in a minute.",

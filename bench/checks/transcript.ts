@@ -175,7 +175,14 @@ type CaseVerdict = {
 
 function chipSignature(chips: ParsedChip[]): string[] {
   return chips
-    .map((c) => (c.kind.type === 'tag' ? `tag:${c.kind.tag}` : `price-max:${c.kind.max}`))
+    .map((c) => {
+      if (c.kind.type === 'tag') return `tag:${c.kind.tag}`
+      if (c.kind.type === 'price-max') return `price-max:${c.kind.max}`
+      // Part of the signature on purpose: the perturbation check compares the signature of a
+      // message against its reworded twin, and a disclosure that appears in one phrasing but not
+      // the other is exactly the drift this check exists to catch.
+      return `unsupported:${c.kind.phrase}`
+    })
     .sort()
 }
 

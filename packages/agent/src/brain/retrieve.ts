@@ -12,6 +12,11 @@ export function predicateFor(chip: ParsedChip): (product: Product) => boolean {
       const max = chip.kind.max
       return (product) => product.price <= max
     }
+    // Never consulted in practice — `intersect` reads active chips only and this kind is never
+    // active — but the switch is closed with a throwing `never`, so the case has to exist. Always
+    // true is the honest answer anyway: a constraint we cannot express excludes nothing.
+    case 'unsupported':
+      return () => true
     default: {
       const _exhaustive: never = chip.kind
       throw new Error(`unhandled chip kind: ${JSON.stringify(_exhaustive)}`)

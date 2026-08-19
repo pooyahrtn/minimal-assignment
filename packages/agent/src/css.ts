@@ -379,6 +379,13 @@ export function styles(tokens: DerivedTokens): string {
     color: var(--mx-text-muted);
     background: var(--mx-surface-sunken);
   }
+  /* A constraint we cannot check: dashed, not struck through — it was never applied and never
+     rejected — and not a control, so no pointer. */
+  .chip[data-state='unsupported'] {
+    border-style: dashed;
+    color: var(--mx-text-muted);
+    cursor: default;
+  }
 
   .messages {
     flex: 1 1 auto;

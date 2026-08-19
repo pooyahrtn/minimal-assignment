@@ -58,8 +58,21 @@ export function renderChips(chips: Chip[], strings: Record<string, string>): HTM
   row.append(legend)
 
   for (const chip of chips) {
-    // Both states are buttons: a chip is dropped by tapping it and restored by tapping it again,
-    // so the affordance and the aria-label are the only things that differ. [ENGINEERING §2.10]
+    // An unsupported chip is a SPAN, not a button, and that is the whole affordance argument: it
+    // cannot be dropped or restored because it was never filtering, so giving it a control would
+    // promise an action that does nothing. A span also keeps it out of the tab order, where a
+    // keyboard user would otherwise land on a dead stop. [ENGINEERING §2.10]
+    if (chip.state === 'unsupported') {
+      const inert = document.createElement('span')
+      inert.className = 'chip'
+      inert.dataset.state = chip.state
+      inert.dataset.chipId = chip.id
+      inert.textContent = chip.label
+      row.append(inert)
+      continue
+    }
+    // Both remaining states are buttons: a chip is dropped by tapping it and restored by tapping
+    // it again, so the affordance and the aria-label are the only things that differ.
     const element = document.createElement('button')
     element.type = 'button'
     element.className = 'chip'

@@ -94,6 +94,7 @@ const VELDE_CONFIG: ConfigResponse = {
     'nomatch.heading': 'Closest without “{blocking}”',
     'nomatch.drop': 'Drop “{blocking}” and show these',
     'compare.heading': 'Side by side',
+    'chips.cannot': 'I cannot filter on {labels}. The rest of the brief is applied.',
     'no-results': 'Nothing in the range does all of that. Drop a filter and I will look again.',
     'catalog.offline':
       'I cannot reach the catalogue right now, so I cannot show you pieces. Your brief is kept. Try again in a moment.',
@@ -183,6 +184,7 @@ const KRACHT_CONFIG: ConfigResponse = {
     'nomatch.heading': 'Closest if you drop “{blocking}”',
     'nomatch.drop': 'Drop “{blocking}” and show me those',
     'compare.heading': 'Side by side',
+    'chips.cannot': "I can't filter on {labels} — it's not in the product data.",
     'no-results': "Nothing in the range does all that. Drop one filter and I'll look again.",
     'catalog.offline':
       "I can't reach the catalogue right now, so I can't check what's in stock. Your filters are saved — try me again in a minute.",
@@ -269,6 +271,7 @@ const HELDER_CONFIG: ConfigResponse = {
     'nomatch.heading': 'Closest without “{blocking}”',
     'nomatch.drop': 'Drop “{blocking}” and show these',
     'compare.heading': 'Side by side',
+    'chips.cannot': 'I cannot filter on {labels}. The rest of the brief is applied.',
     'no-results': 'Nothing matches all of that. Drop a filter and I will look again.',
     'catalog.offline':
       'I cannot reach the catalogue right now, so I cannot show you anything. Your filters are kept — try again in a moment.',
