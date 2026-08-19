@@ -11,7 +11,7 @@ import {
 } from '@maximal/tokens'
 import type { MerchantTokens, Voice } from '@maximal/tokens'
 import { loadCatalog } from '../packages/agent/src/brain/catalog'
-import type { ConfigResponse } from '../packages/agent/src/types'
+import type { ConfigResponse, Product } from '../packages/agent/src/types'
 
 /**
  * Build-time config generator. Everything that could change — derived tokens, voice strings, the
@@ -31,6 +31,9 @@ type ShopSpec = {
   /** `null` = no catalog at all, which is the honest shape for the unknown-key default. A path to
    * an empty JSON array would be a file on disk pretending to be data. */
   catalogPath: string | null
+  /** `null` = the catalog's own product URLs are this shop's own. Non-null for a brand that
+   * borrows another brand's catalog: see `relink` below. */
+  productOrigin: string | null
   strings: Record<string, string>
 }
 
@@ -82,6 +85,7 @@ const SHOPS: Record<string, ShopSpec> = {
     merchant: VELDE,
     voice: VELDE_VOICE,
     catalogPath: 'packages/agent/src/brain/catalog.velde.json',
+    productOrigin: null,
     // No name, no face, no contractions: clipped lines, product first.
     strings: {
       'launcher.label': 'Help me choose',
@@ -114,6 +118,7 @@ const SHOPS: Record<string, ShopSpec> = {
     merchant: KRACHT,
     voice: KRACHT_VOICE,
     catalogPath: 'packages/agent/src/brain/catalog.kracht.json',
+    productOrigin: null,
     // Joep, a coach: warm, direct, second person, contractions.
     strings: {
       'launcher.label': 'Ask Joep',
@@ -155,6 +160,10 @@ const SHOPS: Record<string, ShopSpec> = {
     merchant: HELDER,
     voice: HELDER_VOICE,
     catalogPath: 'packages/agent/src/brain/catalog.velde.json',
+    // Reserved, unbuilt, and unresolvable by construction — `.example` is IANA-reserved, so this
+    // can never become somebody's real site. HELDER has no storefront; a link that says so is the
+    // honest one. [COMPLAINS T11]
+    productOrigin: 'https://helder.example',
     strings: {
       ...NEUTRAL_STRINGS,
       'launcher.label': 'Find me something',
@@ -177,6 +186,7 @@ const SHOPS: Record<string, ShopSpec> = {
     merchant: DEFAULT_BRAND,
     voice: DEFAULT_VOICE,
     catalogPath: null,
+    productOrigin: null,
     // No persona, no house style — plain second-person English that reads as unfinished setup
     // rather than as somebody's brand voice.
     strings: NEUTRAL_STRINGS,
@@ -186,12 +196,25 @@ const SHOPS: Record<string, ShopSpec> = {
 /** The shop key `/v1/config` falls back to. Not a merchant; see the SHOPS entry above. */
 const DEFAULT_KEY = 'default'
 
+/**
+ * A brand that borrows another brand's catalog must not borrow its links. `url` navigates a
+ * shopper to a merchant, so HELDER's cards pointing at VELDE's storefront put a shopper in another
+ * shop under HELDER's name — the one part of the reuse that lies. [COMPLAINS T11]
+ *
+ * `image` is left alone on purpose: a photo is an asset we serve, it names no merchant, and
+ * rewriting it to an origin nothing answers would blank every card.
+ */
+const relink =
+  (origin: string) =>
+  (product: Product): Product => ({ ...product, url: `${origin}${new URL(product.url).pathname}` })
+
 async function buildConfig(spec: ShopSpec): Promise<ConfigResponse> {
+  const catalog = spec.catalogPath === null ? [] : await loadCatalog(spec.catalogPath)
   return {
     tokens: derive(spec.merchant),
     voice: spec.voice,
     strings: spec.strings,
-    catalog: spec.catalogPath === null ? [] : await loadCatalog(spec.catalogPath),
+    catalog: spec.productOrigin === null ? catalog : catalog.map(relink(spec.productOrigin)),
   }
 }
 
@@ -244,13 +267,29 @@ const root = `${import.meta.dir}/..`
 const built: [string, ConfigResponse][] = []
 const written: string[] = []
 for (const [shop, spec] of Object.entries(SHOPS)) {
-  const config = await buildConfig(spec)
+  built.push([shop, await buildConfig(spec)])
+}
+
+// Two shops sharing a product URL means one of them links into the other's storefront. Nothing
+// else in the tree checks catalog distinctness, and this is where every config is in hand at
+// once. It throws BEFORE anything is written, so a bad config never reaches disk. [COMPLAINS T11]
+const owners = new Map<string, string>()
+for (const [shop, config] of built) {
+  for (const product of config.catalog) {
+    const owner = owners.get(product.url)
+    if (owner !== undefined) {
+      throw new Error(`build-config: ${shop} and ${owner} both ship ${product.url}`)
+    }
+    owners.set(product.url, shop)
+  }
+}
+
+for (const [shop, config] of built) {
   // Next to the server that reads them and the config page (T7) that will edit them, rather than
   // in `tools/`, which only writes them.
   const path = `${root}/apps/platform/config/${shop}.json`
   await Bun.write(path, JSON.stringify(config, null, 2))
   written.push(path)
-  built.push([shop, config])
 }
 
 // `default` is served but never bundled — see its SHOPS entry. Filtered before `fallbackSource`

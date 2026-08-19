@@ -10,20 +10,14 @@ the task-text refutation in pickup step 2.
 
 ## Open
 
-### 1. T6 cannot close its own DoD without breaking the storefront freeze
+### 1. ~~T6 cannot close its own DoD without breaking the storefront freeze~~ — RESOLVED
 
-Both storefronts hardcode the platform origin in their one embed line —
-`apps/shop-velde/render.ts:197` and `apps/shop-kracht/app/layout.tsx:140`, both
-`http://localhost:4003/v1/agent.js`. T6's DoD requires the config fetched cross-origin from two
-different `*.vercel.app` origins, which those lines cannot satisfy unchanged. `ENGINEERING §1.1`
-and `PRINCIPLES §296` freeze storefront source after the `<script>` tag lands (`9aa8c0b`), "no
-exceptions".
-
-Nobody owns this: it is not a row in the `TASKS §1` graph, which is the recurrence of archived
-item 2 (integration work is invisible to a graph built for parallelism) — this time against an
-irreversible rule. **Needs a decision before T6 starts**, not during. Candidates: exempt the embed
-line's origin in `§1.1` explicitly; or point both storefronts at the final hostname now and have
-the local stub answer there.
+Both storefronts hardcoded the platform origin in their one embed line (`apps/shop-velde/render.ts`,
+`apps/shop-kracht/app/layout.tsx`), which T6's cross-origin DoD could not satisfy under the
+`ENGINEERING §1.1` freeze. Resolved by the re-plan (`770889b`): `ENGINEERING §1.1` now carries one
+named exemption — the embed line's `src=` origin, changed once by T15 — and `TASKS §0 #11` narrows
+the proof to "no commit whose diff touches anything but the origin". Kept as a numbered item
+because both of those cite `[COMPLAINS #1]` as the source.
 
 ### 2. `bench/run.ts:38` still grades a check by its case count
 
@@ -32,6 +26,10 @@ and `ENGINEERING §3.1` require a check that finds failures to fail. Every check
 throw on failure, which is what makes the current form safe — that belief is unverified, and the
 harness every other check depends on should not rest on it. Verify each check throws, or grade on
 a failure count the check returns.
+
+**Owned:** `TASKS.md` T9 (`⬜ open`) took both this and the dead gold-comparison path
+(`transcript.ts:370` defaults to `fixture.json`, so `detectBrand()` never matches and a bare
+`bun bench` never reaches gold). Do not fix it off-desk — `run.ts` grading is T9's.
 
 ### 3. `PROGRESS.md` rows are written in retrospective batches
 
@@ -75,4 +73,30 @@ registered `bun bench` check (`scorecard`) over ten landed tasks. Two false demo
 - A fabricated contrast ratio ("4.44:1 on this surface") shipped in a `derive.test.ts` comment, in the one file whose entire job is measurement — the real value, found by fault-injecting the regression during review, was `#606060` at 5.423/4.506/6.289, and every ratio assertion in the file stayed green against it; only an unrelated hue-tint assertion would have caught the regression — harm: a false empirical claim sat in the AA-contrast test suite until an adversarial reviewer happened to inject the exact regression it claimed to guard against; nothing in the author's own gates checks comment prose against reality; risk: this is the exact failure mode this session's own decisions log names `ENGINEERING §3` as existing to prevent, and it shipped anyway — a fabricated number in test rationale is caught only when a reviewer chooses to fault-inject that specific line, which is not reliable.
 - HELDER's first draft shipped with typography byte-identical to `DEFAULT_BRAND`'s fallback font block and a `clarify` string near-duplicating its own greeting, on the one brand whose stated job is looking deliberately unlike the "not configured" fallback — harm: shipped past the author's own review and had to be caught and corrected by the adversarial reviewer; risk: no DoD box tests "distinct from the fallback" directly, so the same fast-copy shortcut reproduces on the next brand added the same way.
 - HELDER's catalog is byte-identical to VELDE's, including every product URL pointing at VELDE's `localhost:4001` origin — the third "brand" is a reskin serving another merchant's products, not a distinct merchant — and this is disclosed only as prose in `DECISIONS-LOG.md`, not in anything a demo rehearsal would surface — harm: clicking any HELDER product opens VELDE's shop under HELDER's name, and no DoD box or gate checks catalog distinctness; risk: a live "extend the build" demo beat that follows a product link exposes this on stage, and the only warning against it is a log entry a presenter would have to already know to read.
+  - **Fixed 2026-08-19:** the shared catalog stays (that reuse is the token system's proof, and
+    `tools/build-config.ts` says so at the `helder` spec), but the links no longer lie —
+    `ShopSpec.productOrigin` rewrites HELDER's product `url`s to `https://helder.example`, an
+    IANA-reserved host that can never resolve to anyone's real shop. `image` is untouched: a photo
+    names no merchant, and rewriting it would blank every card. The missing gate now exists too —
+    `build:config` throws if two shops ship the same product URL, before anything reaches disk.
 - The two adversarial rounds (plan refutation + diff review) took a task `TASKS.md` scoped as "ten lines, no new code" and estimated at 10 minutes of agent time to ~55 minutes over 2 rounds, each round separately costing roughly 100k tokens and 6-10 minutes — harm: review scaffolding alone cost roughly 5x the entire task estimate, for a task PROGRESS.md's own standing lesson 5 already flagged this class of overhead against before this task added a worse ratio; risk: applying the same fixed two-round process regardless of task size means the smallest, most mechanical tasks pay the highest overhead-to-content ratio, with nothing in the process scaling review depth to the task's own estimate.
+
+---
+
+## T5 + T6 — 2026-08-19
+
+**What changed:** Shipped the 7 message-block renderers (text, quick-replies, chips-update, product-card, product-compare, no-match, cta) plus the H2 brand-divergence gallery/check, and the `apps/platform` config/agent.js server plus the H6 budget check — the latter two slices delegated whole to Sonnet.
+
+**Complaints**
+- The plan's central risk model was false: it assumed `bench`'s H3 gold files would catch a `Product` schema change, but `bench/checks/transcript.ts:370` defaults `catalogPath` to `fixture.json` and `detectBrand()` only matches `catalog.{velde,kracht}.json`, so a bare `bun bench` never reaches the gold branch at all — contradicting commit `0e5c695`'s own message that "the golden transcripts are now actually read" — harm: an entire plan was built on a safety net that doesn't exist, caught only by a 3-agent adversarial round (63 findings, ~14 blocking) rather than by running the command before writing the plan, and the gap is logged REPORTED-NOT-FIXED, meaning gold is still rotting after this session closed; risk: every future task that touches `Product` will keep trusting a gold-file check that a bare `bun bench` silently skips, and the false "actually read" commit message stays uncorrected in history.
+- The plan proposed reusing the landed `.chip` click handler for the no-match card's drop action for "zero new wiring" — a message block lives in scrollback forever, so the toggle would keep a stale `data-state` and re-fire on a second tap, and it would have broken three already-landed T12 e2e assertions (the global `.chip` count, a second `.chips` container tripping strict mode, a duplicate `Drop under €30` accessible name) — harm: caught only by adversarial plan review, not by checking the handler's assumptions against the tests that already existed for it; risk: reusing an interactive-surface handler for a permanent scrollback block keeps looking like free reuse until it's actually run against the existing suite.
+- Backticks inside a CSS comment broke a JS template literal twice in the same session — once in `packages/agent/src/css.ts`, once in a separate workflow script — the identical failure mode, hit and fixed twice rather than once; harm: debugging time spent twice on one root cause; risk: nothing stops a CSS comment with a backtick from being written inside a JS template literal a third time.
+- A python patch script asserted and died halfway through, leaving its edits half-applied to the tree — harm: left files in an unknown partially-patched state that had to be diagnosed and untangled before work could continue; risk: any non-atomic scripted patch keeps producing this exact failure the next time one of its assumptions is wrong mid-run.
+- `git add -A` staged a concurrent peer session's uncommitted work, directly against `ENGINEERING §5.1` rule 2's explicit "never `git add -A`, it sweeps another session's WIP onto your branch" — harm: another live session's WIP landed in this session's staging area and had to be caught and unwound by hand; risk: the rule is written in the file precisely because this has happened before (`DECISIONS-LOG [T1348]`, same failure against `bench/checks.ts`/`package.json`), and it happened again this session regardless of the rule existing.
+- A self-edit silently deleted an assertion and a `page.close()` that had been added minutes earlier, with nothing surfacing the loss until later — harm: work from minutes prior was destroyed by the author's own next edit and had to be reconstructed; risk: wholesale block-replacement edits keep clobbering just-added code, and nothing diffs an agent's own edit against its own immediately-prior one to catch this.
+- T5 DoD box 3 ("every block survives a 40-character unbroken word") was reported CLOSED on an assertion written on the wrong axis, and it was false: the no-match heading clipped to `CLOSEST WITHOUT "RIJKSMUSEUMSTRAATVERLICHTINGSPROJE`, invisible to the check because it measured block roots against card wrappers that are `overflow: hidden` — a check that can only pass, not evidence — harm: a shipped, demo-facing visual defect was reported done by the author's own gate and surfaced only by a second full adversarial diff round (13 findings); risk: a structurally-can't-fail check will keep passing on the next block built the same way, and self-reported "box closed" claims resting on it cannot be trusted without an independent re-check.
+- The same diff round found three more undisclosed defects in the build: `labelCase` doing nothing on a second block beyond the one already amended in the DoD, a duplicated `fill`/`money` function pair shipped inside the size-capped bundle, and a stale-card double-fire bug — none self-reported, all three found only because three reviewers were driving real browsers against the diff — harm: three shipped defects in one diff went uncaught by the author's own review; risk: self-review in this codebase is not catching this defect class (silent no-op, duplication, double-fire), and it will recur on the next renderer built the same way.
+- `DECISIONS-LOG.md` carries a WITHDRAWN entry where the author asserted "there is no import-boundary lint rule," which was false — the rule exists in a nested `packages/agent/biome.json` (`root: false`, `extends: "//"`) that a root-only grep missed — harm: a false, checkable claim about the codebase sat in the permanent decisions log until a reviewer caught it and forced the withdrawal; risk: an unverified negative claim that skips nested/extended configs will recur, and later sessions read `DECISIONS-LOG.md` as ground truth by default.
+- `bun run test:e2e` exits 1 on the full parallel run because one KRACHT storefront spec flakes under whole-suite CPU contention — green 50/50 at `--workers=1` and green per-file, red only under contention — harm: the task cannot point to a clean run of the gate command as written, so a red gate has to be explained away rather than shown fixed; risk: this exact flake will keep failing the whole-suite gate for whichever task happens to run last and land the blame on unrelated work, every time the suite runs under load.
+- The plan and diff adversarial rounds cost ~11.6m/455k tokens and ~25.8m/536k tokens respectively — ~37.4 agent-minutes and ~991k tokens combined, more than the build itself, on a task PROGRESS.md scoped at 60m/15m — continuing the same review-exceeds-build ratio already flagged twice this session for T10 and T11; harm: review overhead again outweighed build cost, and nothing in this session's process changed that; risk: a fixed two-round review regardless of task size keeps taxing every task the same fixed amount, and the ratio keeps getting worse, not better, across consecutive tasks in the same session.
+- Two concurrent Claude sessions edited the same working tree throughout T5/T6, exchanging messages about collisions, against `ENGINEERING §5.1` rule 1 ("One task, one desk, one worktree. Two agents in one worktree collide, which is the exact thing worktrees prevent.") — harm: a constant collision surface for the entire session, the direct precondition for the `git add -A` incident above; risk: as long as multiple sessions share one working tree, every file either touches is a potential clobber, and the rule written to prevent exactly this is not being enforced.

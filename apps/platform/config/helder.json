@@ -83,7 +83,7 @@
     {
       "id": "noord-wool-overcoat",
       "title": "Noord Wool Overcoat",
-      "url": "http://localhost:4001/products/noord-wool-overcoat",
+      "url": "https://helder.example/products/noord-wool-overcoat",
       "image": "http://localhost:4001/photos/outerwear-03.jpg",
       "price": 545,
       "currency": "EUR",
@@ -111,7 +111,7 @@
     {
       "id": "spui-quilted-liner",
       "title": "Spui Wool Jacket",
-      "url": "http://localhost:4001/products/spui-quilted-liner",
+      "url": "https://helder.example/products/spui-quilted-liner",
       "image": "http://localhost:4001/photos/outerwear-01.jpg",
       "price": 285,
       "currency": "EUR",
@@ -139,7 +139,7 @@
     {
       "id": "dijk-chore-jacket",
       "title": "Dijk Peacoat",
-      "url": "http://localhost:4001/products/dijk-chore-jacket",
+      "url": "https://helder.example/products/dijk-chore-jacket",
       "image": "http://localhost:4001/photos/outerwear-06.jpg",
       "price": 245,
       "currency": "EUR",
@@ -167,7 +167,7 @@
     {
       "id": "ij-trench",
       "title": "IJ Wool Jacket",
-      "url": "http://localhost:4001/products/ij-trench",
+      "url": "https://helder.example/products/ij-trench",
       "image": "http://localhost:4001/photos/outerwear-08.jpg",
       "price": 425,
       "currency": "EUR",
@@ -195,7 +195,7 @@
     {
       "id": "vecht-field-jacket",
       "title": "Vecht Field Jacket",
-      "url": "http://localhost:4001/products/vecht-field-jacket",
+      "url": "https://helder.example/products/vecht-field-jacket",
       "image": "http://localhost:4001/photos/outerwear-07.jpg",
       "price": 350,
       "currency": "EUR",
@@ -223,7 +223,7 @@
     {
       "id": "sluis-anorak",
       "title": "Sluis Leather Coat",
-      "url": "http://localhost:4001/products/sluis-anorak",
+      "url": "https://helder.example/products/sluis-anorak",
       "image": "http://localhost:4001/photos/outerwear-09.jpg",
       "price": 245,
       "currency": "EUR",
@@ -251,7 +251,7 @@
     {
       "id": "havik-bomber",
       "title": "Havik Wool Blazer",
-      "url": "http://localhost:4001/products/havik-bomber",
+      "url": "https://helder.example/products/havik-bomber",
       "image": "http://localhost:4001/photos/outerwear-12.jpg",
       "price": 295,
       "currency": "EUR",
@@ -279,7 +279,7 @@
     {
       "id": "wal-overshirt",
       "title": "Wal Wool Coat",
-      "url": "http://localhost:4001/products/wal-overshirt",
+      "url": "https://helder.example/products/wal-overshirt",
       "image": "http://localhost:4001/photos/outerwear-13.jpg",
       "price": 195,
       "currency": "EUR",
@@ -307,7 +307,7 @@
     {
       "id": "doorn-rain-coat",
       "title": "Doorn Rain Coat",
-      "url": "http://localhost:4001/products/doorn-rain-coat",
+      "url": "https://helder.example/products/doorn-rain-coat",
       "image": "http://localhost:4001/photos/outerwear-05.jpg",
       "price": 165,
       "currency": "EUR",
@@ -335,7 +335,7 @@
     {
       "id": "kaap-cardigan",
       "title": "Kaap Cardigan",
-      "url": "http://localhost:4001/products/kaap-cardigan",
+      "url": "https://helder.example/products/kaap-cardigan",
       "image": "http://localhost:4001/photos/knitwear-04.jpg",
       "price": 260,
       "currency": "EUR",
@@ -363,7 +363,7 @@
     {
       "id": "merino-crew",
       "title": "Merino Crew",
-      "url": "http://localhost:4001/products/merino-crew",
+      "url": "https://helder.example/products/merino-crew",
       "image": "http://localhost:4001/photos/knitwear-06.jpg",
       "price": 165,
       "currency": "EUR",
@@ -391,7 +391,7 @@
     {
       "id": "zand-waffle-knit",
       "title": "Zand Ribbed V-Neck",
-      "url": "http://localhost:4001/products/zand-waffle-knit",
+      "url": "https://helder.example/products/zand-waffle-knit",
       "image": "http://localhost:4001/photos/knitwear-02.jpg",
       "price": 145,
       "currency": "EUR",
@@ -419,7 +419,7 @@
     {
       "id": "winter-leather-gloves",
       "title": "Winter Knit Gloves",
-      "url": "http://localhost:4001/products/winter-leather-gloves",
+      "url": "https://helder.example/products/winter-leather-gloves",
       "image": "http://localhost:4001/photos/knitwear-01.jpg",
       "price": 145,
       "currency": "EUR",
@@ -447,7 +447,7 @@
     {
       "id": "nes-knit-polo",
       "title": "Nes Knit Polo",
-      "url": "http://localhost:4001/products/nes-knit-polo",
+      "url": "https://helder.example/products/nes-knit-polo",
       "image": null,
       "price": 180,
       "currency": "EUR",
@@ -475,7 +475,7 @@
     {
       "id": "veld-leather-tote",
       "title": "Veld Leather Tote",
-      "url": "http://localhost:4001/products/veld-leather-tote",
+      "url": "https://helder.example/products/veld-leather-tote",
       "image": "http://localhost:4001/photos/leather-01.jpg",
       "price": 395,
       "currency": "EUR",
@@ -503,7 +503,7 @@
     {
       "id": "kade-leather-bomber",
       "title": "Kade Leather Bomber",
-      "url": "http://localhost:4001/products/kade-leather-bomber",
+      "url": "https://helder.example/products/kade-leather-bomber",
       "image": "http://localhost:4001/photos/leather-10.jpg",
       "price": 595,
       "currency": "EUR",
@@ -531,7 +531,7 @@
     {
       "id": "haven-weekend-holdall",
       "title": "Haven Canvas Pack",
-      "url": "http://localhost:4001/products/haven-weekend-holdall",
+      "url": "https://helder.example/products/haven-weekend-holdall",
       "image": "http://localhost:4001/photos/leather-07.jpg",
       "price": 545,
       "currency": "EUR",
@@ -559,7 +559,7 @@
     {
       "id": "riem-belt",
       "title": "Riem Belt",
-      "url": "http://localhost:4001/products/riem-belt",
+      "url": "https://helder.example/products/riem-belt",
       "image": "http://localhost:4001/photos/leather-09.jpg",
       "price": 120,
       "currency": "EUR",
@@ -587,7 +587,7 @@
     {
       "id": "damrak-derby",
       "title": "Damrak Suede Boots",
-      "url": "http://localhost:4001/products/damrak-derby",
+      "url": "https://helder.example/products/damrak-derby",
       "image": "http://localhost:4001/photos/leather-03.jpg",
       "price": 320,
       "currency": "EUR",
