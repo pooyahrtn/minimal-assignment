@@ -72,6 +72,13 @@
     "obstacle.text": "Nothing clears all of it. {options} everything except “{blocking}” — the closest is {closest}. Tap “{blocking}” to drop it and I'll show you those, or keep it and drop something else.",
     "obstacle.count.one": "One option fits",
     "obstacle.count.many": "{n} options fit",
+    "card.specs": "What's in it",
+    "card.outofstock": "Sold out",
+    "card.noimage": "No photo yet",
+    "card.view": "Take a look",
+    "nomatch.heading": "Closest if you drop “{blocking}”",
+    "nomatch.drop": "Drop “{blocking}” and show me those",
+    "compare.heading": "Side by side",
     "no-results": "Nothing in the range does all that. Drop one filter and I'll look again.",
     "catalog.offline": "I can't reach the catalogue right now, so I can't check what's in stock. Your filters are saved — try me again in a minute."
   },

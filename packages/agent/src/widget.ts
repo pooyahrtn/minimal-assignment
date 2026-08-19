@@ -189,6 +189,11 @@ export class MxAgent extends HTMLElement {
     const text = this.input.value.trim()
     if (text === '') return
     this.input.value = ''
+    this.say(text)
+  }
+
+  /** One path for everything the shopper says, typed into the composer or tapped as a reply. */
+  private say(text: string): void {
     this.appendMessage(renderText(text, 'shopper'))
     // The seam T4 plugs into. T3 renders the shopper's line and stops there — no conversation
     // logic lives in the shell.
@@ -200,6 +205,7 @@ export class MxAgent extends HTMLElement {
   private onPanelClick(event: Event): void {
     const target = event.target
     if (!(target instanceof HTMLElement)) return
+    if (this.onBlockAction(target)) return
     const chip = target.closest('.chip')
     if (!(chip instanceof HTMLElement)) return
     const id = chip.dataset.chipId
@@ -209,8 +215,41 @@ export class MxAgent extends HTMLElement {
     // The row is replaced wholesale, so the element holding focus is about to disappear. Only a
     // keyboard user was focused on it; a mouse user must not get the keyboard opened.
     const hadFocus = this.shadow.activeElement === chip
-    // Applied here as well as in the brain: dropping the LAST active chip leaves the brain with
-    // nothing to recommend and no chip row to send back, and the tap must still be visible.
+    this.setChip(id, next)
+    // After the dispatch, because whatever answered it has redrawn the row underneath us.
+    if (hadFocus) this.focusChip(id)
+  }
+
+  /**
+   * Controls that live inside a message block rather than in the chip row. Returns true when it
+   * handled the click, so the chip-row path never sees it.
+   *
+   * The no-match card's action is a ONE-WAY drop, not a toggle. A message block stays in the
+   * scrollback forever, so a toggle there would keep a stale state and re-fire on a second tap;
+   * the chip row above is where the decision is reversed, which is also what the obstacle sentence
+   * tells the shopper to do. Keeping chips to exactly one surface is ENGINEERING §2.10.
+   */
+  private onBlockAction(target: HTMLElement): boolean {
+    const reply = target.closest('.quick-option')
+    if (reply instanceof HTMLElement && reply.dataset.replyText !== undefined) {
+      this.say(reply.dataset.replyText)
+      return true
+    }
+    const drop = target.closest('.nomatch-drop')
+    if (!(drop instanceof HTMLButtonElement) || drop.disabled) return false
+    const id = drop.dataset.dropChip
+    if (id === undefined) return false
+    drop.disabled = true
+    this.setChip(id, 'dropped')
+    return true
+  }
+
+  /**
+   * Applies a chip state locally and tells the brain. Applied here as well as in the brain because
+   * dropping the LAST active chip leaves the brain with nothing to recommend and no chip row to
+   * send back — and the tap must still be visible.
+   */
+  private setChip(id: string, next: Chip['state']): void {
     this.push({
       kind: 'chips-update',
       chips: this.chips.map((entry): Chip => (entry.id === id ? { ...entry, state: next } : entry)),
@@ -222,8 +261,6 @@ export class MxAgent extends HTMLElement {
         composed: true,
       }),
     )
-    // After the dispatch, because whatever answered it has redrawn the row underneath us.
-    if (hadFocus) this.focusChip(id)
   }
 
   /** Keeps a keyboard user on the chip they just toggled instead of dumping them in the composer. */
@@ -241,7 +278,13 @@ export class MxAgent extends HTMLElement {
     }
     if (event.key !== 'Tab') return
     // The panel is the whole widget while it is open, so its own controls are the entire tab ring.
-    const stops = Array.from(this.panel.querySelectorAll('button, input'))
+    // `a[href]` is not optional here: T5's product cards and CTA blocks ship real anchors, and a
+    // ring computed from buttons and inputs alone would let Tab walk out of the panel and into the
+    // storefront underneath from whichever anchor happened to be last. A control that has already
+    // done its one job (the no-match drop action) is disabled and out of the ring.
+    const stops = Array.from(this.panel.querySelectorAll('button, input, a[href]')).filter(
+      (node) => !(node instanceof HTMLButtonElement && node.disabled),
+    )
     const first = stops.at(0)
     const last = stops.at(-1)
     if (!(first instanceof HTMLElement) || !(last instanceof HTMLElement)) return

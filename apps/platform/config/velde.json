@@ -69,6 +69,13 @@
     "obstacle.text": "No match on all of it. {options} everything except “{blocking}”. Closest: {closest}. Tap “{blocking}” to drop it, or drop something else instead.",
     "obstacle.count.one": "One piece fits",
     "obstacle.count.many": "{n} pieces fit",
+    "card.specs": "Details",
+    "card.outofstock": "Out of stock",
+    "card.noimage": "No photograph",
+    "card.view": "See the piece",
+    "nomatch.heading": "Closest without “{blocking}”",
+    "nomatch.drop": "Drop “{blocking}” and show these",
+    "compare.heading": "Side by side",
     "no-results": "Nothing in the range does all of that. Drop a filter and I will look again.",
     "catalog.offline": "I cannot reach the catalogue right now, so I cannot show you pieces. Your brief is kept. Try again in a moment."
   },

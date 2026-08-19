@@ -140,6 +140,16 @@ function said(blocks: Block[]): string[] {
   return blocks.flatMap((block) => (block.kind === 'text' ? [block.text] : []))
 }
 
+/**
+ * The product titles a turn recommended. Before T5 these arrived as `text` blocks, because
+ * `converse.ts` flattened every card into a sentence; they are `product-card` blocks now and the
+ * renderer draws title and price itself. Same invariant, read off the block that actually carries
+ * it — which is also stronger, since it no longer passes just because a title appeared in prose.
+ */
+function recommended(blocks: Block[]): string[] {
+  return blocks.flatMap((block) => (block.kind === 'product-card' ? [block.product.title] : []))
+}
+
 const KRACHT_OPENING =
   "I'm after a protein shake with no sweeteners, lactose-free, and ideally under €30."
 const VELDE_OPENING =
@@ -168,9 +178,10 @@ describe('the obstacle sentence', () => {
     expect(sentence).not.toContain('{')
 
     const dropped = step(opening.state, { type: 'drop-chip', id: 'chip-price' })
-    const lines = said(reply(dropped.blocks, dropped.state, kracht.strings))
-    expect(lines.length).toBeGreaterThan(1)
-    expect(lines.some((line) => line.includes('Isolate'))).toBe(true)
+    const rescued = reply(dropped.blocks, dropped.state, kracht.strings)
+    expect(said(rescued)[0]).toBe(kracht.strings['recommend.lead'])
+    expect(recommended(rescued).length).toBeGreaterThan(0)
+    expect(recommended(rescued).some((title) => title.includes('Isolate'))).toBe(true)
 
     const restored = step(dropped.state, { type: 'restore-chip', id: 'chip-price' })
     expect(said(reply(restored.blocks, restored.state, kracht.strings)).join(' ')).toContain(
@@ -181,10 +192,15 @@ describe('the obstacle sentence', () => {
   test('the brand that resolves happily says so, in its own voice', async () => {
     const catalog = await loadCatalog('packages/agent/src/brain/catalog.velde.json')
     const opening = step(createBrain(catalog), { type: 'message', text: VELDE_OPENING })
-    const lines = said(reply(opening.blocks, opening.state, velde.strings))
-    expect(lines.length).toBeGreaterThan(1)
+    const blocks = reply(opening.blocks, opening.state, velde.strings)
+    const lines = said(blocks)
     expect(lines[0]).toBe('Matches:')
-    expect(lines.filter((line) => line.includes('€245')).length).toBeGreaterThan(0)
+    // The price now lives on the card, not in prose, so the assertion reads the block's own
+    // product. Derived from the catalog rather than pinned, for the reason stated above.
+    const cheapest = Math.min(
+      ...blocks.flatMap((b) => (b.kind === 'product-card' ? [b.product.price] : [])),
+    )
+    expect(cheapest).toBe(245)
     expect(lines.join(' ')).not.toContain('except')
   })
 

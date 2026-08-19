@@ -9,9 +9,13 @@ import type { MxAgent } from './widget'
  * The seam: shell events in, brain blocks out. The shell owns no conversation logic and the brain
  * owns no DOM, so this file is the only place that knows both exist.
  *
- * ponytail: five of the seven renderers still throw (T5 owns them), so a product/obstacle block is
- * flattened to `text` here using templates from the config payload. When T5 lands, `flatten` loses
- * those cases and the blocks go straight through — the FSM already emits the right ones.
+ * T5 landed, so every block now has a real renderer and passes straight through. Two things still
+ * happen here, and both are the same rule: copy belongs to the merchant, not to the brain.
+ *   - `quick-replies` carries a hardcoded English prompt built in `fsm.ts`. It is replaced with the
+ *     merchant's own `clarify` string on the way past.
+ *   - `no-match` is preceded by the obstacle SENTENCE, built from the merchant's template plus
+ *     arithmetic [PRINCIPLES §8]. The card that follows shows the near misses; the sentence is what
+ *     names the blocking constraint and quantifies it.
  */
 
 /** Reads one string off a `CustomEvent.detail` without trusting its shape. No `as`. */
@@ -42,9 +46,9 @@ function money(product: Product): string {
   }).format(product.price)
 }
 
-function item(strings: Record<string, string>, product: Product): string {
-  return fill(str(strings, 'recommend.item'), { title: product.title, price: money(product) })
-}
+// `recommend.item` is still in the payload and is no longer read: the product card renders title
+// and price itself now. The key stays because an embed script pasted last month is a binary we
+// cannot recall and may still be reading it — fields are added, never removed. [ENGINEERING §2.2]
 
 /** Plural forms are copy, not code: the merchant owns both halves. */
 function countPhrase(strings: Record<string, string>, n: number): string {
@@ -77,21 +81,24 @@ function obstacleText(
   })
 }
 
-function flatten(block: Block, state: BrainState, strings: Record<string, string>): Block[] {
+/**
+ * The brain's blocks, with every string it built itself replaced by one the merchant owns. The
+ * FSM is deliberately brand-blind, so the two literals it does produce — the clarify prompt and a
+ * product card's `reason` — must not reach a shopper. `reason` is dropped by the renderer;
+ * the prompt is swapped here, where the payload is in scope.
+ */
+function voice(block: Block, state: BrainState, strings: Record<string, string>): Block[] {
   switch (block.kind) {
     case 'text':
     case 'chips-update':
+    case 'product-card':
+    case 'product-compare':
+    case 'cta':
       return [block]
     case 'quick-replies':
-      return [text(str(strings, 'clarify'))]
-    case 'product-card':
-      return [text(item(strings, block.product))]
-    case 'product-compare':
-      return block.products.map((product) => text(item(strings, product)))
+      return [{ ...block, prompt: str(strings, 'clarify') }]
     case 'no-match':
-      return [text(obstacleText(block, state, strings))]
-    case 'cta':
-      return [text(block.label)]
+      return [text(obstacleText(block, state, strings)), block]
     default: {
       const _exhaustive: never = block
       throw new Error(`maximal: unknown block ${JSON.stringify(_exhaustive)}`)
@@ -116,9 +123,15 @@ export function reply(
     if (block.kind === 'product-card' && !out.some((b) => b.kind === 'text')) {
       out.push(text(str(strings, 'recommend.lead')))
     }
-    out.push(...flatten(block, state, strings))
+    out.push(...voice(block, state, strings))
   }
-  if (!out.some((b) => b.kind === 'text')) {
+  // The predicate is "the turn answered nothing", not "the turn produced no prose". Before T5 the
+  // two were the same thing only because every block was flattened into text; testing for prose
+  // now would staple "Nothing in the range does all of that" underneath every clarify prompt and
+  // every CTA. A `chips-update` is the only block that is not an answer — it echoes the brief back
+  // — so a turn that produced nothing else still owes the shopper a sentence. [ENGINEERING §2.9]
+  const answered = out.some((block) => block.kind !== 'chips-update')
+  if (!answered) {
     const key = state.catalog.length === 0 ? 'catalog.offline' : 'no-results'
     out.push(text(str(strings, key)))
   }

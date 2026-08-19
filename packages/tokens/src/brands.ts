@@ -75,3 +75,44 @@ export const KRACHT_VOICE: Voice = {
   greeting: "What are you training for? Tell me what you need and I'll filter as we go.",
   tone: 'warm',
 }
+
+/**
+ * The neutral brand `/v1/config/:shopKey` answers with when it does not know the key — a typo in
+ * `data-shop`, a merchant who has not finished onboarding, a stale embed. It lives here, with the
+ * other brand literals, because ENGINEERING §1.2 puts every colour in `packages/tokens` and
+ * nowhere else.
+ *
+ * Deliberately nobody's brand rather than somebody else's: `config.ts`'s standing rule is that a
+ * widget wearing another merchant's identity is worse than no widget, and a neutral greyscale
+ * ground with a blue accent belongs to no one in this repo. Middle-of-the-road on every axis
+ * (`regular`/`sm`/`soft`/`sentence`/`comfortable`) so nothing about it reads as a design choice
+ * made on the merchant's behalf.
+ */
+export const DEFAULT_BRAND: MerchantTokens = {
+  accent: '#3A5BC7',
+  surface: '#FFFFFF',
+  fontDisplay: {
+    family: 'Inter',
+    weight: 600,
+    href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap',
+  },
+  fontBody: {
+    family: 'Inter',
+    weight: 400,
+    href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap',
+  },
+  scale: 'regular',
+  radius: 'sm',
+  elevation: 'soft',
+  labelCase: 'sentence',
+  density: 'comfortable',
+  launcher: { style: 'pill', position: 'bottom-right' },
+}
+
+/** No name and no face: the default has no persona to borrow. */
+export const DEFAULT_VOICE: Voice = {
+  name: 'Shop assistant',
+  avatar: null,
+  greeting: 'Tell me what you are looking for and I will help you narrow it down.',
+  tone: 'neutral',
+}

@@ -12,7 +12,7 @@
     "format": "biome check --write .",
     "build": "bun run --filter '@maximal/agent' build",
     "build:config": "bun run tools/build-config.ts",
-    "dev:platform": "bun run tools/serve-platform.ts",
+    "dev:platform": "bun run build && bun run apps/platform/server.ts",
     "dev:velde": "bun run apps/shop-velde/server.ts",
     "dev:kracht": "cd apps/shop-kracht && bun run dev",
     "test:e2e": "playwright test -c e2e/playwright.config.ts",

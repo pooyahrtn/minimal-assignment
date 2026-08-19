@@ -1,0 +1,83 @@
+{
+  "tokens": {
+    "css": {
+      "--mx-accent": "#3a5bc7",
+      "--mx-text-on-accent": "#ffffff",
+      "--mx-surface": "#ffffff",
+      "--mx-surface-raised": "#ebebeb",
+      "--mx-surface-sunken": "#ffffff",
+      "--mx-border": "#d7d7d7",
+      "--mx-text-primary": "#000000",
+      "--mx-text-muted": "#6a6a6a",
+      "--mx-focus-ring": "#000000",
+      "--mx-overlay-scrim": "rgba(0, 0, 0, 0.45)",
+      "--mx-space-1": "4px",
+      "--mx-space-2": "8px",
+      "--mx-space-3": "16px",
+      "--mx-space-4": "24px",
+      "--mx-space-5": "32px",
+      "--mx-radius-sm": "4px",
+      "--mx-radius-md": "6px",
+      "--mx-radius-lg": "8px",
+      "--mx-shadow-1": "0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08)",
+      "--mx-shadow-2": "0 8px 24px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.1)",
+      "--mx-font-display": "'Inter', system-ui, sans-serif",
+      "--mx-font-body": "'Inter', system-ui, sans-serif",
+      "--mx-text-xs": "12px",
+      "--mx-text-sm": "14px",
+      "--mx-text-md": "16px",
+      "--mx-text-lg": "20px",
+      "--mx-label-transform": "none",
+      "--mx-label-tracking": "normal",
+      "--mx-line-height": "1.55"
+    },
+    "labelCase": "sentence",
+    "launcher": {
+      "style": "pill",
+      "position": "bottom-right"
+    },
+    "fonts": {
+      "display": {
+        "family": "Inter",
+        "weight": 600,
+        "href": "https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+      },
+      "body": {
+        "family": "Inter",
+        "weight": 400,
+        "href": "https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+      }
+    }
+  },
+  "voice": {
+    "name": "Shop assistant",
+    "avatar": null,
+    "greeting": "Tell me what you are looking for and I will help you narrow it down.",
+    "tone": "neutral"
+  },
+  "strings": {
+    "launcher.label": "Help me choose",
+    "panel.close": "Close",
+    "chips.legend": "Looking for",
+    "chips.drop": "Drop {label}",
+    "chips.restore": "Put {label} back",
+    "composer.placeholder": "What are you looking for?",
+    "composer.send": "Send",
+    "clarify": "Tell me what you need and I will narrow it down.",
+    "recommend.lead": "Here is what fits:",
+    "recommend.item": "{title} · {price}",
+    "obstacle.text": "Nothing matches all of it. {options} everything except “{blocking}”. Closest: {closest}. Tap “{blocking}” to drop it, or drop something else instead.",
+    "obstacle.count.one": "One option fits",
+    "obstacle.count.many": "{n} options fit",
+    "card.specs": "Details",
+    "card.outofstock": "Out of stock",
+    "card.noimage": "No image",
+    "card.view": "View",
+    "nomatch.heading": "Closest without “{blocking}”",
+    "nomatch.drop": "Drop “{blocking}” and show these",
+    "compare.heading": "Side by side",
+    "no-results": "Nothing matches all of that. Drop a filter and I will look again.",
+    "catalog.offline": "This shop is not set up yet, so I cannot show you products. Tell the shop owner their embed key does not match a configured shop."
+  },
+  "catalog": []
+}

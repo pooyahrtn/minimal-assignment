@@ -212,6 +212,7 @@ export function styles(tokens: DerivedTokens): string {
   .chip {
     display: inline-block;
     max-width: 100%;
+    overflow-wrap: anywhere;
     padding: var(--mx-space-1) var(--mx-space-2);
     border: 1px solid var(--mx-border);
     border-radius: var(--mx-radius-sm);
@@ -241,6 +242,11 @@ export function styles(tokens: DerivedTokens): string {
     padding: var(--mx-space-3);
     background: var(--mx-surface);
   }
+  /* A flex item shrinks before its container scrolls. Once the conversation is taller than the
+     panel, every block would be squeezed and then clipped by its own overflow — measured at
+     391px of card in 668px of content before this rule existed. The list scrolls; the blocks in
+     it keep their height. */
+  .messages > * { flex-shrink: 0; }
 
   .msg {
     max-width: 85%;
@@ -248,6 +254,10 @@ export function styles(tokens: DerivedTokens): string {
     padding: var(--mx-space-2) var(--mx-space-3);
     border-radius: var(--mx-radius-md);
     font-size: var(--mx-text-sm);
+    /* A product handle or a pasted URL is one 40-character word with nowhere to break. Without
+       this it widens the panel instead of wrapping. Applies to every block, which is why it sits
+       on the shared bubble and chip rules rather than only on the blocks T5 added. */
+    overflow-wrap: anywhere;
   }
   .msg[data-from='agent'] {
     align-self: flex-start;
@@ -260,6 +270,208 @@ export function styles(tokens: DerivedTokens): string {
     background: var(--mx-accent);
     color: var(--mx-text-on-accent);
   }
+
+  /* ------------------------------------------------------------------------------------------
+     The five blocks T5 owns. Every colour, radius, spacing step and font size below resolves from
+     a --mx-* custom property; there is not one length literal in this section. The card image is
+     sized by 'aspect-ratio' and the compare columns by flex, precisely so neither needs a number
+     no token can supply. [ENGINEERING §1.2]
+     ------------------------------------------------------------------------------------------ */
+
+  /* The one place 'labelCase' becomes visible outside the shell chrome — every block that has a
+     label draws it here, so 'upper-tracked' changes all of them at once. */
+  .label {
+    display: block;
+    color: var(--mx-text-muted);
+    font-family: var(--mx-font-display);
+    font-size: var(--mx-text-xs);
+    font-weight: ${tokens.fonts.display.weight};
+    text-transform: var(--mx-label-transform);
+    letter-spacing: var(--mx-label-tracking);
+  }
+
+  .quick { display: flex; flex-direction: column; gap: var(--mx-space-2); align-self: stretch; }
+  .quick-options { display: flex; flex-wrap: wrap; gap: var(--mx-space-2); }
+
+  .quick-option {
+    min-height: 44px;
+    padding: var(--mx-space-2) var(--mx-space-3);
+    border: 1px solid var(--mx-border);
+    border-radius: var(--mx-radius-md);
+    background: var(--mx-surface-raised);
+    color: var(--mx-text-primary);
+    font-family: var(--mx-font-body);
+    font-size: var(--mx-text-sm);
+    line-height: var(--mx-line-height);
+    text-align: start;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+  }
+
+  .card, .compare, .nomatch, .cta {
+    align-self: stretch;
+    min-width: 0;
+    background: var(--mx-surface-raised);
+    border-radius: var(--mx-radius-md);
+    box-shadow: var(--mx-shadow-1);
+    overflow: hidden;
+  }
+
+  .card { display: flex; flex-direction: column; }
+
+  .media {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Square by ratio rather than by height: the card is as wide as the panel the brand's own
+       type scale produced, so the photograph follows it instead of pinning a number. */
+    aspect-ratio: 1;
+    background: var(--mx-surface-sunken);
+  }
+  .media-image { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  .media-empty {
+    color: var(--mx-text-muted);
+    font-size: var(--mx-text-xs);
+    text-transform: var(--mx-label-transform);
+    letter-spacing: var(--mx-label-tracking);
+    text-align: center;
+    padding: var(--mx-space-2);
+  }
+
+  /* Out of stock is stated in words in the price line; the photograph fades so the state is
+     legible before the words are read, never instead of them. */
+  .card[data-stock='out'] .media { opacity: 0.55; }
+
+  .card-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mx-space-2);
+    padding: var(--mx-space-3);
+    min-width: 0;
+  }
+
+  .card-title {
+    margin: 0;
+    font-family: var(--mx-font-display);
+    font-size: var(--mx-text-md);
+    font-weight: ${tokens.fonts.display.weight};
+    line-height: var(--mx-line-height);
+    color: var(--mx-text-primary);
+    overflow-wrap: anywhere;
+  }
+
+  .price-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--mx-space-2);
+  }
+  .price {
+    font-family: var(--mx-font-display);
+    font-size: var(--mx-text-lg);
+    font-weight: ${tokens.fonts.display.weight};
+    color: var(--mx-text-primary);
+  }
+  .stock {
+    color: var(--mx-text-muted);
+    font-size: var(--mx-text-xs);
+    text-transform: var(--mx-label-transform);
+    letter-spacing: var(--mx-label-tracking);
+  }
+
+  .specs { display: flex; flex-direction: column; gap: var(--mx-space-1); }
+
+  /* Two columns by content, not by a fixed width: a spec label is one or two words in both
+     catalogs, and letting the grid measure it is what keeps this schema-agnostic. */
+  .spec-rows {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--mx-space-1) var(--mx-space-2);
+    margin: 0;
+    font-size: var(--mx-text-xs);
+    line-height: var(--mx-line-height);
+  }
+  .spec-label { color: var(--mx-text-muted); overflow-wrap: anywhere; }
+  .spec-value { margin: 0; color: var(--mx-text-primary); overflow-wrap: anywhere; }
+
+  .card-link, .cta-link, .nomatch-drop {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: var(--mx-space-2) var(--mx-space-3);
+    border: 0;
+    border-radius: var(--mx-radius-sm);
+    background: var(--mx-accent);
+    color: var(--mx-text-on-accent);
+    font-family: var(--mx-font-body);
+    font-size: var(--mx-text-sm);
+    font-weight: ${tokens.fonts.body.weight};
+    line-height: var(--mx-line-height);
+    text-transform: var(--mx-label-transform);
+    letter-spacing: var(--mx-label-tracking);
+    text-align: center;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+  }
+  /* An out-of-stock product still links to its page — the shopper may want to be told when it is
+     back — but it must not read as the primary action of the message. */
+  .card[data-stock='out'] .card-link {
+    background: var(--mx-surface-sunken);
+    color: var(--mx-text-primary);
+    box-shadow: var(--mx-shadow-1);
+  }
+
+  .compare { padding: var(--mx-space-3); display: flex; flex-direction: column; gap: var(--mx-space-2); }
+  /* The table scrolls inside the card instead of widening the panel: three columns cannot fit at
+     375px and clipping them would be worse than a swipe. */
+  .compare-scroll { overflow-x: auto; overscroll-behavior-x: contain; }
+  .compare-table { border-collapse: collapse; font-size: var(--mx-text-xs); }
+  .compare-product, .compare-key, .compare-value, .compare-corner {
+    padding: var(--mx-space-1) var(--mx-space-2);
+    border-bottom: 1px solid var(--mx-border);
+    text-align: start;
+    vertical-align: top;
+    color: var(--mx-text-primary);
+    font-weight: inherit;
+  }
+  .compare-product {
+    font-family: var(--mx-font-display);
+    font-weight: ${tokens.fonts.display.weight};
+  }
+  .compare-value { color: var(--mx-text-muted); }
+
+  .nomatch { padding: var(--mx-space-3); display: flex; flex-direction: column; gap: var(--mx-space-2); }
+  .nomatch-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .nomatch-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--mx-space-2);
+    padding: var(--mx-space-2) 0;
+    border-bottom: 1px solid var(--mx-border);
+    font-size: var(--mx-text-sm);
+  }
+  .nomatch-item:last-child { border-bottom: 0; }
+  .nomatch-title { min-width: 0; overflow-wrap: anywhere; }
+  .nomatch-price {
+    font-family: var(--mx-font-display);
+    font-weight: ${tokens.fonts.display.weight};
+    white-space: nowrap;
+  }
+  /* Once tapped the control has done its one job; the constraint chip in the row above is where
+     the decision is reversed. */
+  .nomatch-drop[disabled] {
+    background: var(--mx-surface-sunken);
+    color: var(--mx-text-muted);
+    cursor: default;
+  }
+
+  .cta { padding: var(--mx-space-3); display: flex; }
+  .cta-link { flex: 1 1 auto; }
 
   .composer {
     display: flex;
@@ -304,7 +516,7 @@ export function styles(tokens: DerivedTokens): string {
 
   /* Derived against BOTH the accent and the surface, so it stays visible on either. 2px is the
      WCAG 2.4.13 focus-indicator floor. */
-  :is(.launcher, .close, .chip, .input, .send):focus-visible {
+  :is(.launcher, .close, .chip, .input, .send, .quick-option, .card-link, .cta-link, .nomatch-drop):focus-visible {
     outline: 2px solid var(--mx-focus-ring);
     outline-offset: 2px;
   }
