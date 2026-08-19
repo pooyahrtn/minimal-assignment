@@ -195,7 +195,7 @@ async function runExtract(url: string): Promise<void> {
     }
   }
   extractBtn.disabled = false
-  extractBtn.textContent = 'Read my store'
+  extractBtn.textContent = 'Start'
   openReview(url)
 }
 
@@ -541,12 +541,16 @@ function nlGroup(): HTMLElement {
   return section
 }
 
+/** One guard for both the snippet box and the Save button in the action bar: an accent nobody can
+ *  see must not reach a storefront, and a snippet is only half of how it would get there. */
+function saveBlocked(tokens: MerchantTokens): boolean {
+  return !readabilityReport(tokens).accentOnSurface.meets && acknowledgedPair !== pairKey(tokens)
+}
+
 function snippetGroup(tokens: MerchantTokens): HTMLElement {
   const section = group('Install it')
-  const blocked =
-    !readabilityReport(tokens).accentOnSurface.meets && acknowledgedPair !== pairKey(tokens)
 
-  if (blocked) {
+  if (saveBlocked(tokens)) {
     section.append(
       el(
         'p',
@@ -562,21 +566,6 @@ function snippetGroup(tokens: MerchantTokens): HTMLElement {
   box.readOnly = true
   box.value = published?.snippet ?? '<!-- Copy this once your settings are final. -->'
   section.append(box)
-
-  const actions = el('div', 'warn-actions')
-  const copy = el(
-    'button',
-    'btn btn-primary',
-    published === null
-      ? 'Publish & copy snippet'
-      : dirtySincePublish
-        ? 'Publish changes & copy'
-        : 'Copy snippet',
-  )
-  copy.type = 'button'
-  copy.addEventListener('click', () => void publish(box, copy))
-  actions.append(copy)
-  section.append(actions)
 
   const verify = el('div', 'verify')
   if (published === null) {
@@ -600,7 +589,7 @@ function snippetGroup(tokens: MerchantTokens): HTMLElement {
   return section
 }
 
-async function publish(box: HTMLTextAreaElement, button: HTMLButtonElement): Promise<void> {
+async function publish(button: HTMLButtonElement): Promise<void> {
   if (editor === null) return
   button.disabled = true
   try {
@@ -627,7 +616,6 @@ async function publish(box: HTMLTextAreaElement, button: HTMLButtonElement): Pro
     ) {
       const first = published === null
       published = { shopKey: body.shopKey, snippet: body.snippet }
-      box.value = body.snippet
       if (first) watchForInstall(body.shopKey)
     }
     dirtySincePublish = false
@@ -696,14 +684,33 @@ function render(): void {
   rail.append(readabilityPanel(readabilityReport(tokens)))
   rail.append(snippetGroup(tokens))
 
+  // The bar carries the page's one commit action, so it is reachable from anywhere in a rail
+  // that scrolls past a screenful. Undo and reset keep their place beside it as ghosts, and their
+  // long forms move to the accessible name: three full labels in a 27rem column is a wrapped bar.
   const actions = el('div', 'rail-actions')
-  const undo = el('button', 'btn btn-ghost', editor.canUndo ? `Undo ${editor.undoLabel}` : 'Undo')
+  if (!saveBlocked(tokens)) {
+    const save = el(
+      'button',
+      'btn btn-primary',
+      published === null
+        ? 'Save & copy snippet'
+        : dirtySincePublish
+          ? 'Save changes & copy'
+          : 'Copy snippet',
+    )
+    save.type = 'button'
+    save.addEventListener('click', () => void publish(save))
+    actions.append(save)
+  }
+  const undo = el('button', 'btn btn-ghost', 'Undo')
   undo.type = 'button'
   undo.disabled = !editor.canUndo
+  if (editor.canUndo) undo.setAttribute('aria-label', `Undo ${editor.undoLabel}`)
   undo.addEventListener('click', () => editor?.undo())
-  const reset = el('button', 'btn btn-ghost', 'Reset to what we found')
+  const reset = el('button', 'btn btn-ghost', 'Reset')
   reset.type = 'button'
   reset.disabled = editor.isDetected
+  reset.setAttribute('aria-label', 'Reset to what we found')
   reset.addEventListener('click', () => editor?.resetToDetected())
   actions.append(undo, reset)
   rail.append(actions)

@@ -19,6 +19,7 @@
     <!-- 1. Paste your store URL. -->
     <main class="paste" id="paste">
       <div class="paste-inner">
+        <p class="eyebrow">Step 1 of 2</p>
         <h1>Point us at your store.</h1>
         <p class="lede">
           We read your palette, your type and your corners off the page you already ship — then
@@ -38,15 +39,19 @@
               autocomplete="url"
               spellcheck="false"
             />
-            <button class="btn btn-primary" type="submit" id="extract-btn">Read my store</button>
+            <button class="btn btn-primary btn-lg" type="submit" id="extract-btn">Start</button>
           </div>
-          <p class="hint" id="paste-hint">
-            Try <button class="linkish" type="button" data-fill="http://localhost:4001">the VELDE
-            store</button> or <button class="linkish" type="button" data-fill="http://localhost:4002">KRACHT</button>.
-            You can also <button class="linkish" type="button" id="skip-extract">skip this and set
-            it up by hand</button>.
-          </p>
+          <div class="paste-alt">
+            <span class="paste-alt-label">No store to hand? Read one of ours:</span>
+            <button class="chip" type="button" data-fill="http://localhost:4001">VELDE</button>
+            <button class="chip" type="button" data-fill="http://localhost:4002">KRACHT</button>
+          </div>
         </form>
+        <p class="hint">
+          You can also
+          <button class="linkish" type="button" id="skip-extract">set it up by hand</button>
+          — we start from neutral defaults and nothing is read off your site.
+        </p>
       </div>
     </main>
 

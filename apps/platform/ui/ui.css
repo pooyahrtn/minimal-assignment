@@ -13,8 +13,11 @@
  * anywhere in this file. The rest:
  *
  *   - Page geometry the widget's five-step ramp has no opinion about: `--rail-w` 27rem,
- *     `--phone-w` 375px, the 4.5rem topbar height, 40rem/34rem prose measures, 60vh on the mobile
- *     preview frame, 2.75rem swatches, 1rem/0.5rem dots and chips.
+ *     `--phone-w` 375px, `--topbar-h` 4.5rem, 40rem/34rem prose measures, the 8rem floor under
+ *     the submit button, 60vh on the mobile preview frame, 2.75rem swatches, 1rem/0.5rem dots
+ *     and chips.
+ *   - Interaction feel, which no token carries: one 120ms transition duration and the two
+ *     `brightness()` steps the primary button darkens by on hover and press.
  *   - `999px` on the status dot and `3px` on the warning rule — a fully-round dot and a hairline
  *     accent are shapes by definition, the same reasoning `css.ts` uses for pill launchers.
  *   - Two derived-but-multiplied headline sizes, `calc(var(--mx-text-lg) * 1.7)` and `* 1.35`.
@@ -34,11 +37,25 @@
   /* The rail is sized to the longest control label plus its value, not to a round number. */
   --rail-w: 27rem;
   --phone-w: 375px;
+  /* Declared once and USED by the header, because both screens size themselves against it. It
+     was a 4.5rem literal in two `calc`s while the header itself measured 63px, so screen one
+     asked for 9px more than the viewport had and the page carried a scrollbar it did not need. */
+  --topbar-h: 4.5rem;
   --hairline: 1px;
+  --dur: 120ms;
 }
 
 * {
   box-sizing: border-box;
+}
+
+/* Every transition above is decoration; none of them carries meaning that survives its removal. */
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .chip,
+  .input {
+    transition: none;
+  }
 }
 
 body {
@@ -55,9 +72,10 @@ body {
 
 .topbar {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: var(--mx-space-2);
-  padding: var(--mx-space-3) var(--mx-space-4);
+  height: var(--topbar-h);
+  padding: 0 var(--mx-space-4);
   background: var(--mx-surface);
   border-bottom: var(--hairline) solid var(--mx-border);
 }
@@ -86,12 +104,22 @@ body {
   place-items: center;
   /* The topbar is the only other thing on the page; filling the rest centres the one question
      this screen asks instead of stranding it under a masthead. */
-  min-height: calc(100vh - 4.5rem);
-  padding: var(--mx-space-4);
+  min-height: calc(100vh - var(--topbar-h));
+  padding: var(--mx-space-5) var(--mx-space-4);
 }
 
 .paste-inner {
   width: min(100%, 40rem);
+}
+
+/* A two-screen flow that never says so is a flow the merchant cannot place themselves in. */
+.eyebrow {
+  margin: 0 0 var(--mx-space-2);
+  color: var(--mx-text-muted);
+  font-size: var(--mx-text-xs);
+  font-weight: 600;
+  text-transform: var(--mx-label-transform);
+  letter-spacing: var(--mx-label-tracking);
 }
 
 h1 {
@@ -112,9 +140,20 @@ h1 {
   font-size: var(--mx-text-md);
 }
 
+/* The form is a card and the page around it is not: this surface is near-white, so an edge is the
+   only thing separating "the one question" from "the empty page it floats on". */
+.paste-form {
+  padding: var(--mx-space-4);
+  background: var(--mx-surface);
+  border: var(--hairline) solid var(--mx-border);
+  border-radius: var(--mx-radius-lg);
+  box-shadow: var(--mx-shadow-1);
+}
+
 .paste-row {
   display: flex;
   gap: var(--mx-space-2);
+  margin-top: var(--mx-space-1);
 }
 
 .paste-row > input {
@@ -122,8 +161,37 @@ h1 {
   min-width: 0;
 }
 
+/* The submit button opts OUT of the shrink-to-ellipsis every other `.btn` needs. That rule exists
+   for the rail, whose labels are the merchant's own arbitrarily long phrases; here the label is
+   ours and it is the only action on the screen. `.input` carries `width: 100%`, which resolves to
+   a flex basis of the whole row, so the row always overflowed and the button always paid for it —
+   at every viewport width, not just narrow ones. It read "Read my …". */
+.paste-row > .btn {
+  flex: 0 0 auto;
+  /* Held at the width of the LONGER label: this button says "Reading…" for the length of the
+     extract, and a primary action that resizes mid-submit reads as a glitch. */
+  min-width: 8rem;
+}
+
+/* Two demo stores as things to press. They were three underlined phrases in one sentence, which
+   gave "fill this field for me" and "leave this screen" the same affordance. */
+.paste-alt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mx-space-2);
+  margin-top: var(--mx-space-3);
+  padding-top: var(--mx-space-3);
+  border-top: var(--hairline) solid var(--mx-border);
+}
+
+.paste-alt-label {
+  color: var(--mx-text-muted);
+  font-size: var(--mx-text-sm);
+}
+
 .hint {
-  margin: var(--mx-space-2) 0 0;
+  margin: var(--mx-space-3) 0 0;
   color: var(--mx-text-muted);
   font-size: var(--mx-text-sm);
 }
@@ -135,7 +203,7 @@ h1 {
   grid-template-columns: var(--rail-w) minmax(0, 1fr);
   /* Each column scrolls on its own: dragging a colour at the bottom of the rail must not scroll
      the preview out of the frame. */
-  height: calc(100vh - 4.5rem);
+  height: calc(100vh - var(--topbar-h));
 }
 
 /* One variable for the rail's inset, because the sticky action bar cancels it with a negative
@@ -145,9 +213,10 @@ h1 {
   --rail-pad: var(--mx-space-4);
   overflow-y: auto;
   padding: var(--rail-pad);
-  /* Room for the sticky action bar to sit over, so the last control can still scroll clear of
-     it rather than hiding underneath. */
-  padding-bottom: calc(var(--mx-space-5) + var(--rail-pad));
+  /* No extra bottom reserve: the sticky bar is the last child and stays in flow, so it IS the
+     bottom padding. Reserving space under it left the bar clamped a gap above the column's
+     bottom edge with rows scrolling through the gap underneath it. */
+  padding-bottom: 0;
   background: var(--mx-surface);
   border-right: var(--hairline) solid var(--mx-border);
 }
@@ -270,18 +339,26 @@ h1 {
 
 .input {
   width: 100%;
-  padding: var(--mx-space-2);
-  background: var(--mx-surface);
+  padding: var(--mx-space-2) var(--mx-space-3);
+  /* One step away from whatever it sits on — the card and the rail are both `--mx-surface`, and a
+     field the same colour as its container is a field found only by its hairline. */
+  background: var(--mx-surface-sunken);
   color: var(--mx-text-primary);
   border: var(--hairline) solid var(--mx-border);
   border-radius: var(--mx-radius-sm);
   font-family: var(--mx-font-body);
   font-size: var(--mx-text-md);
   line-height: var(--mx-line-height);
+  transition: border-color var(--dur) ease;
+}
+
+.input:focus {
+  border-color: var(--mx-accent);
 }
 
 .input:focus-visible,
 .btn:focus-visible,
+.chip:focus-visible,
 .swatch:focus-visible,
 .seg button:focus-visible,
 .linkish:focus-visible {
@@ -376,11 +453,35 @@ h1 {
   line-height: var(--mx-line-height);
   cursor: pointer;
   white-space: nowrap;
+  transition:
+    filter var(--dur) ease,
+    background-color var(--dur) ease;
 }
 
 .btn-primary {
   background: var(--mx-accent);
   color: var(--mx-text-on-accent);
+}
+
+/* Brightness, not a second accent: the merchant's accent is the only brand colour this page is
+   allowed to have, and darkening it is the one hover that works for every hue they might pick.
+   ponytail: fails to read on an already-black accent; a derived `--mx-accent-hover` if that lands. */
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(0.92);
+}
+.btn-primary:active:not(:disabled) {
+  filter: brightness(0.85);
+}
+
+.btn-ghost:hover:not(:disabled),
+.seg button:hover:not([aria-pressed="true"]) {
+  background: var(--mx-surface-raised);
+}
+
+/* The single primary action on screen one, sized like one rather than like a rail control. */
+.btn-lg {
+  padding: var(--mx-space-2) var(--mx-space-4);
+  font-size: var(--mx-text-md);
 }
 
 .btn-ghost {
@@ -406,19 +507,52 @@ h1 {
   cursor: pointer;
 }
 
+.linkish:hover {
+  text-decoration-thickness: 2px;
+}
+
+/* A demo store is a suggestion, not the primary path: bordered and quiet, next to the field it
+   fills. */
+.chip {
+  padding: var(--mx-space-1) var(--mx-space-2);
+  background: var(--mx-surface-sunken);
+  color: var(--mx-text-primary);
+  border: var(--hairline) solid var(--mx-border);
+  border-radius: var(--mx-radius-sm);
+  font-family: var(--mx-font-body);
+  font-size: var(--mx-text-sm);
+  font-weight: 600;
+  line-height: var(--mx-line-height);
+  cursor: pointer;
+  transition:
+    background-color var(--dur) ease,
+    border-color var(--dur) ease;
+}
+
+.chip:hover {
+  background: var(--mx-surface-raised);
+  border-color: var(--mx-text-muted);
+}
+
 /* Solid, not a fade: a gradient lets the control behind it show through at 30% opacity, which
    reads as a rendering bug rather than a layer. It is pulled out to the rail's own padding so the
    bar spans the full column edge to edge. */
 .rail-actions {
   min-width: 0;
   position: sticky;
-  bottom: calc(var(--rail-pad) * -1);
+  bottom: 0;
   display: flex;
+  align-items: center;
   gap: var(--mx-space-2);
-  margin: var(--mx-space-3) calc(var(--rail-pad) * -1) calc(var(--rail-pad) * -1);
+  margin: var(--mx-space-3) calc(var(--rail-pad) * -1) 0;
   padding: var(--mx-space-3) var(--rail-pad);
   background: var(--mx-surface);
   border-top: var(--hairline) solid var(--mx-border);
+}
+
+/* The one commit action on the page: it takes the room, the two ghosts take what is left. */
+.rail-actions .btn-primary {
+  flex: 1 1 auto;
 }
 
 /* --------------------------------------------------------------------------- found / states -- */
@@ -533,10 +667,13 @@ h1 {
   margin-top: var(--mx-space-2);
 }
 
+/* Baseline, not centre: the description wraps to two lines and a vertically centred group label
+   floats against the middle of them. The label belongs on the first line's baseline. */
 .delta {
   display: flex;
+  align-items: baseline;
   gap: var(--mx-space-2);
-  padding: var(--mx-space-1) var(--mx-space-2);
+  padding: var(--mx-space-2);
   background: var(--mx-surface-raised);
   border-radius: var(--mx-radius-sm);
   font-size: var(--mx-text-sm);
@@ -548,7 +685,6 @@ h1 {
   text-transform: var(--mx-label-transform);
   letter-spacing: var(--mx-label-tracking);
   font-size: var(--mx-text-xs);
-  align-self: center;
 }
 
 /* --------------------------------------------------------------------------------- snippet -- */
@@ -613,6 +749,10 @@ h1 {
 
   h1 {
     font-size: calc(var(--mx-text-lg) * 1.35);
+  }
+
+  .paste-form {
+    padding: var(--mx-space-3);
   }
 
   .paste-row {

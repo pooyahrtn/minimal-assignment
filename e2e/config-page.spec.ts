@@ -30,7 +30,7 @@ test('box 1: URL to a copyable snippet without typing a hex code', async ({ page
   await page.getByRole('button', { name: /^Use #/ }).click()
 
   await expect(page.getByText('Your accent disappears')).toHaveCount(0)
-  const publish = page.getByRole('button', { name: /Publish & copy snippet/ })
+  const publish = page.getByRole('button', { name: /Save & copy snippet/ })
   await expect(publish).toBeVisible()
   await publish.click()
 
@@ -92,7 +92,7 @@ test('box 4: no configuration reachable here can ship an illegible widget', asyn
   await expect(
     page.getByText('we will not hand you a snippet that installs an invisible button'),
   ).toBeVisible()
-  await expect(page.getByRole('button', { name: /Publish & copy snippet/ })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: /Save & copy snippet/ })).toHaveCount(0)
 
   // And the text inside the widget is still guaranteed — every listed pair clears its floor.
   const failing = page.locator('.ratio[data-meets="false"]')
@@ -263,7 +263,7 @@ test('the page itself works at this viewport with no horizontal overflow', async
 test('republishing updates the config the snippet already points at', async ({ page }) => {
   await openReview(page)
   await page.getByRole('button', { name: /^Use #/ }).click()
-  await page.getByRole('button', { name: /Publish & copy snippet/ }).click()
+  await page.getByRole('button', { name: /Save & copy snippet/ }).click()
 
   // A retrying assertion, not a bare read: the POST is in flight when the click resolves, and a
   // plain `inputValue()` raced it under full parallelism — it passed in isolation and flaked at
@@ -284,8 +284,8 @@ test('republishing updates the config the snippet already points at', async ({ p
   const accentHex = page.locator('.colour-row input[type="text"]').first()
   await accentHex.fill('#FF0055')
   await accentHex.blur()
-  await expect(page.getByRole('button', { name: /Publish changes & copy/ })).toBeVisible()
-  await page.getByRole('button', { name: /Publish changes & copy/ }).click()
+  await expect(page.getByRole('button', { name: /Save changes & copy/ })).toBeVisible()
+  await page.getByRole('button', { name: /Save changes & copy/ }).click()
 
   await expect.poll(served, { timeout: 15_000 }).not.toBe(first)
   expect(await served()).toBe('#ff0055')
@@ -301,13 +301,13 @@ test('acknowledging an invisible accent does not survive changing the surface', 
   await inputs.first().fill('#FFFF00')
   await inputs.first().blur()
   await page.getByRole('button', { name: 'Keep mine anyway' }).click()
-  await expect(page.getByRole('button', { name: /Publish & copy snippet/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Save & copy snippet/ })).toBeVisible()
 
   // Same accent, different surface — a combination nobody agreed to. It must ask again.
   await inputs.nth(1).fill('#FFFFE0')
   await inputs.nth(1).blur()
   await expect(page.getByText('Your accent disappears into your surface.')).toBeVisible()
-  await expect(page.getByRole('button', { name: /Publish & copy snippet/ })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: /Save & copy snippet/ })).toHaveCount(0)
 })
 
 test('the preview keeps the merchant edits across an in-frame navigation', async ({ page }) => {
@@ -422,7 +422,7 @@ test('box 9: a private or unreachable address is named, not swallowed', async ({
 test('the verification state waits for a real load and then reports it', async ({ page }) => {
   await openReview(page)
   await page.getByRole('button', { name: /^Use #/ }).click()
-  await page.getByRole('button', { name: /Publish & copy snippet/ }).click()
+  await page.getByRole('button', { name: /Save & copy snippet/ }).click()
   await expect(page.locator('.snippet')).toHaveValue(/data-shop="shop-[a-z0-9]+"/)
   const key = /data-shop="([^"]+)"/.exec(await page.locator('.snippet').inputValue())?.[1]
 
