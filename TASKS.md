@@ -676,12 +676,22 @@ under *What to send*.
 
 **Scope.** Three Vercel projects on `{maximal,velde,kracht}.releashed.io`: the two storefronts and
 the platform. Shipped first on `*.vercel.app`, which remain live as the projects' default domains.
+The platform means **all** of it, not just `/v1/*`: T7's configuration page had been built,
+committed and demoed on localhost while `maximal.releashed.io/` answered 404, because this task's
+staging tool was written when the platform had two routes and nobody re-read that sentence after
+T7 landed. Static half (`/`, `/ui/*`, `/v1/agent.js`, the four brand configs) on the CDN; dynamic
+half (`POST /v1/config`, `POST /v1/extract`, `/v1/published/:key`, `/v1/font.css`, minted keys) in
+one Vercel function that wraps `apps/platform/server.ts` — the same router, not a second one.
 Repoint each storefront's embed `src=` origin at the deployed platform — the one byte the freeze
 now exempts (§0 #11) — and nothing else. Config and `agent.js` served with the same caching headers
 T6 pinned locally.
 
 **DoD**
-- [ ] Three live URLs, and the widget mounts on both storefronts from one `<script>` line.
+- [x] Three live URLs, and the widget mounts on both storefronts from one `<script>` line.
+- [x] **Every route of all three, not the ones this task remembered to name.** `deploy.sh verify`
+      now walks the config page and round-trips mint → read back → install poll, because "three
+      live URLs" was read as "the widget mounts" and the platform's own home page 404'd for hours
+      under a green check.
 - [ ] **T6's cross-origin box closes for real here**: config fetched from a genuinely different
       origin, zero CORS errors in a fresh browser console.
 - [x] The deploy changed **no line under `apps/`** — `git log -p <range> -- apps/` is empty, because

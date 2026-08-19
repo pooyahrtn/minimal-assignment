@@ -21,6 +21,23 @@ const BUNDLE = `${root}/packages/agent/dist/agent.js`
 const CONFIG_DIR = `${import.meta.dir}/config`
 
 /**
+ * Where a MINTED config is written. Locally that is `config/` next to the committed brands, which
+ * is what the e2e suite and the demo have always done. On Vercel the deployment is read-only
+ * except for `/tmp`, so minted keys go there and `configPath()` below decides per key which of the
+ * two directories a read comes from — the four committed brands are never in `/tmp`, and nothing
+ * minted is ever in `config/`.
+ *
+ * ponytail: `/tmp` is per-instance and lost on redeploy, so a published key survives the demo
+ * session and no longer. That is the same lifetime `firstServedAt` already documents for the
+ * install poll. Upgrade path if a published config must outlive a deploy: Vercel Blob, one
+ * `put`/`head` pair replacing the two `node:fs` calls here.
+ */
+const MINT_DIR = process.env.VERCEL === undefined ? CONFIG_DIR : '/tmp/config'
+const MINTED = new Set<string>()
+const configPath = (shop: string): string =>
+  `${MINTED.has(shop) ? MINT_DIR : CONFIG_DIR}/${shop}.json`
+
+/**
  * A closed set, not a path segment: `/v1/config/../../etc/passwd` never reaches the filesystem,
  * because the key is only ever used as a Set lookup, never interpolated into a path. Enumerated
  * once at startup from the files that actually exist, rather than a hand-maintained list that
@@ -153,6 +170,10 @@ async function runBuild(): Promise<void> {
 }
 
 async function rebuildBundle(): Promise<void> {
+  // On Vercel the bundle is a build artifact and there is no toolchain, no writable source tree and
+  // nothing to be stale against: `bun build` would fail per request on the one route whose contract
+  // is that it never breaks a merchant's page. The mtime guard below is a DEV freshness fix.
+  if (process.env.VERCEL !== undefined) return
   const bundle = Bun.file(BUNDLE)
   const builtAt = (await bundle.exists()) ? (await bundle.stat()).mtimeMs : 0
   if (builtAt > (await newestMtime(SOURCE_DIRS))) return
@@ -215,6 +236,9 @@ async function runUiBuild(): Promise<void> {
 }
 
 async function rebuildUiBundle(): Promise<void> {
+  // Same reasoning as `rebuildBundle`. Deployed, `/ui/main.js` is a static file staged by
+  // `tools/build-platform.ts` and served by the CDN, so this route is never even reached there.
+  if (process.env.VERCEL !== undefined) return
   if (uiBundleBytes !== null && uiBuiltMtime > (await newestMtime(UI_SOURCE_DIRS))) return
   uiInFlight ??= runUiBuild().finally(() => {
     uiInFlight = null
@@ -450,7 +474,8 @@ async function handleConfigPost(request: Request, url: URL): Promise<Response> {
     return jsonError(400, 'shopKey must be an already-published shop key')
   }
 
-  await Bun.write(`${CONFIG_DIR}/${shopKey}.json`, JSON.stringify(body))
+  MINTED.add(shopKey)
+  await Bun.write(configPath(shopKey), JSON.stringify(body))
   SHOPS.add(shopKey)
 
   // Origin from the incoming request, not hardcoded: port 4003 is frozen for the two existing
@@ -535,7 +560,7 @@ async function handleConfigGet(request: Request, url: URL): Promise<Response> {
   if (SHOPS.has(requested) && !firstServedAt.has(requested)) {
     firstServedAt.set(requested, Date.now())
   }
-  const bytes = await Bun.file(`${CONFIG_DIR}/${shop}.json`).bytes()
+  const bytes = await Bun.file(configPath(shop)).bytes()
   return cachedResponse(bytes, 'application/json; charset=utf-8', request)
 }
 
@@ -576,22 +601,27 @@ const ROUTES: { method: string; match: (pathname: string) => boolean; handle: Ro
   { method: 'GET', match: (p) => p === '/ui/main.js', handle: handleUiMainJs },
 ]
 
+/**
+ * The router itself, separated from `Bun.serve` so it has two callers: `serve()` below for local
+ * dev and the e2e suite, and `api/platform.ts` for the deployed Vercel function. One router, so a
+ * route cannot exist locally and be missing in production — which is exactly how T7's whole
+ * configuration page came to be built, committed, demoed locally, and never deployed.
+ */
+export async function handleRequest(request: Request): Promise<Response> {
+  const url = new URL(request.url)
+  if (request.method === 'OPTIONS') {
+    // `/v1/extract` doesn't get the blanket wildcard CORS below — same reasoning as its POST
+    // handler above applies to its preflight response.
+    const headers = url.pathname === '/v1/extract' ? extractCorsHeaders(request, url) : CORS
+    return new Response(null, { status: 204, headers })
+  }
+  const route = ROUTES.find((r) => r.method === request.method && r.match(url.pathname))
+  if (route) return route.handle(request, url)
+  return new Response('not found\n', { status: 404, headers: CORS })
+}
+
 export function serve(port = 4003) {
-  return Bun.serve({
-    port,
-    async fetch(request) {
-      const url = new URL(request.url)
-      if (request.method === 'OPTIONS') {
-        // `/v1/extract` doesn't get the blanket wildcard CORS below — same reasoning as its POST
-        // handler above applies to its preflight response.
-        const headers = url.pathname === '/v1/extract' ? extractCorsHeaders(request, url) : CORS
-        return new Response(null, { status: 204, headers })
-      }
-      const route = ROUTES.find((r) => r.method === request.method && r.match(url.pathname))
-      if (route) return route.handle(request, url)
-      return new Response('not found\n', { status: 404, headers: CORS })
-    },
-  })
+  return Bun.serve({ port, fetch: handleRequest })
 }
 
 if (import.meta.main) {

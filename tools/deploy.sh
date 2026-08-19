@@ -30,6 +30,11 @@ deploy() {
   # KRACHT block below already follows.
   bunx vercel project update maximal-platform --build-command \
     "bun run tools/build-platform.ts --velde=$VELDE --kracht=$KRACHT"
+  # Arms `api/platform.ts`. `vercel.json` lives at the repo root and maximal-velde is rooted there
+  # too, so that function is built into the storefront's deployment as well; this variable is what
+  # makes it answer only on the platform. Set here, so a clean clone does not have to know.
+  bunx vercel env rm PLATFORM_API production --project maximal-platform --yes 2>/dev/null || true
+  printf '1' | bunx vercel env add PLATFORM_API production --project maximal-platform
   bunx vercel deploy --prod --yes --project maximal-platform
 
   bunx vercel project update maximal-velde --build-command \
@@ -121,6 +126,32 @@ verify() {
       fail "$shop config still carries $(grep -o 'http://localhost:[0-9]*' <<<"$body" | sort -u | tr '\n' ' ')"
     fi
   done
+
+  echo "— platform: T7's configuration page is actually deployed"
+  # It was built, committed, demoed on localhost and never deployed for as long as the platform had
+  # been live, because this script only ever checked /v1/*. A deployed link that 404s at its root is
+  # the first thing a reviewer sees.
+  page=$(curl -sf "$PLATFORM/") || fail "$PLATFORM/ served no configuration page"
+  grep -q '/ui/main.js' <<<"$page" || fail 'the config page does not reference its own bundle'
+  grep -q localhost <<<"$page" && fail 'the config page still offers a localhost store to try'
+  for asset in /ui/ui.css /ui/main.js; do
+    code=$(curl -s -o /dev/null -w '%{http_code}' "$PLATFORM$asset")
+    [ "$code" = "200" ] || fail "$asset returned $code — the page would render unstyled or dead"
+  done
+
+  echo "— platform: the dynamic half — mint, read back, and the install poll"
+  # The three routes that cannot be a file on a CDN. Round-tripped, not pinged: a 200 from
+  # POST /v1/config proves nothing if the key it mints is not then servable.
+  minted=$(curl -sf -X POST -H 'content-type: application/json' \
+    -d "$(curl -sf "$PLATFORM/v1/config/default")" "$PLATFORM/v1/config") \
+    || fail 'POST /v1/config did not mint a config'
+  key=$(python3 -c "import sys,json; print(json.loads(sys.argv[1])['shopKey'])" "$minted")
+  grep -q "$PLATFORM/v1/agent.js" <<<"$minted" || fail "the minted snippet does not point at $PLATFORM"
+  echo "    minted $key"
+  code=$(curl -s -o /dev/null -w '%{http_code}' "$PLATFORM/v1/config/$key")
+  [ "$code" = "200" ] || fail "the minted key returned $code — the snippet would serve nothing"
+  seen=$(curl -sf "$PLATFORM/v1/published/$key") || fail 'the install poll did not answer'
+  grep -q 'firstSeenAt' <<<"$seen" || fail "install poll returned $seen"
 
   echo "— KRACHT: photographs survived the symlink"
   # Must be measured on the HTML, not by fetching a photo. `apps/shop-kracht/lib/products.ts:41`

@@ -11,10 +11,13 @@ bun run typecheck
 # Comment lines are prose, not code: "yields nothing as CSS" and "measured, as CSS custom-property
 # names" both matched the `as <Capitalised>` arm and blocked a commit that contained no cast at all.
 # Lines *opening* with a comment marker are dropped; a trailing `// as Foo` after real code is not,
-# because that line still starts with the code.
+# because that line still starts with the code. Same for an alias clause — `export { x as Y }` and
+# `import { x as y }` match the `as <Capitalised>` arm and contain no cast, and no cast can appear
+# inside one, so dropping the whole line loses no enforcement.
 hits=$(git diff --cached --name-only --diff-filter=ACM -z -- '*.ts' '*.tsx' \
        | xargs -0 -r grep -nE '\bas\s+(unknown|any|string|number|boolean|[A-Z][A-Za-z0-9_]*)\b' \
        | grep -vE ':[[:space:]]*(\*|//|/\*)' \
+       | grep -vE ':[[:space:]]*(export|import)[[:space:]]*\{' \
        || true)
 if [ -n "$hits" ]; then
   echo "$hits" >&2

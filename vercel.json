@@ -42,8 +42,14 @@
   ],
   "rewrites": [
     {
-      "source": "/v1/config/:key",
-      "destination": "/v1/config/default"
+      "source": "/v1/(.*)",
+      "destination": "/api/platform"
     }
-  ]
+  ],
+  "bunVersion": "1.x",
+  "functions": {
+    "api/platform.ts": {
+      "includeFiles": "apps/platform/config/**"
+    }
+  }
 }

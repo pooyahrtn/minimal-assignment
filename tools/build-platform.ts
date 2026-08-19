@@ -25,6 +25,10 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const ROOT = `${import.meta.dir}/..`
 const OUT = `${ROOT}/dist/platform`
 const CONFIG_DIR = `${ROOT}/apps/platform/config`
+const UI_DIR = `${ROOT}/apps/platform/ui`
+const UI_ENTRY = `${UI_DIR}/main.ts`
+const UI_INDEX = `${UI_DIR}/index.html`
+const UI_CSS = `${UI_DIR}/ui.css`
 const BUNDLE = `${ROOT}/packages/agent/dist/agent.js`
 
 const arg = (name: string, fallback: string): string =>
@@ -46,6 +50,12 @@ const arg = (name: string, fallback: string): string =>
  * Keyed by PORT rather than by shop, because a config's catalog can point at a storefront that is
  * not its own: HELDER has no store of its own and borrows VELDE's.
  */
+const repoint = (body: string): string =>
+  body.replaceAll(
+    /http:\/\/localhost:(\d+)/g,
+    (whole, port: string) => ORIGIN_BY_PORT[port] ?? whole,
+  )
+
 const ORIGIN_BY_PORT: Record<string, string> = {
   '4001': arg('velde', 'http://localhost:4001'),
   '4002': arg('kracht', 'http://localhost:4002'),
@@ -79,15 +89,34 @@ for await (const name of new Bun.Glob('*.json').scan({ cwd: CONFIG_DIR })) {
   // disk of whoever ran the build, and several share the extractor's neutral fallback accent, which
   // is indistinguishable from the config-collision bug the check below exists to catch.
   if (shop.startsWith('shop-')) continue
-  const body = await Bun.file(`${CONFIG_DIR}/${name}`).text()
-  const repointed = body.replaceAll(
-    /http:\/\/localhost:(\d+)/g,
-    (whole, port: string) => ORIGIN_BY_PORT[port] ?? whole,
-  )
+  const repointed = repoint(await Bun.file(`${CONFIG_DIR}/${name}`).text())
   // Extensionless on purpose — see the header comment. This is the whole fix.
   await Bun.write(`${OUT}/v1/config/${shop}`, repointed)
   shops.push(shop)
 }
+
+/**
+ * T7's configuration page, staged as three static files. It was built, committed and demoed on
+ * localhost, and then never deployed at all — `maximal.releashed.io/` answered 404 for as long as
+ * the platform has been live — because this tool staged "the platform's two routes" and nobody
+ * re-read that sentence after T7 landed.
+ *
+ * `main.js` is built HERE rather than left to `server.ts:handleUiMainJs`, which builds it in
+ * process on demand: on Vercel that route is never reached, because a static file beats a rewrite.
+ * Same `Bun.build` call, so the deployed bytes and the dev bytes come off the same builder.
+ */
+const ui = await Bun.build({ entrypoints: [UI_ENTRY], target: 'browser', format: 'esm' })
+if (!ui.success) throw new Error(`config page ui build failed:\n${ui.logs.join('\n')}`)
+const uiBundle = ui.outputs[0]
+if (uiBundle === undefined) throw new Error('config page ui build produced no output')
+await mkdir(`${OUT}/ui`, { recursive: true })
+// Through `repoint` for the same reason the configs are: the page's "try the VELDE store" buttons
+// fill the URL field with `http://localhost:4001`, so deployed they would hand the reviewer a dead
+// link to their own machine. The blanket origin check below is what caught this — it was written
+// against the config payload and found the surface nobody had named. [TASKS §0 #11]
+await Bun.write(`${OUT}/index.html`, repoint(await Bun.file(UI_INDEX).text()))
+await Bun.write(`${OUT}/ui/ui.css`, Bun.file(UI_CSS))
+await Bun.write(`${OUT}/ui/main.js`, await uiBundle.text())
 
 // Copied, not authored. Vercel reads `vercel.json` from the project ROOT when it builds from git,
 // and from the upload root when `vercel deploy dist/platform` uploads a prebuilt directory — two
@@ -112,9 +141,11 @@ for (const { key, value } of CORS) {
 }
 
 const bundleBytes = (await Bun.file(`${OUT}/v1/agent.js`).bytes()).length
+const uiBytes = (await Bun.file(`${OUT}/ui/main.js`).bytes()).length
 console.log(
-  `platform → ${OUT}: agent.js ${bundleBytes}B, ${shops.length} configs [${shops.join(', ')}]`,
+  `platform → ${OUT}: agent.js ${bundleBytes}B, ui ${uiBytes}B, ${shops.length} configs [${shops.join(', ')}]`,
 )
+if (uiBytes === 0) throw new Error('the config page bundle is empty — the page would not render')
 if (bundleBytes === 0) throw new Error('agent.js is empty — the widget would not mount')
 if (!shops.includes('default')) throw new Error('default config missing — unknown keys would 404')
 if (shops.length < 2) throw new Error(`expected the brand configs, staged only ${shops.length}`)
