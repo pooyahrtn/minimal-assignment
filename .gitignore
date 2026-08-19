@@ -5,3 +5,9 @@ dist/
 .DS_Store
 /playwright-report/
 /test-results/
+
+# Configs minted by the config page's POST /v1/config — the demo and the e2e suite both
+# create these, and they are generated state, not source. The four committed brands are not
+# matched by this pattern.
+apps/platform/config/shop-*.json
+.vercel/

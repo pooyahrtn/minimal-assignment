@@ -1,0 +1,9 @@
+# `.gitignore` rules are NOT honoured by the Vercel CLI — only this file is. Without it the
+# KRACHT deploy (which uploads from the repo ROOT so the symlinked photos in
+# apps/shop-kracht/public resolve) would also ship the built output of the other two projects,
+# the Playwright artifacts and the benchmark gallery. None of it is used by `next build`.
+dist/
+test-results/
+playwright-report/
+bench/
+e2e/

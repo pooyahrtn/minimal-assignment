@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { products } from '../lib/products'
 
-const SITE = 'http://localhost:4002'
+const SITE = process.env.NEXT_PUBLIC_SITE_ORIGIN ?? 'http://localhost:4002'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const productPages: MetadataRoute.Sitemap = products.map((product) => ({

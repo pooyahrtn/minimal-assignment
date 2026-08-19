@@ -9,7 +9,12 @@ import {
   products,
 } from './catalog'
 
-export const ORIGIN = 'http://localhost:4001'
+// Origin literals are the ONE thing the storefront freeze exempts [TASKS §0 #11, ENGINEERING
+// §1.1]. The `??` default is the frozen value, so local dev, e2e and the bench see byte-identical
+// output; only a deploy build sets these. An origin string cannot hide a widget bug, which is the
+// entire reason the exemption exists.
+export const ORIGIN = process.env.SITE_ORIGIN ?? 'http://localhost:4001'
+export const PLATFORM_ORIGIN = process.env.PLATFORM_ORIGIN ?? 'http://localhost:4003'
 
 const esc = (value: string): string =>
   value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
@@ -194,7 +199,7 @@ ${page.sticky ?? ''}
 ${cartDrawer()}
 ${cookieBanner()}
 <script src="/assets/velde.js" defer></script>
-<script src="http://localhost:4003/v1/agent.js" data-shop="velde" async></script>
+<script src="${PLATFORM_ORIGIN}/v1/agent.js" data-shop="velde" async></script>
 </body>
 </html>`
 

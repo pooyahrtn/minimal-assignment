@@ -8,7 +8,7 @@ import { categories, decimal, REVIEW_COUNT, REVIEW_SCORE } from '../lib/catalog'
 import './globals.css'
 
 export const metadata: Metadata = {
-  metadataBase: new URL('http://localhost:4002'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_ORIGIN ?? 'http://localhost:4002'),
   title: {
     default: 'KRACHT — protein, creatine and pre-workout, straight to your door',
     template: '%s | KRACHT',
@@ -137,7 +137,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <main>{children}</main>
         <Footer />
         <CookieBar />
-        <script src="http://localhost:4003/v1/agent.js" data-shop="kracht" async />
+        <script
+          src={`${process.env.NEXT_PUBLIC_PLATFORM_ORIGIN ?? 'http://localhost:4003'}/v1/agent.js`}
+          data-shop="kracht"
+          async
+        />
       </body>
     </html>
   )

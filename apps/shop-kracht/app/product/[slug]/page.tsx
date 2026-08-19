@@ -23,7 +23,7 @@ import {
   sizeSiblings,
 } from '../../../lib/products'
 
-const SITE = 'http://localhost:4002'
+const SITE = process.env.NEXT_PUBLIC_SITE_ORIGIN ?? 'http://localhost:4002'
 
 type PageProps = { params: Promise<{ slug: string }> }
 
