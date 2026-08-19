@@ -76,6 +76,28 @@ async function launcherOutsideViewport(page: Page): Promise<string | null> {
   })
 }
 
+/**
+ * `syncViewport` writes `panel.style.height` from `visualViewport.height` on every viewport
+ * resize, below the mobile breakpoint. Headless cannot produce the divergence that makes it
+ * matter, but it CAN prove the handler still runs and still writes — which is the half that
+ * regresses silently when someone tidies up an iOS-only code path.
+ */
+async function panelTracksViewport(page: Page): Promise<string | null> {
+  return page.evaluate((expected: number) => {
+    const host = document.querySelector('mx-agent')
+    const panel = host instanceof HTMLElement ? host.shadowRoot?.querySelector('.panel') : null
+    if (!(panel instanceof HTMLElement)) return 'no panel rendered'
+    const written = panel.style.height
+    if (written === '') {
+      return 'the panel has no inline height after a viewport resize — syncViewport did not run'
+    }
+    const value = Number.parseFloat(written)
+    return Math.abs(value - expected) <= 1
+      ? null
+      : `the panel's inline height is ${written}, not ${expected}px — syncViewport is not tracking the viewport`
+  }, KEYBOARD_VIEWPORT.height)
+}
+
 /** One brand, both surfaces. Returns what it found rather than throwing at the first thing. */
 async function measureBrand(
   browser: Browser,
@@ -109,6 +131,17 @@ async function measureBrand(
     await settle(page)
     const squeezed = await composerBelowFold(page)
     if (squeezed) failures.push(`${brand.name}, ${KEYBOARD_VIEWPORT.height}px tall: ${squeezed}`)
+
+    /*
+     * And the mechanism, not just the outcome. The composer check above passes on CSS alone — at
+     * 375px the panel is inset-anchored to all four edges, so it stays inside a shorter viewport
+     * whether or not `syncViewport` exists. Proved by deleting `syncViewport`'s body: the short
+     * pass stayed green, 0 failures, which made two of every brand's "measurements" decoration.
+     * This reads the inline height `syncViewport` writes, which is the only thing that will
+     * matter when a real keyboard makes `visualViewport.height` diverge from `innerHeight`.
+     */
+    const tracked = await panelTracksViewport(page)
+    if (tracked) failures.push(`${brand.name}: ${tracked}`)
     measured += 2
   } finally {
     await page.close()

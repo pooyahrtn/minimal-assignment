@@ -57,8 +57,19 @@ export function cornerCss(corner: Corner): string {
 }
 
 export function styles(tokens: DerivedTokens): string {
+  /*
+   * `!important` on the custom properties too, and it is the half the first hardening pass missed.
+   * `all: initial` does not reset custom properties — that is *why* `${vars}` survives the reset
+   * line below it, and it is equally why a host page's `* { --mx-accent: #00ff00 }` walked
+   * straight past every important pin and repainted nine computed properties inside the shadow
+   * root. Measured; H5's `HOSTILE_CSS` carries the vector.
+   *
+   * The preview channel still wins, because `boot.ts` writes its overrides as important INLINE
+   * declarations, and an important inline style outranks an important rule. That coupling is
+   * stated in both files rather than left for whoever changes one of them.
+   */
   const vars = Object.entries(tokens.css)
-    .map(([name, value]) => `${name}: ${value};`)
+    .map(([name, value]) => `${name}: ${value} !important;`)
     .join('\n    ')
 
   return `

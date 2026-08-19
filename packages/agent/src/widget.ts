@@ -83,6 +83,12 @@ export class MxAgent extends HTMLElement {
   private readonly input: HTMLInputElement
   private chipRow: HTMLElement
   private chips: Chip[] = []
+  /** One sticky-bar measurement per frame, however many events asked for one. */
+  private stickyBarPending = false
+  /** The launcher's last known horizontal centre — see `stickyBarHeight`. */
+  private probeX: number | undefined
+  private readonly previewSheet: HTMLStyleElement
+  private readonly previewVars = new Map<string, string>()
 
   constructor(config: ConfigResponse) {
     super()
@@ -152,7 +158,9 @@ export class MxAgent extends HTMLElement {
     this.panel.addEventListener('click', (event) => this.onPanelClick(event))
 
     this.shadow = this.attachShadow({ mode: 'open' })
-    this.shadow.append(sheet, this.launcher, this.panel)
+    // Last, so its `:host` rule wins the tie against the one in `sheet`. See `setPreviewVar`.
+    this.previewSheet = document.createElement('style')
+    this.shadow.append(sheet, this.previewSheet, this.launcher, this.panel)
     this.shadow.addEventListener('keydown', (event) => {
       if (event instanceof KeyboardEvent) this.onKeydown(event)
     })
@@ -175,8 +183,24 @@ export class MxAgent extends HTMLElement {
      * A `MutationObserver` would catch the case where a banner leaves without a click at all; it
      * is the upgrade if that ever shows up, and it costs an observer on the whole body to buy it.
      */
-    document.addEventListener('click', () => {
-      requestAnimationFrame(() => this.clearStickyBar())
+    // Never removed, like the two listeners above it — which is exactly why `boot.ts` forbids
+    // re-mounting the widget and mutates it in place instead. One element, one page, one lifetime.
+    document.addEventListener('click', () => this.scheduleStickyBar())
+    /*
+     * The other half, and the one a real storefront forced. VELDE's banner LEAVES on a click, so
+     * the listener above catches it. KRACHT's banner ARRIVES — `CookieBar.tsx` renders it from a
+     * `useEffect` after hydration, which is after `window.load`, which was the widget's last
+     * measurement. Measured on KRACHT's PDP, 6 runs out of 6: the launcher lifted 73px for the
+     * add-to-cart bar and then sat on top of a 143px cookie bar that had appeared underneath it.
+     * A click listener cannot see that; nothing was clicked.
+     *
+     * `childList` on the whole body is the blunt instrument the earlier comment named as the
+     * upgrade "if it ever matters". It matters. Coalesced to one measurement per frame, and one
+     * measurement is a single `elementsFromPoint` plus one `getComputedStyle`.
+     */
+    new MutationObserver(() => this.scheduleStickyBar()).observe(document.body, {
+      childList: true,
+      subtree: true,
     })
 
     this.push({ kind: 'text', text: voice.greeting })
@@ -188,6 +212,26 @@ export class MxAgent extends HTMLElement {
    * three real values rather than written through, because this is reached from a `postMessage`
    * payload — an origin check makes the sender trusted, not the data well-formed.
    */
+  /**
+   * The config page's live channel for a single `--mx-*` value.
+   *
+   * It writes into a stylesheet INSIDE the shadow root rather than an inline style on the host,
+   * and the reason is the cascade, not taste. `styles()` emits the token block as `!important` so
+   * a merchant theme's `* { --mx-accent: … }` cannot repaint the widget — and for IMPORTANT
+   * declarations the shadow context beats the outer one, which is the same rule that keeps the
+   * host page out. An inline style on `<mx-agent>` is outer context, so it lost to our own reset:
+   * measured as three red `config-page` specs, the preview frozen at the old accent.
+   *
+   * Two `:host` rules, same specificity, same context, both important — so the later one wins, and
+   * `previewSheet` is appended after `sheet`. Values are validated by the caller [boot.ts]: only
+   * real `--mx-*` names reach here.
+   */
+  setPreviewVar(name: string, value: string): void {
+    this.previewVars.set(name, value)
+    const body = [...this.previewVars].map(([key, val]) => `${key}: ${val} !important;`).join('\n')
+    this.previewSheet.textContent = `:host {\n${body}\n}`
+  }
+
   setPreviewLauncherStyle(style: string): void {
     if (style !== 'bubble' && style !== 'pill' && style !== 'text-anchor') return
     this.launcher.dataset.style = style
@@ -228,11 +272,31 @@ export class MxAgent extends HTMLElement {
    * while a bar that stops short of the corner was measured as if it reached. Taking the tallest
    * bar found anywhere along the bottom edge would make the first case worse, not better.
    */
+  /**
+   * Coalesced to one measurement per frame. The frame is also what makes the click listener work
+   * at all: both handlers are bubble-phase on `document`, `agent.js` is `async` and `velde.js` is
+   * `defer`, so ours can register first and read the banner still laid out.
+   */
+  private scheduleStickyBar(): void {
+    if (this.stickyBarPending) return
+    this.stickyBarPending = true
+    requestAnimationFrame(() => {
+      this.stickyBarPending = false
+      this.clearStickyBar()
+    })
+  }
+
   private stickyBarHeight(): number {
     const launcher = this.launcher.getBoundingClientRect()
-    const x = Math.round(
-      launcher.width > 0 ? launcher.left + launcher.width / 2 : window.innerWidth / 2,
-    )
+    /*
+     * Remembered, because `setOpen(true)` sets `launcher.hidden = true` and a hidden element
+     * measures 0x0 — so every re-measure taken while the panel is OPEN used to silently fall back
+     * to the viewport centre, which is the probe point this whole change replaced. The panel is
+     * anchored to the same corner as the launcher, so the last known corner is the right answer
+     * for both.
+     */
+    if (launcher.width > 0) this.probeX = Math.round(launcher.left + launcher.width / 2)
+    const x = this.probeX ?? Math.round(window.innerWidth / 2)
     for (const node of document.elementsFromPoint(x, window.innerHeight - 1)) {
       if (node === this || !(node instanceof HTMLElement)) continue
       const position = window.getComputedStyle(node).position

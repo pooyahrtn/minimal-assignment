@@ -65,16 +65,27 @@ function safeStore(): CacheStore {
  *
  * Mutation is in place, never a re-mount. `styles()` writes the custom properties into a `:host`
  * rule, so an inline `setProperty` on the host element overrides them — which covers colour,
- * spacing, radius, the type ramp and label treatment without touching the DOM. Re-mounting would
- * leak the constructor's `visualViewport`/`resize` listeners onto the storefront's window on every
- * keystroke, drop the `converse` wiring, and wipe the conversation.
+ * spacing, radius, the type ramp and label treatment without touching the DOM. That still holds
+ * after T9 hardened `:host` to `all: initial !important`: the hardening is on the properties the
+ * rule re-states AND on the `--mx-*` declarations, because `all` does not touch custom properties
+ * and a host page's `* { --mx-accent: … }` therefore reached straight into the shadow root. The
+ * override below stays on top of that by writing into a stylesheet INSIDE the shadow root — an
+ * inline style on the host is outer context and loses to an important `:host` rule, which is the
+ * same cascade rule that keeps the merchant's theme out. Change one of those two and the preview
+ * goes dead, so both sides say so. Re-mounting would leak the constructor's `visualViewport`/`resize`/document
+ * `click` listeners onto the storefront's window on every keystroke, drop the `converse` wiring,
+ * and wipe the conversation.
  */
 function applyPreviewVars(agent: MxAgent, vars: unknown): void {
   if (!isRecord(vars)) return
   for (const [name, value] of Object.entries(vars)) {
     // An origin check makes the sender trusted, not the payload well-formed. Only real token
     // names get through, so nothing can write an arbitrary inline style onto the host element.
-    if (name.startsWith('--mx-') && typeof value === 'string') agent.style.setProperty(name, value)
+    // Into the shadow root, not onto the host's inline style. The `:host` token block is
+    // `!important` so a merchant theme cannot repaint the widget through `--mx-*`, and for
+    // important declarations the shadow context outranks the outer one — so an inline style on
+    // `<mx-agent>` loses to our own reset. `setPreviewVar` writes where it can win. [widget.ts]
+    if (name.startsWith('--mx-') && typeof value === 'string') agent.setPreviewVar(name, value)
   }
 }
 
