@@ -22,20 +22,16 @@ import { handleRequest } from '../apps/platform/server'
  * Exported per HTTP method, not as a `default`. A default export is invoked with Node's
  * `(req, res)` — `req.headers` is then a plain object and `req.url` a bare path, and the router
  * dies on `new URL()` before it matches anything. The named-method form is what selects the Web
- * handler signature, which is the one `server.ts` is written against.
+ * handler signature, which is the one `server.ts` is written against — and `handleRequest` itself
+ * no longer trusts that selection to hold: it reconstructs an absolute URL from the host headers
+ * whenever `request.url` arrives as a bare path, so this wrapper doesn't need a second copy of
+ * that logic. One router, one place that turns a request into a URL.
  */
 async function handler(request: Request): Promise<Response> {
   if (process.env.PLATFORM_API === undefined) {
     return new Response('not found\n', { status: 404 })
   }
-  // Belt and braces: whichever signature is selected, the router needs an absolute URL. `POST
-  // /v1/config` echoes `url.origin` back inside the snippet it mints, so this has to be the host
-  // the caller actually used — the platform answers on `maximal.releashed.io`, on the project's
-  // `*.vercel.app` default domain and on every preview URL.
-  if (request.url.startsWith('http')) return handleRequest(request)
-  const host = request.headers.get('host')
-  if (host === null) return new Response('no host header\n', { status: 400 })
-  return handleRequest(new Request(`https://${host}${request.url}`, request))
+  return handleRequest(request)
 }
 
 export const GET = handler

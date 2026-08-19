@@ -805,13 +805,32 @@ const ROUTES: { method: string; match: (pathname: string) => boolean; handle: Ro
 ]
 
 /**
+ * `request.url` is supposed to be an absolute URL — that's the Fetch API contract `Request`
+ * makes — but the deployed function has been observed handing this router a bare path instead
+ * (`api/platform.ts`'s header comment names the hazard: whichever invocation shape a runtime
+ * selects, a bare path makes `new URL()` throw before any route matches). Rather than trust the
+ * platform to always deliver an absolute URL, the router reconstructs one itself whenever
+ * `request.url` isn't one already, from `x-forwarded-host`/`host` and `x-forwarded-proto` — the
+ * standard proxy headers set on every request that reaches a Vercel function. `null` means
+ * neither host header arrived, which `handleRequest` turns into a 400 instead of a crash.
+ */
+function resolveUrl(request: Request): URL | null {
+  if (request.url.startsWith('http')) return new URL(request.url)
+  const host = request.headers.get('x-forwarded-host') ?? request.headers.get('host')
+  if (host === null) return null
+  const proto = request.headers.get('x-forwarded-proto') ?? 'https'
+  return new URL(`${proto}://${host}${request.url}`)
+}
+
+/**
  * The router itself, separated from `Bun.serve` so it has two callers: `serve()` below for local
  * dev and the e2e suite, and `api/platform.ts` for the deployed Vercel function. One router, so a
  * route cannot exist locally and be missing in production — which is exactly how T7's whole
  * configuration page came to be built, committed, demoed locally, and never deployed.
  */
 export async function handleRequest(request: Request): Promise<Response> {
-  const url = new URL(request.url)
+  const url = resolveUrl(request)
+  if (url === null) return new Response('no host header\n', { status: 400, headers: CORS })
   if (request.method === 'OPTIONS') {
     // `/v1/extract` doesn't get the blanket wildcard CORS below — same reasoning as its POST
     // handler above applies to its preflight response.
