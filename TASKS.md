@@ -108,7 +108,7 @@ actually happened.
 | T7 | ⬜ open | Configuration page | 90m | **120m** | T6, T2, **T11** | yes |
 | T8 | ✅ landed | Catalog ingest + brand extractor | 45m | 30m | T0, T2 · T4 to close last DoD | yes (build) |
 | T9 | ⬜ open | Hostile-page hardening + polish pass | 45m | 60m | T3, T5, T2 | no |
-| T10 | 🔄 draft half in flight | DECISIONS.md, log, demo rehearsal | 20m draft | **90m** | all, **T15** | no |
+| T10 | ◐ draft half landed `ed09a5d` | DECISIONS.md, log, demo rehearsal | 20m draft | **90m** | all, **T15** | no |
 | T11 | ⬜ open (**required**) | Third brand — the visible clamp | 10m | 10m | T1, T6 | yes |
 | T12 | ◐ both halves landed | E2E critical-flow suite (Playwright) | 40m | 30m | T2 · T3+T4 wired · **T5 for the card flows** | no |
 | T13 | ⬜ open (cut #0) | Real LLM turn behind the AI SDK | 2h | 45m | T6 (stub is enough) | yes |
@@ -445,7 +445,14 @@ still cross the shadow boundary). Motion, focus rings, loading and empty states,
 
 ---
 
-## T10 `🔄 draft half in flight` — DECISIONS.md, the log, and demo rehearsal
+## T10 `◐ draft half landed` — DECISIONS.md, the log, and demo rehearsal
+
+**Draft half landed `ed09a5d`.** Closed: boxes 2, 3, 4, 5 (agent half) and 8. Still open: **box 1**
+(one page — `DECISIONS.md` is 1565 words), **box 5's human half** (the two worst-scoring tasks
+re-read by a human — `bun bench scorecard` names T14 at 1/4, then a three-way tie at 2/4 between T2,
+T12 and H1+H3, so "the two" needs a tiebreak nobody specified), and **boxes 6 and 7**, which are
+blocked on T15/T7/T11 rather than deferred. T5 and T6 landed after the scorecard ran and are
+unjudged; the check prints that gap on every run.
 
 **Scope.** One page, honestly written, covering exactly the brief's six bullets:
 merchant thinking / cross-brand approach / **what AI suggested that I overrode** / what I cut /
