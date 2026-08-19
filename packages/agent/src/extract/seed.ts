@@ -1,4 +1,3 @@
-import { readabilityReport } from '@maximal/tokens'
 import type { MerchantDraft } from './extract'
 
 /**
@@ -87,9 +86,18 @@ export const SEED_BY_ORIGIN: Record<string, MerchantDraft> = {
  * Self-check: `bun packages/agent/src/extract/seed.ts`. The one thing a wrong pair here costs is
  * the embed snippet — the config page refuses to hand one over while accent-on-surface is under
  * 3:1 — so that is what this asserts, on the same `readabilityReport` row the page guards on.
- * Import-time cost is zero; this block only runs when the file is executed directly.
+ *
+ * `readabilityReport` is imported HERE, dynamically, and that is load-bearing rather than style.
+ * `server.ts` imports `SEED_BY_ORIGIN` at module scope, so this file sits in the deployed
+ * function's graph. Every other `@maximal/tokens` reference in that graph is an `import type`,
+ * which the compiler erases — a static value import is the one kind that survives to runtime, and
+ * Vercel's function bundle does not carry the workspace package. The whole platform API answered
+ * 500 at BOOT (`ResolveMessage`, exit 1) on every route, including unrouted ones, until this line
+ * moved inside the guard. An earlier version of this comment claimed "import-time cost is zero",
+ * which was true of the block and false of the import — the distinction that cost the outage.
  */
 if (import.meta.main) {
+  const { readabilityReport } = await import('@maximal/tokens')
   for (const [origin, draft] of Object.entries(SEED_BY_ORIGIN)) {
     const row = readabilityReport(draft.tokens).accentOnSurface
     const line = `${origin} — accent ${draft.tokens.accent} on surface ${draft.tokens.surface}: ${row.ratio.toFixed(2)}:1 (floor ${row.floor})`
