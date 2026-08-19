@@ -105,7 +105,7 @@ actually happened.
 | T4 | ✅ landed | Agent brain — FSM, retrieval, obstacle | 30m | 20m | T0 | yes |
 | T5 | ◐ landed (**box 5's sale-price third open — blocked on T0/T8, see PROGRESS**) | Message block renderers | 60m | **90m** | T3 | yes |
 | T6 | ✅ landed | Platform API + snippet delivery | 15m | 10m | T0 | yes |
-| T7 | ⬜ open | Configuration page | 90m | **120m** | T6, T2, **T11** | yes |
+| T7 | ✅ landed (**boxes 8 amended, 9 half-open — see below**) | Configuration page | 90m | **120m** | T6, T2, **T11** | yes |
 | T8 | ✅ landed | Catalog ingest + brand extractor | 45m | 30m | T0, T2 · T4 to close last DoD | yes (build) |
 | T9 | ⬜ open | Hostile-page hardening + polish pass | 45m | 60m | T3, T5, T2 | no |
 | T10 | ◐ draft half landed `ed09a5d` | DECISIONS.md, log, demo rehearsal | 20m draft | **90m** | all, **T15** | no |
@@ -337,7 +337,7 @@ KV — **no database**.
 
 ---
 
-## T7 `⬜ open` — Configuration page
+## T7 `✅ landed` — Configuration page
 `apps/platform`. **The highest-scoring surface after the agent. Do not start it tired.**
 
 **Scope.** The layered flow from PRINCIPLES §9:
@@ -375,16 +375,16 @@ and T11 are unbuilt. **Say it out loud on stage as a known ceiling with a named 
 there.
 
 **DoD**
-- [ ] A non-technical merchant can go URL → snippet **without typing a single hex code**.
-- [ ] A merchant *with* a hex code and a font name can override everything the extractor guessed.
-- [ ] The NL field moves at least 4 distinct token groups and the change is *visible in the preview*, not just in a JSON blob.
-- [ ] No configuration reachable through this UI can render an illegible or broken widget. Try to break it deliberately.
-- [ ] Undo works on every control including the NL field.
-- [ ] The config page itself is Maximal-branded — it is our product, not an unstyled admin.
-- [ ] Pasting a merchant's own theme font URL renders that typeface in the widget, under both brands.
-- [ ] Every clamped pair is *visible* as a named before/after, not silently corrected.
-- [ ] A blocked or empty crawl is shown as its own state and routes to the manual fields. Test it against a real Cloudflare-protected shop.
-- [ ] The constant signature is present under all three brands and cannot be removed from this UI —
+- [x] A non-technical merchant can go URL → snippet **without typing a single hex code**. The extractor's VELDE guess is a near-white accent, so the path runs through the readability block and its one-click fix — which is the honest version of "no hex typed". `e2e/config-page.spec.ts` box 1.
+- [x] A merchant *with* a hex code and a font name can override everything the extractor guessed.
+- [x] The NL field moves at least 4 distinct token groups and the change is *visible in the preview*. **Six groups**, each named in a delta row, asserted against the live iframe's computed styles.
+- [x] No configuration reachable through this UI can render an illegible or broken widget. `#FFFF00` on `#FFFFFF` measures 1.07:1 and the snippet is withheld until the merchant resolves or explicitly keeps it — and acknowledgement is keyed to the accent/surface **pair**, so changing either asks again.
+- [x] Undo works on every control including the NL field. Transactional: one phrase that moves six groups is one undo.
+- [x] The config page itself is Maximal-branded — `derive(MAXIMAL)`, so the page about the token engine is drawn by it, which also keeps the universal "no hardcoded colour outside `packages/tokens`" bullet true here.
+- [x] Pasting a merchant's own theme font URL renders that typeface in the widget, under both brands. **The platform wraps the `.woff2` in a stylesheet at `/v1/font.css`; the shipped widget did not change** — `FontChoice.href` keeps its documented meaning [ENGINEERING §2.1/§2.2].
+- [ ] ~~Every clamped pair is *visible* as a named before/after~~ → **AMENDED to a readability panel.** Measured, the literal box degenerates to a constant: `textPrimary` moves in **0 of the 4 real brands** (383/2000 random), `textOnAccent` in **0/2000** (it is a black/white flip, not a search), and `textMuted` in **2000/2000** with a "before" that is the surface's own lightness — a search seed no merchant typed. A panel printing the identical three-moved/four-unchanged result for every input is not a differentiator. What ships: the 7 guaranteed pairs' shipped ratios, `textMuted`'s genuine before/after (HELDER's olive `#646147` against VELDE's grey `#686765` is the visible clamp T11 was promoted for), and two cases the original framing misses — a pair that fell back **below** the floor via `bestEffort` (silent *non*-correction), and accent-vs-surface. Reasoned in `DECISIONS-LOG.md` → Tokens.
+- [ ] A blocked or empty crawl is shown as its own state and routes to the manual fields. **Half closed.** `blocked` / `empty` / `failed` / `ok` are computed in the platform layer (the extractor only reports `ok: boolean` + prose, and an empty crawl returns `ok: true` with invented defaults — the silent fallback this box forbids). `failed` is covered by a deterministic offline test. **The "real Cloudflare-protected shop" half is NOT closed as written, and is not claimed.** Gymshark, MyProtein, Zalando and SHEIN all served readable HTML to the extractor on 2026-08-19; `coolblue.nl` and `shop.tesla.com` return 403 and `bol.com` times out. The 403 path *was* driven end to end through the page and renders "Your store answered our reader with a block" over editable fields — but a 403 is not a challenge page, and `isChallengePage`'s branch is unreachable in practice because a real bot wall exits on `!response.ok` first. A box whose proof is a third party's bot policy on the day also sits badly against §0 #3, so the four states are proven deterministically in `apps/platform/classify.test.ts` (both branches fault-injected red) rather than against a live shop.
+- [x] The constant signature is present under all three brands and cannot be removed from this UI —
       and it reads as an **AI disclosure at first interaction**, not as a vendor credit line
       (EU AI Act Art. 50, binding since 2026-08-02; a widget engineered to disappear into the host
       page is the case least likely to earn the "obvious to the user" exemption) [COMPETITORS §3].

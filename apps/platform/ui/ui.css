@@ -1,0 +1,619 @@
+/*
+ * The configuration page's own chrome.
+ *
+ * Every colour, radius, spacing step and font size here is a `--mx-*` custom property that
+ * `main.ts` writes onto `:root` from `derive(MAXIMAL)` — the same engine, the same clamp and the
+ * same guarantee the widget gets. That is what keeps the universal DoD's "no hardcoded colour,
+ * radius, spacing, or font size outside packages/tokens" true on the one page that would
+ * otherwise be the obvious exception, and it means the page about the token system is built by
+ * the token system. [TASKS.md §2, T7 DoD box 6]
+ *
+ * What is NOT a token, listed honestly — an earlier version of this comment named four exceptions
+ * and there are about three times that many. Colour is genuinely clean: no literal hex, no rgb()
+ * anywhere in this file. The rest:
+ *
+ *   - Page geometry the widget's five-step ramp has no opinion about: `--rail-w` 27rem,
+ *     `--phone-w` 375px, the 4.5rem topbar height, 40rem/34rem prose measures, 60vh on the mobile
+ *     preview frame, 2.75rem swatches, 1rem/0.5rem dots and chips.
+ *   - `999px` on the status dot and `3px` on the warning rule — a fully-round dot and a hairline
+ *     accent are shapes by definition, the same reasoning `css.ts` uses for pill launchers.
+ *   - Two derived-but-multiplied headline sizes, `calc(var(--mx-text-lg) * 1.7)` and `* 1.35`.
+ *     A derived base times an invented multiplier is still an invented size; the widget's ramp
+ *     tops out at panel scale and this page has a headline, which the ramp was never asked about.
+ *   - Optical values the ramp does not carry: three `letter-spacing` nudges, `line-height: 1.5`
+ *     on the snippet box, `font-weight` 400/600/700, and one monospace stack for the snippet.
+ *
+ * The honest summary is that colour, radius and spacing come from the engine and page-level
+ * typography largely does not. Widening `CssVarName` — a wire contract validated by
+ * `packages/agent/src/config.ts` and baked into every `apps/platform/config/*.json` — to carry a
+ * headline size for one admin page would be the worse trade.
+ */
+
+:root {
+  color-scheme: light;
+  /* The rail is sized to the longest control label plus its value, not to a round number. */
+  --rail-w: 27rem;
+  --phone-w: 375px;
+  --hairline: 1px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--mx-surface-sunken);
+  color: var(--mx-text-primary);
+  font-family: var(--mx-font-body);
+  font-size: var(--mx-text-md);
+  line-height: var(--mx-line-height);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------------------------------------------------------------------------------- topbar -- */
+
+.topbar {
+  display: flex;
+  align-items: baseline;
+  gap: var(--mx-space-2);
+  padding: var(--mx-space-3) var(--mx-space-4);
+  background: var(--mx-surface);
+  border-bottom: var(--hairline) solid var(--mx-border);
+}
+
+.wordmark {
+  font-family: var(--mx-font-display);
+  font-size: var(--mx-text-lg);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.topbar-sub {
+  color: var(--mx-text-muted);
+  font-size: var(--mx-text-sm);
+  text-transform: var(--mx-label-transform);
+  letter-spacing: var(--mx-label-tracking);
+}
+
+/* ------------------------------------------------------------------------------ screen one -- */
+
+/* `:not([hidden])`, because an author `display` rule beats the UA stylesheet's `[hidden]` and the
+   two screens would otherwise both paint. The widget's own stylesheet solves this with
+   `[hidden] { display: none !important }`; a scoped selector gets there without the `!important`. */
+.paste:not([hidden]) {
+  display: grid;
+  place-items: center;
+  /* The topbar is the only other thing on the page; filling the rest centres the one question
+     this screen asks instead of stranding it under a masthead. */
+  min-height: calc(100vh - 4.5rem);
+  padding: var(--mx-space-4);
+}
+
+.paste-inner {
+  width: min(100%, 40rem);
+}
+
+h1 {
+  margin: 0 0 var(--mx-space-2);
+  font-family: var(--mx-font-display);
+  /* One step above the widget's largest step: this is the page's only headline and the ramp tops
+     out at panel scale. */
+  font-size: calc(var(--mx-text-lg) * 1.7);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+}
+
+.lede {
+  margin: 0 0 var(--mx-space-4);
+  max-width: 34rem;
+  color: var(--mx-text-muted);
+  font-size: var(--mx-text-md);
+}
+
+.paste-row {
+  display: flex;
+  gap: var(--mx-space-2);
+}
+
+.paste-row > input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.hint {
+  margin: var(--mx-space-2) 0 0;
+  color: var(--mx-text-muted);
+  font-size: var(--mx-text-sm);
+}
+
+/* ------------------------------------------------------------------------------ screen two -- */
+
+.review:not([hidden]) {
+  display: grid;
+  grid-template-columns: var(--rail-w) minmax(0, 1fr);
+  /* Each column scrolls on its own: dragging a colour at the bottom of the rail must not scroll
+     the preview out of the frame. */
+  height: calc(100vh - 4.5rem);
+}
+
+/* One variable for the rail's inset, because the sticky action bar cancels it with a negative
+   margin to span the column edge to edge. Two literals would drift the moment the breakpoint
+   changed one of them — measured, they did: an 8px horizontal overflow at 375px. */
+.rail {
+  --rail-pad: var(--mx-space-4);
+  overflow-y: auto;
+  padding: var(--rail-pad);
+  /* Room for the sticky action bar to sit over, so the last control can still scroll clear of
+     it rather than hiding underneath. */
+  padding-bottom: calc(var(--mx-space-5) + var(--rail-pad));
+  background: var(--mx-surface);
+  border-right: var(--hairline) solid var(--mx-border);
+}
+
+.stage {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: var(--mx-space-3) var(--mx-space-4) var(--mx-space-4);
+}
+
+.stage-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mx-space-2);
+  padding-bottom: var(--mx-space-2);
+}
+
+.stage-title {
+  display: flex;
+  align-items: center;
+  gap: var(--mx-space-2);
+  color: var(--mx-text-muted);
+  font-size: var(--mx-text-sm);
+  text-transform: var(--mx-label-transform);
+  letter-spacing: var(--mx-label-tracking);
+}
+
+.dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--mx-text-muted);
+}
+.dot[data-state="live"] {
+  background: var(--mx-accent);
+}
+
+.stage-frame {
+  flex: 1 1 auto;
+  display: grid;
+  place-items: stretch;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--mx-surface);
+  border: var(--hairline) solid var(--mx-border);
+  border-radius: var(--mx-radius-lg);
+  box-shadow: var(--mx-shadow-1);
+}
+
+.preview {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+/* The 375px check the brief calls the default viewport, one click away rather than a devtools
+   trip — and it is the width the widget's own mobile breakpoint resolves against. */
+.stage-frame[data-width="phone"] {
+  place-items: center;
+  background: var(--mx-surface-sunken);
+}
+.stage-frame[data-width="phone"] .preview {
+  width: var(--phone-w);
+  max-width: 100%;
+  height: 100%;
+  border-left: var(--hairline) solid var(--mx-border);
+  border-right: var(--hairline) solid var(--mx-border);
+  background: var(--mx-surface);
+}
+
+.stage-note {
+  margin: var(--mx-space-2) 0 0;
+  color: var(--mx-text-muted);
+  font-size: var(--mx-text-sm);
+}
+
+/* -------------------------------------------------------------------------------- controls -- */
+
+.group {
+  margin-bottom: var(--mx-space-4);
+}
+
+.group-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--mx-space-2);
+  margin-bottom: var(--mx-space-2);
+}
+
+.group-title {
+  font-family: var(--mx-font-display);
+  font-size: var(--mx-text-md);
+  font-weight: 600;
+}
+
+.group-note {
+  color: var(--mx-text-muted);
+  font-size: var(--mx-text-xs);
+}
+
+.field {
+  display: grid;
+  gap: var(--mx-space-1);
+  margin-bottom: var(--mx-space-2);
+}
+
+.field-label {
+  display: block;
+  color: var(--mx-text-muted);
+  font-size: var(--mx-text-xs);
+  text-transform: var(--mx-label-transform);
+  letter-spacing: var(--mx-label-tracking);
+}
+
+.input {
+  width: 100%;
+  padding: var(--mx-space-2);
+  background: var(--mx-surface);
+  color: var(--mx-text-primary);
+  border: var(--hairline) solid var(--mx-border);
+  border-radius: var(--mx-radius-sm);
+  font-family: var(--mx-font-body);
+  font-size: var(--mx-text-md);
+  line-height: var(--mx-line-height);
+}
+
+.input:focus-visible,
+.btn:focus-visible,
+.swatch:focus-visible,
+.seg button:focus-visible,
+.linkish:focus-visible {
+  outline: 2px solid var(--mx-focus-ring);
+  outline-offset: 2px;
+}
+
+/* Native colour input plus a hex field, side by side: the picker is for the merchant who has no
+   hex code (DoD box 1) and the text field is for the one who does (box 2). Same state, two doors.
+   `<input type="color">` over any picker library — it is the platform's own, it is keyboard
+   accessible for free, and it opens the OS eyedropper on every desktop browser. */
+.colour-row {
+  display: flex;
+  gap: var(--mx-space-2);
+  align-items: center;
+}
+
+.swatch {
+  flex: 0 0 auto;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  background: none;
+  border: var(--hairline) solid var(--mx-border);
+  border-radius: var(--mx-radius-sm);
+  cursor: pointer;
+}
+.swatch::-webkit-color-swatch-wrapper {
+  padding: 3px;
+}
+.swatch::-webkit-color-swatch {
+  border: 0;
+  border-radius: calc(var(--mx-radius-sm));
+}
+
+.colour-row .input {
+  font-variant-numeric: tabular-nums;
+  text-transform: uppercase;
+}
+
+/* A segmented control, not a <select>: five radius steps and three scales are a spectrum the
+   merchant should see all of at once. */
+.seg {
+  display: flex;
+  gap: 0;
+  border: var(--hairline) solid var(--mx-border);
+  border-radius: var(--mx-radius-sm);
+  overflow: hidden;
+}
+
+.seg button {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: var(--mx-space-2) var(--mx-space-1);
+  background: var(--mx-surface);
+  color: var(--mx-text-muted);
+  border: 0;
+  border-right: var(--hairline) solid var(--mx-border);
+  font-family: var(--mx-font-body);
+  font-size: var(--mx-text-sm);
+  line-height: var(--mx-line-height);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.seg button:last-child {
+  border-right: 0;
+}
+.seg button[aria-pressed="true"] {
+  background: var(--mx-accent);
+  color: var(--mx-text-on-accent);
+  font-weight: 600;
+}
+
+/* ----------------------------------------------------------------------------------- buttons */
+
+/* `min-width: 0` and the truncation below are load-bearing, not cosmetic: the undo button's label
+   is the merchant's own phrase, and an NL phrase is arbitrarily long. With `nowrap` and no min-width
+   a flex item refuses to shrink below its content, so one long phrase pushed the whole DOCUMENT to
+   768px at a 375px viewport and put "Reset to what we found" off-screen entirely. */
+.btn {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: var(--mx-space-2) var(--mx-space-3);
+  border: var(--hairline) solid transparent;
+  border-radius: var(--mx-radius-sm);
+  font-family: var(--mx-font-body);
+  font-size: var(--mx-text-sm);
+  font-weight: 600;
+  line-height: var(--mx-line-height);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: var(--mx-accent);
+  color: var(--mx-text-on-accent);
+}
+
+.btn-ghost {
+  background: var(--mx-surface);
+  color: var(--mx-text-primary);
+  border-color: var(--mx-border);
+  font-weight: 400;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.linkish {
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--mx-text-primary);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  cursor: pointer;
+}
+
+/* Solid, not a fade: a gradient lets the control behind it show through at 30% opacity, which
+   reads as a rendering bug rather than a layer. It is pulled out to the rail's own padding so the
+   bar spans the full column edge to edge. */
+.rail-actions {
+  min-width: 0;
+  position: sticky;
+  bottom: calc(var(--rail-pad) * -1);
+  display: flex;
+  gap: var(--mx-space-2);
+  margin: var(--mx-space-3) calc(var(--rail-pad) * -1) calc(var(--rail-pad) * -1);
+  padding: var(--mx-space-3) var(--rail-pad);
+  background: var(--mx-surface);
+  border-top: var(--hairline) solid var(--mx-border);
+}
+
+/* --------------------------------------------------------------------------- found / states -- */
+
+.found {
+  padding: var(--mx-space-3);
+  margin-bottom: var(--mx-space-4);
+  background: var(--mx-surface-raised);
+  border: var(--hairline) solid var(--mx-border);
+  border-radius: var(--mx-radius-md);
+}
+
+.found h2 {
+  margin: 0 0 var(--mx-space-1);
+  font-family: var(--mx-font-display);
+  font-size: var(--mx-text-md);
+  font-weight: 600;
+}
+
+.found p {
+  margin: 0;
+  color: var(--mx-text-muted);
+  font-size: var(--mx-text-sm);
+}
+
+.found[data-state="blocked"],
+.found[data-state="empty"],
+.found[data-state="failed"] {
+  background: var(--mx-surface-sunken);
+}
+
+/* --------------------------------------------------------------------------- readability ---- */
+
+.read-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--mx-space-2);
+  align-items: center;
+  padding: var(--mx-space-1) 0;
+  border-bottom: var(--hairline) solid var(--mx-border);
+  font-size: var(--mx-text-sm);
+}
+.read-row:last-child {
+  border-bottom: 0;
+}
+
+.read-pair {
+  display: flex;
+  align-items: center;
+  gap: var(--mx-space-1);
+  min-width: 0;
+}
+
+.chip-swatch {
+  flex: 0 0 auto;
+  width: 1rem;
+  height: 1rem;
+  border-radius: var(--mx-radius-sm);
+  border: var(--hairline) solid var(--mx-border);
+}
+
+.ratio {
+  font-variant-numeric: tabular-nums;
+  color: var(--mx-text-muted);
+}
+.ratio[data-meets="false"] {
+  color: var(--mx-text-primary);
+  font-weight: 700;
+}
+
+.warn {
+  padding: var(--mx-space-3);
+  margin-bottom: var(--mx-space-3);
+  background: var(--mx-surface-sunken);
+  /* A 3px rule rather than a colour fill: the page cannot use a red it did not derive, and a
+     weight change reads as "look here" under every brand including a dark one. */
+  border-left: 3px solid var(--mx-text-primary);
+  border-radius: var(--mx-radius-sm);
+  font-size: var(--mx-text-sm);
+}
+
+.warn strong {
+  display: block;
+  margin-bottom: var(--mx-space-1);
+}
+
+.warn-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mx-space-2);
+  margin-top: var(--mx-space-2);
+}
+
+.before-after {
+  display: flex;
+  align-items: center;
+  gap: var(--mx-space-1);
+  margin-top: var(--mx-space-1);
+  color: var(--mx-text-muted);
+  font-size: var(--mx-text-xs);
+}
+
+.arrow {
+  opacity: 0.6;
+}
+
+/* ---------------------------------------------------------------------------------- deltas -- */
+
+.deltas {
+  display: grid;
+  gap: var(--mx-space-1);
+  margin-top: var(--mx-space-2);
+}
+
+.delta {
+  display: flex;
+  gap: var(--mx-space-2);
+  padding: var(--mx-space-1) var(--mx-space-2);
+  background: var(--mx-surface-raised);
+  border-radius: var(--mx-radius-sm);
+  font-size: var(--mx-text-sm);
+}
+
+.delta-group {
+  flex: 0 0 auto;
+  color: var(--mx-text-muted);
+  text-transform: var(--mx-label-transform);
+  letter-spacing: var(--mx-label-tracking);
+  font-size: var(--mx-text-xs);
+  align-self: center;
+}
+
+/* --------------------------------------------------------------------------------- snippet -- */
+
+.snippet {
+  display: block;
+  width: 100%;
+  padding: var(--mx-space-2);
+  background: var(--mx-surface-sunken);
+  color: var(--mx-text-primary);
+  border: var(--hairline) solid var(--mx-border);
+  border-radius: var(--mx-radius-sm);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--mx-text-xs);
+  line-height: 1.5;
+  word-break: break-all;
+  resize: none;
+}
+
+.verify {
+  display: flex;
+  align-items: center;
+  gap: var(--mx-space-2);
+  margin-top: var(--mx-space-2);
+  color: var(--mx-text-muted);
+  font-size: var(--mx-text-sm);
+}
+
+/* ------------------------------------------------------------------------------------ 375px -- */
+
+/* The config page is a desktop tool and we are not pretending otherwise — but "375px is the
+   default development viewport, not a responsive afterthought" [PRINCIPLES §1.3] applies to our
+   own product too. Below the split point the rail becomes the page and the preview becomes a
+   collapsible panel above it, because two columns in 375px is two unusable columns. */
+@media (max-width: 900px) {
+  .review:not([hidden]) {
+    grid-template-columns: minmax(0, 1fr);
+    height: auto;
+  }
+
+  .rail {
+    --rail-pad: var(--mx-space-3);
+    order: 2;
+    overflow: visible;
+    border-right: 0;
+  }
+
+  .stage {
+    order: 1;
+    padding: var(--mx-space-3) var(--mx-space-3) 0;
+  }
+
+  .stage-frame {
+    /* Tall enough for the launcher AND an open panel; the merchant is checking placement, and a
+       squat frame shows neither. */
+    height: 60vh;
+  }
+
+  .stage-frame[data-width="phone"] .preview {
+    width: 100%;
+  }
+
+  h1 {
+    font-size: calc(var(--mx-text-lg) * 1.35);
+  }
+
+  .paste-row {
+    flex-direction: column;
+  }
+}

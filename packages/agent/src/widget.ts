@@ -36,6 +36,36 @@ function avatarNode(voice: Voice): HTMLElement {
 }
 
 /**
+ * The one piece of this widget that is not the merchant's. Its text, its presence and the fact
+ * that no config key can suppress it are literals here, outside the token system entirely
+ * [PRINCIPLES §9] — `strings` is merchant-owned via `tools/build-config.ts`, so a signature that
+ * lived there would be merchant-settable by construction.
+ *
+ * It says "AI" and not "Maximal" on purpose. EU AI Act Article 50 has been binding since
+ * 2026-08-02 and asks that AI interaction be clear and distinguishable "at the latest at the time
+ * of the first interaction" — a widget engineered to disappear into the host page is the case
+ * least likely to earn the "obvious to a reasonably well-informed person" exemption
+ * [COMPETITORS §3]. So this is a disclosure that happens to also be our mark, not a vendor credit
+ * that happens to mention AI.
+ */
+const SIGNATURE_TEXT = 'AI'
+const SIGNATURE_LABEL = 'AI assistant by Maximal'
+
+/**
+ * On the LAUNCHER, not in the panel footer. The launcher is the first interaction; a footer line
+ * is seen only after the shopper has already opened the panel and typed, which is later than
+ * Art. 50 allows. It also keeps the signature out of `bench/checks/divergence.ts`'s `.panel`
+ * screenshot — a brand-constant element inside the H2 shot drags the divergence number down
+ * against a floor that must never be lowered [BENCHMARKS §4.1].
+ */
+function signatureNode(): HTMLElement {
+  const badge = el('span', 'signature')
+  badge.textContent = SIGNATURE_TEXT
+  badge.title = SIGNATURE_LABEL
+  return badge
+}
+
+/**
  * The agent shell: launcher, panel, header, message list, composer, constraint-chip row — all of
  * it inside one shadow root, so nothing on the storefront can style it and nothing we ship can
  * leak out. [PRINCIPLES §5]
@@ -47,6 +77,7 @@ export class MxAgent extends HTMLElement {
   private readonly config: ConfigResponse
   private readonly shadow: ShadowRoot
   private readonly launcher: HTMLButtonElement
+  private readonly launcherLabel: HTMLSpanElement
   private readonly panel: HTMLDivElement
   private readonly list: HTMLDivElement
   private readonly input: HTMLInputElement
@@ -64,12 +95,20 @@ export class MxAgent extends HTMLElement {
     this.launcher = el('button', 'launcher')
     this.launcher.type = 'button'
     this.launcher.dataset.style = tokens.launcher.style
-    const launcherLabel = el(
+    this.launcherLabel = el(
       'span',
       tokens.launcher.style === 'bubble' ? 'sr-only' : 'launcher-label',
     )
-    launcherLabel.textContent = str(strings, 'launcher.label')
-    this.launcher.append(avatarNode(voice), launcherLabel)
+    this.launcherLabel.textContent = str(strings, 'launcher.label')
+    // Appended after the label and never read from config: there is no code path from
+    // `/v1/config` to removing this node.
+    this.launcher.append(avatarNode(voice), this.launcherLabel, signatureNode())
+    // The accessible name carries the disclosure even when the visual badge is the only thing a
+    // sighted shopper sees — a 2-character mark is not a disclosure to a screen reader.
+    this.launcher.setAttribute(
+      'aria-label',
+      `${str(strings, 'launcher.label')} — ${SIGNATURE_LABEL}`,
+    )
     this.launcher.addEventListener('click', () => this.setOpen(true))
 
     const header = el('header', 'header')
@@ -121,6 +160,22 @@ export class MxAgent extends HTMLElement {
     window.addEventListener('resize', () => this.clearStickyBar())
 
     this.push({ kind: 'text', text: voice.greeting })
+  }
+
+  /**
+   * The one control the preview channel cannot deliver as a custom property: the stylesheet
+   * selects on `[data-style]`, so the launcher's shape is a DOM attribute. Validated against the
+   * three real values rather than written through, because this is reached from a `postMessage`
+   * payload — an origin check makes the sender trusted, not the data well-formed.
+   */
+  setPreviewLauncherStyle(style: string): void {
+    if (style !== 'bubble' && style !== 'pill' && style !== 'text-anchor') return
+    this.launcher.dataset.style = style
+    // The label's visibility is a CLASS, not a rule keyed off `[data-style]`, so swapping the
+    // attribute alone leaves a bubble — which is `padding: 0; aspect-ratio: 1` — trying to hold a
+    // full label, and it renders as clipped wrapped text inside a circle. Found by switching the
+    // launcher shape in the config page's live preview and looking at it.
+    this.launcherLabel.className = style === 'bubble' ? 'sr-only' : 'launcher-label'
   }
 
   connectedCallback(): void {

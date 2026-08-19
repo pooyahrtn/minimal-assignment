@@ -349,3 +349,113 @@ export function derive(m: MerchantTokens): DerivedTokens {
     fonts: { display: m.fontDisplay, body: m.fontBody },
   }
 }
+
+// ---------------------------------------------------------------------------------------------
+// Readability report — T7 DoD box 7 ("every clamped pair is visible as a named before/after, not
+// silently corrected"). Reuses `derive()`'s own output and the clamp machinery above; no
+// parallel derivation logic.
+// ---------------------------------------------------------------------------------------------
+
+export type ReadabilityRow = {
+  /** The token pair being measured, as CSS custom-property names. */
+  fg: CssVarName
+  bg: CssVarName
+  fgHex: string
+  bgHex: string
+  ratio: number
+  /** 4.5 for text pairs, 3 for the focus ring and for accent-vs-surface. */
+  floor: number
+  meets: boolean
+}
+
+export type ReadabilityReport = {
+  /** One row per AA_GUARANTEED_PAIRS entry, floor 4.5. */
+  guaranteed: ReadabilityRow[]
+  /** focusRing measured against accent and against surface, floor 3 (WCAG 1.4.11). */
+  focusRing: ReadabilityRow[]
+  /**
+   * accent vs surface, floor 3. NOT part of the AA guarantee — derive() emits accent verbatim —
+   * but the launcher and primary CTA are filled with it on the merchant's own page, so an accent
+   * that vanishes into the surface is an invisible button. This row is why the config page can
+   * refuse to hand over a snippet.
+   */
+  accentOnSurface: ReadabilityRow
+  /**
+   * The one genuine clamp movement. `textMuted`'s search starts AT the surface's own lightness
+   * and nudges out to the nearest point clearing 4.5:1, so `from` is what the merchant's surface
+   * tint wants the muted text to be and `to` is what it had to become. This always moves; that is
+   * expected and is the point — HELDER's olive and VELDE's grey are different answers to the same
+   * question.
+   */
+  mutedMove: { fromHex: string; toHex: string; fromRatio: number; toRatio: number }
+  /**
+   * Rows where the derivation could NOT reach the floor and fell back to best-effort
+   * (`bestEffort`, or a focus ring with no in-gamut answer). Silent non-correction is the failure
+   * the "show the clamp" feature actually needs to surface. Empty on almost every config.
+   */
+  shortfalls: ReadabilityRow[]
+}
+
+function readabilityRow(
+  fg: CssVarName,
+  bg: CssVarName,
+  css: CssVars,
+  floor: number,
+): ReadabilityRow {
+  const fgHex = css[fg]
+  const bgHex = css[bg]
+  const ratio = contrastRatio(hexToRgb(fgHex), hexToRgb(bgHex))
+  return { fg, bg, fgHex, bgHex, ratio, floor, meets: ratio >= floor }
+}
+
+/** Recomputes exactly the point `deriveClampedText` starts its `textMuted` search from — the
+ * surface's own L/H at the capped chroma — so `mutedMove.fromHex` is a real value, not an
+ * approximation of one. */
+function deriveMutedMove(m: MerchantTokens, css: CssVars): ReadabilityReport['mutedMove'] {
+  const surfaceRgb = hexToRgb(m.surface)
+  const surfaceOklch = rgbToOklch(surfaceRgb)
+  const textChroma = Math.min(surfaceOklch.c, TEXT_CHROMA_CAP)
+  const fromRgb = oklchToRgb(gamutMap({ l: surfaceOklch.l, c: textChroma, h: surfaceOklch.h }))
+  const fromHex = rgbToHex(fromRgb)
+  const toHex = css['--mx-text-muted']
+  return {
+    fromHex,
+    toHex,
+    fromRatio: contrastRatio(fromRgb, surfaceRgb),
+    toRatio: contrastRatio(hexToRgb(toHex), surfaceRgb),
+  }
+}
+
+export function readabilityReport(m: MerchantTokens): ReadabilityReport {
+  const { css } = derive(m)
+
+  const guaranteed = AA_GUARANTEED_PAIRS.map(([fg, bg]) => readabilityRow(fg, bg, css, 4.5))
+  const focusRing = [
+    readabilityRow('--mx-focus-ring', '--mx-accent', css, 3),
+    readabilityRow('--mx-focus-ring', '--mx-surface', css, 3),
+  ]
+  const accentOnSurface = readabilityRow('--mx-accent', '--mx-surface', css, 3)
+  const mutedMove = deriveMutedMove(m, css)
+  const shortfalls = [...guaranteed, ...focusRing].filter((row) => !row.meets)
+
+  return { guaranteed, focusRing, accentOnSurface, mutedMove, shortfalls }
+}
+
+/**
+ * The nearest colour to `accent` that clears `minRatio` against `surface`, preserving hue and
+ * chroma and moving only lightness — so the suggestion still reads as the merchant's colour.
+ * Returns the accent unchanged when it already clears. Returns the best achievable when nothing
+ * in the sRGB gamut clears (possible for a mid-luminance surface).
+ */
+export function nearestVisibleAccent(accent: string, surface: string, minRatio = 3): string {
+  const accentRgb = hexToRgb(accent)
+  const surfaceRgb = hexToRgb(surface)
+  if (contrastRatio(accentRgb, surfaceRgb) >= minRatio) return accent
+
+  const accentOklch = rgbToOklch(accentRgb)
+  const checks: Check[] = [{ bg: surfaceRgb, minRatio }]
+  const makeRgb = (l: number) => oklchToRgb(gamutMap({ l, c: accentOklch.c, h: accentOklch.h }))
+  const results = scanL(makeRgb, checks)
+  const candidate = closestPassing(results, accentOklch.l) ?? bestEffort(results)
+  return rgbToHex(candidate)
+}

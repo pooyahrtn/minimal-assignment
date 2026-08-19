@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Maximal — set up your assistant</title>
+    <link rel="stylesheet" href="/ui/ui.css" />
+  </head>
+  <body>
+    <!--
+      Two screens, one document. `data-screen` on <body> switches them, so there is no router and
+      no framework: this is a single-purpose setup flow, not an app. [PRINCIPLES §9's layered flow]
+    -->
+    <header class="topbar">
+      <span class="wordmark">Maximal</span>
+      <span class="topbar-sub">Assistant setup</span>
+    </header>
+
+    <!-- 1. Paste your store URL. -->
+    <main class="paste" id="paste">
+      <div class="paste-inner">
+        <h1>Point us at your store.</h1>
+        <p class="lede">
+          We read your palette, your type and your corners off the page you already ship — then
+          show you every guess before anything goes live.
+        </p>
+        <form class="paste-form" id="extract-form">
+          <label class="field-label" for="store-url">Your store address</label>
+          <div class="paste-row">
+            <input
+              class="input"
+              id="store-url"
+              name="url"
+              type="url"
+              required
+              placeholder="https://your-store.com"
+              autocomplete="url"
+              spellcheck="false"
+            />
+            <button class="btn btn-primary" type="submit" id="extract-btn">Read my store</button>
+          </div>
+          <p class="hint" id="paste-hint">
+            Try <button class="linkish" type="button" data-fill="http://localhost:4001">the VELDE
+            store</button> or <button class="linkish" type="button" data-fill="http://localhost:4002">KRACHT</button>.
+            You can also <button class="linkish" type="button" id="skip-extract">skip this and set
+            it up by hand</button>.
+          </p>
+        </form>
+      </div>
+    </main>
+
+    <!-- 2. Here's what we found. Everything editable, nothing assumed correct. -->
+    <main class="review" id="review" hidden>
+      <section class="rail" id="rail" aria-label="Assistant settings">
+        <!-- Rendered by main.ts. Kept in the document as an empty landmark so the page has its
+             structure before the first paint rather than after it. -->
+      </section>
+      <section class="stage" aria-label="Live preview">
+        <div class="stage-bar">
+          <div class="stage-title">
+            <span class="dot" id="preview-dot" aria-hidden="true"></span>
+            <span id="preview-label">Live preview</span>
+          </div>
+          <div class="stage-actions">
+            <button class="btn btn-ghost" type="button" id="width-toggle" aria-pressed="false">
+              375px
+            </button>
+          </div>
+        </div>
+        <div class="stage-frame" id="stage-frame">
+          <iframe
+            class="preview"
+            id="preview"
+            title="Your storefront with the assistant on it"
+            src="about:blank"
+          ></iframe>
+        </div>
+        <p class="stage-note" id="stage-note"></p>
+      </section>
+    </main>
+
+    <script type="module" src="/ui/main.js"></script>
+  </body>
+</html>

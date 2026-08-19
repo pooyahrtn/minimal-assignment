@@ -167,3 +167,31 @@ export const HELDER_VOICE: Voice = {
   greeting: 'Say what the occasion is. I will work backwards from it.',
   tone: 'plain',
 }
+
+/**
+ * Maximal's own chrome on the T7 config page. Deliberately not `DEFAULT_BRAND` — that brand is
+ * the characterless answer for an *unknown* merchant, and this page is not that: it is our own
+ * product, confident and specific, run through `derive()` like every other brand in this file so
+ * the page about the token engine is itself built by the token engine (T7 DoD box 6; ENGINEERING
+ * §1.2's "no hardcoded colour outside `packages/tokens`" applies here too).
+ */
+export const MAXIMAL: MerchantTokens = {
+  accent: '#4B3BEF',
+  surface: '#FCFCFD',
+  fontDisplay: {
+    family: 'Inter',
+    weight: 600,
+    href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
+  },
+  fontBody: {
+    family: 'Inter',
+    weight: 400,
+    href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
+  },
+  scale: 'regular',
+  radius: 'md',
+  elevation: 'soft',
+  labelCase: 'upper-tracked',
+  density: 'comfortable',
+  launcher: { style: 'pill', position: 'bottom-right' },
+}

@@ -123,6 +123,46 @@ export function styles(tokens: DerivedTokens): string {
   .launcher[data-style='text-anchor'] .avatar,
   .launcher[data-style='text-anchor'] .mark { display: none; }
 
+  /* The constant signature [PRINCIPLES §9, EU AI Act Art. 50]. Pinned to the launcher's corner
+     rather than placed inline, so it reads identically under all three launcher styles — 'bubble'
+     has no visible label to sit beside, and 'text-anchor' has no accent fill to sit on.
+
+     Its colours are the ONLY thing here that follows the brand, and deliberately so: it is painted
+     on --mx-surface with --mx-text-primary, which is an AA_GUARANTEED_PAIRS entry, so it is
+     legible at 4.5:1 under every configuration the engine can emit — including one whose accent
+     has vanished into the page. A signature a merchant can accidentally hide is not a disclosure.
+     Size, text and presence stay constant, outside the token system, as §9 requires. */
+  .signature {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border: 1px solid var(--mx-border);
+    border-radius: 999px;
+    background: var(--mx-surface);
+    color: var(--mx-text-primary);
+    font-family: var(--mx-font-body);
+    /* Not var(--mx-text-xs): a brand on the compact scale must not be able to shrink the
+       disclosure below the point where it is readable. */
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    text-transform: none;
+    /* NOT pointer-events: none. That silenced the title tooltip carrying the full disclosure
+       sentence, leaving a sighted shopper with a bare two-letter mark and the real text only in
+       the launcher's accessible name. cursor: inherit keeps it feeling like part of the button
+       it sits on rather than a separate control. */
+    cursor: inherit;
+  }
+
+  .launcher[data-style='text-anchor'] .signature { top: -8px; right: -10px; }
+
   .avatar, .mark {
     flex: 0 0 auto;
     width: var(--mx-space-4);
