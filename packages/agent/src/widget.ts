@@ -89,6 +89,8 @@ export class MxAgent extends HTMLElement {
   private stickyBarPending = false
   /** The launcher's last known horizontal centre — see `stickyBarHeight`. */
   private probeX: number | undefined
+  /** One viewport sync per frame, however many keyboard events asked for one. */
+  private viewportPending = false
   private readonly previewSheet: HTMLStyleElement
   private readonly previewVars = new Map<string, string>()
 
@@ -166,7 +168,15 @@ export class MxAgent extends HTMLElement {
     this.shadow.addEventListener('keydown', (event) => {
       if (event instanceof KeyboardEvent) this.onKeydown(event)
     })
-    window.visualViewport?.addEventListener('resize', () => this.syncViewport())
+    /*
+     * Both events, not just `resize`. The keyboard changes two numbers and fires a different
+     * event for each: `resize` for `visualViewport.height` when it comes up, `scroll` for
+     * `offsetTop` when Safari shifts the visible region to keep the focused input above it.
+     * Listening to `resize` alone caught the shrink and missed the shift, which is the half a
+     * shopper actually sees — see `syncViewport`.
+     */
+    window.visualViewport?.addEventListener('resize', () => this.scheduleViewport())
+    window.visualViewport?.addEventListener('scroll', () => this.scheduleViewport())
     window.addEventListener('resize', () => this.clearStickyBar())
     /*
      * Cookie banners go away when the shopper consents, and nothing tells us. VELDE dismisses from
@@ -514,16 +524,56 @@ export class MxAgent extends HTMLElement {
   }
 
   /**
-   * At 375px the panel is full height, and on iOS the software keyboard does not shrink `100dvh`
-   * — only `visualViewport` sees it. Writing the measured height keeps the composer above the
-   * keyboard instead of under it. Desktop clears the inline height and lets the stylesheet win.
+   * Coalesced to one write per frame: iOS fires resize and scroll all through the keyboard's
+   * slide-up animation, and every one of them asks the same question.
+   */
+  private scheduleViewport(): void {
+    if (this.viewportPending) return
+    this.viewportPending = true
+    requestAnimationFrame(() => {
+      this.viewportPending = false
+      this.syncViewport()
+    })
+  }
+
+  /**
+   * What a shopper on a phone sees when the keyboard comes up, and the reason this method is not
+   * one line.
+   *
+   * At 375px the panel fills the screen, and the panel is `position: fixed` — which on iOS means
+   * fixed to the LAYOUT viewport, the tall one, the one the keyboard does not shrink. The
+   * keyboard only moves the VISUAL viewport: it gets shorter (`height`) and, because Safari
+   * scrolls the focused composer up out from behind the keys, it also slides down the layout
+   * viewport (`offsetTop`).
+   *
+   * Writing the height alone — which is all this did — leaves the panel pinned to the top of the
+   * layout viewport while the visible region has moved down past it, and that is what the bug
+   * report from a real iPhone shows: tap the composer on KRACHT and the dialog is simply gone,
+   * leaving the storefront and the keyboard. The offset is read rather than assumed, so the case
+   * where the browser scrolls the document instead and reports 0 stays a no-op.
+   *
+   * So: height from the visual viewport, and translated by its offset, which lands the panel on
+   * the visible region however the browser split the difference between shrinking and scrolling.
+   * A transform rather than a `top`, because a transform does not re-run layout on a box that
+   * holds the whole conversation, and this runs on every frame of the keyboard animation.
+   *
+   * `offsetLeft` costs nothing to carry and covers pinch-zoom, where the visual viewport moves
+   * horizontally too. Desktop clears both and lets the stylesheet win.
    */
   private syncViewport(): void {
     const viewport = window.visualViewport
     if (viewport === null || viewport === undefined || !window.matchMedia(MOBILE_QUERY).matches) {
       this.panel.style.height = ''
+      this.panel.style.transform = ''
       return
     }
+    // Read before the write, because the write is what moves it. A shopper who has scrolled back
+    // up through the conversation keeps their place; one who was at the newest message — which is
+    // everyone who just tapped the composer — keeps that instead of watching it slide out of a
+    // list that lost half its height.
+    const atBottom = this.list.scrollHeight - this.list.scrollTop - this.list.clientHeight < 4
     this.panel.style.height = `${viewport.height}px`
+    this.panel.style.transform = `translate(${viewport.offsetLeft}px, ${viewport.offsetTop}px)`
+    if (atBottom) this.list.scrollTop = this.list.scrollHeight
   }
 }

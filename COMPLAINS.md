@@ -355,3 +355,38 @@ landed in the main tree.
   harm: the task text overclaimed its own coverage; risk: scope language describing a fix as complete
   against a bug *class* rather than the call sites actually touched reads as done to anyone who does
   not re-derive it.
+
+## Mobile keyboard fix — 2026-08-20
+
+**What changed:** The chat dialog was unusable on iOS — tapping the composer put the whole panel
+off the top of the screen. `syncViewport` now positions the panel from `visualViewport.offsetTop`
+as well as its height and re-syncs on `scroll` as well as `resize`; the chip row is capped and
+scrolled so the composer cannot be pushed past the panel's clipped edge; H4 gained a stubbed
+keyboard inset that fails without either fix.
+
+**Complaints**
+- **The defect reached a live storefront and arrived as a photograph from Pooya**, on a surface
+  that has its own HARD gate — harm: a shopper on a phone could not use the product at all, and
+  every gate was green while that was true; risk: `DECISIONS-LOG`'s `[T9]` bullet named the inset
+  half unprovable headless and stopped there, and a named ceiling with no cheap approximation
+  attached stays a hole. The approximation was ~60 lines of stub and would have failed the day
+  `syncViewport` was written.
+- **The second defect was invisible until the first was fixed**: with the panel finally on the
+  visible region, VELDE and HELDER put 347px of chrome into a 340px panel and the composer was laid
+  out past the panel's own clipped edge — harm: fixing the reported symptom alone would have shipped
+  a dialog that was visible and still had nothing to type into; risk: a check written for one defect
+  measures the one defect. It was `[T9]`'s "H4 renders three brands, not two" that made this visible
+  at all — KRACHT fitted, so a two-brand gate would have called the fix done.
+- **Four gates do not reproduce from a clean clone of `HEAD` in a fresh sandbox**, verified against
+  a detached worktree at `558ffc6` with the working tree's changes absent: `bun run test` is
+  **9 failures** in `packages/agent/src/brain/limits.test.ts`; `bun run test:e2e` is **8 failures**,
+  all in `e2e/config-page.spec.ts` (boxes 1 and 5, republish, verification — both projects) and none
+  in any widget spec; `bun bench isolation` is **red** on
+  `.launcher|margin` / `.panel|margin` (kracht clean `163px`, hostile `143px`, i.e. the hostile
+  stylesheet changes the height of the cookie bar the sticky-bar probe measures); and a full
+  `bun bench` hangs after `isolation` rather than finishing. Committed `bench/report.md` and
+  `bench/gallery/*.png` also do not reproduce byte-for-byte here — harm: a green committed report
+  cannot be used as evidence about this tree, and the checks had to be run one at a time to get
+  usable answers; risk: unowned red gates train the next session to skip the suite. **Left as
+  found** — none of them is this fix's, and editing a gate to go green is forbidden
+  [`BENCHMARKS §4.1`].

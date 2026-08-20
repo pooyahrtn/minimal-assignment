@@ -308,6 +308,8 @@ export function styles(tokens: DerivedTokens): string {
 
   .header {
     display: flex;
+    /* The way out and the way in (with .composer): neither shrinks, the rows between them do. */
+    flex: 0 0 auto;
     align-items: center;
     gap: var(--mx-space-2);
     padding: var(--mx-space-3);
@@ -347,6 +349,15 @@ export function styles(tokens: DerivedTokens): string {
     padding: var(--mx-space-2) var(--mx-space-3);
     background: var(--mx-surface-raised);
     border-bottom: 1px solid var(--mx-border);
+    /* The row that gives way on a short panel, because it is the only one that can: with a
+       keyboard up VELDE's chrome is 347px inside 340px, and the composer was measured 55px past
+       the panel's own clipped edge. Scrolled, not hidden — a hidden chip is still in the tab
+       ring. [widget.ts syncViewport] */
+    flex: 0 1 auto;
+    min-height: 0;
+    max-height: 33%;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
   .chips:empty { display: none; }
 
@@ -388,7 +399,9 @@ export function styles(tokens: DerivedTokens): string {
   }
 
   .messages {
-    flex: 1 1 auto;
+    /* Basis 0, not auto: a content-sized basis is a claim on space the composer then loses. */
+    flex: 1 1 0;
+    min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
     display: flex;
@@ -677,6 +690,7 @@ export function styles(tokens: DerivedTokens): string {
 
   .composer {
     display: flex;
+    flex: 0 0 auto;
     gap: var(--mx-space-2);
     padding: var(--mx-space-3);
     background: var(--mx-surface-raised);
@@ -725,7 +739,9 @@ export function styles(tokens: DerivedTokens): string {
 
   @media ${MOBILE_QUERY} {
     .panel {
-      inset: 0;
+      /* Top-anchored, said out loud: \`inset: 0\` plus a height already resolved this way, and
+         \`syncViewport\` translates the box, which a bottom-resolved one would move backwards. */
+      inset: 0 0 auto 0;
       width: 100%;
       /* dvh so browser chrome does not cut the composer off; the keyboard itself does not change
          dvh on iOS, so the loader also writes a visualViewport height onto this element. */

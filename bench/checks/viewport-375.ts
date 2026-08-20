@@ -98,6 +98,98 @@ async function panelTracksViewport(page: Page): Promise<string | null> {
   }, KEYBOARD_VIEWPORT.height)
 }
 
+/** What the panel and composer measured while the stubbed keyboard was up, or why not. */
+type InsetShot =
+  | { error: string }
+  | { panelTop: number; panelBottom: number; composerBottom: number }
+
+/**
+ * The stubbed inset: an iPhone-sized keyboard on the 667px phone this check already renders. iOS
+ * leaves roughly 340px of visible page above the keys and its accessory bar, and Safari scrolls
+ * the visible region ~40px down the layout viewport to clear the focused composer. `innerHeight`
+ * stays 667 throughout, which is exactly the divergence a Playwright viewport cannot produce and
+ * the widget has to survive.
+ */
+const INSET = { height: 340, offsetTop: 40, offsetLeft: 0 }
+
+/** Installs the stub, lets the widget answer it, measures, and always puts the real one back. */
+async function measureUnderKeyboard(page: Page): Promise<InsetShot> {
+  return page.evaluate(async (inset: typeof INSET): Promise<InsetShot> => {
+    const real = window.visualViewport
+    if (real === null || real === undefined) return { error: 'no visualViewport in this browser' }
+    const stub = { ...inset, width: real.width, addEventListener() {}, removeEventListener() {} }
+    const frame = (): Promise<void> =>
+      new Promise((resolve) => requestAnimationFrame(() => resolve()))
+    Object.defineProperty(window, 'visualViewport', { value: stub, configurable: true })
+    try {
+      real.dispatchEvent(new Event('resize'))
+      // Two frames: the widget coalesces its viewport writes into one rAF, so the write lands on
+      // the frame after the event and the layout it causes on the one after that.
+      await frame()
+      await frame()
+      const host = document.querySelector('mx-agent')
+      const root = host instanceof HTMLElement ? host.shadowRoot : null
+      const panel = root?.querySelector('.panel')
+      const composer = root?.querySelector('.composer')
+      if (!(panel instanceof HTMLElement) || !(composer instanceof HTMLElement)) {
+        return { error: 'no panel rendered' }
+      }
+      const box = panel.getBoundingClientRect()
+      return {
+        panelTop: box.top,
+        panelBottom: box.bottom,
+        composerBottom: composer.getBoundingClientRect().bottom,
+      }
+    } finally {
+      // Put the real one back and let the widget settle onto it, so nothing measured after this
+      // reads a panel still sized for a keyboard that was never there.
+      Object.defineProperty(window, 'visualViewport', { value: real, configurable: true })
+      real.dispatchEvent(new Event('resize'))
+      await frame()
+      await frame()
+    }
+  }, INSET)
+}
+
+/**
+ * The half the comment at the bottom of this file used to write off as unprovable headless.
+ *
+ * A real iOS keyboard does two things Playwright's viewport cannot: it shrinks
+ * `visualViewport.height` WITHOUT shrinking `innerHeight`, and it slides `visualViewport.offsetTop`
+ * down the layout viewport when Safari scrolls the focused composer clear of the keys. The widget
+ * is fixed to the layout viewport, so it has to answer both numbers or the panel ends up drawn
+ * somewhere the shopper cannot see — which is the bug this check was extended for: the dialog was
+ * rendered off the top of the screen the moment the keyboard came up.
+ *
+ * The numbers can be handed to it. `window.visualViewport` is swapped for a stub reporting a
+ * keyboard-sized inset, and the event is dispatched on the REAL object the widget subscribed to at
+ * construction. What that proves is the widget's response to those numbers, not that iOS produces
+ * them — the phone still owns that half, and it is still reported by hand.
+ */
+async function panelTracksKeyboardInset(page: Page): Promise<string | null> {
+  const shot = await measureUnderKeyboard(page)
+  if ('error' in shot) return shot.error
+  const top = INSET.offsetTop
+  const bottom = INSET.offsetTop + INSET.height
+  const problems: string[] = []
+  if (Math.abs(shot.panelTop - top) > 1) {
+    problems.push(
+      `panel top ${Math.round(shot.panelTop)}px is not the visible region's top ${top}px — the ` +
+        "keyboard inset is not being tracked, so the dialog is drawn off the shopper's screen",
+    )
+  }
+  if (Math.abs(shot.panelBottom - bottom) > 1) {
+    problems.push(`panel bottom ${Math.round(shot.panelBottom)}px is not ${bottom}px`)
+  }
+  if (shot.composerBottom > bottom + 0.5) {
+    problems.push(
+      `composer bottom ${Math.round(shot.composerBottom)}px is behind the keyboard, which ` +
+        `starts at ${bottom}px`,
+    )
+  }
+  return problems.length === 0 ? null : problems.join('; ')
+}
+
 /** One brand, both surfaces. Returns what it found rather than throwing at the first thing. */
 async function measureBrand(
   browser: Browser,
@@ -126,6 +218,12 @@ async function measureBrand(
     const composer = await composerBelowFold(page)
     if (composer) failures.push(`${brand.name}, panel open: ${composer}`)
 
+    // The keyboard, at the real phone height — a shorter visual viewport pushed down a layout
+    // viewport that did not move. Run here rather than in the short pass below so the numbers are
+    // an iPhone's and not a stub on top of a stub.
+    const inset = await panelTracksKeyboardInset(page)
+    if (inset) failures.push(`${brand.name}, keyboard inset: ${inset}`)
+
     // Short viewport: the composer has to stay reachable when the page gets 267px shorter.
     await page.setViewportSize(KEYBOARD_VIEWPORT)
     await settle(page)
@@ -142,7 +240,7 @@ async function measureBrand(
      */
     const tracked = await panelTracksViewport(page)
     if (tracked) failures.push(`${brand.name}: ${tracked}`)
-    measured += 2
+    measured += 3
   } finally {
     await page.close()
   }
@@ -184,11 +282,12 @@ async function run(): Promise<CheckResult> {
       failures,
       detail:
         `${measured} measurements across ${BRANDS.length} brands (${BRANDS.map((b) => b.name).join(', ')}) ` +
-        `at ${VIEWPORT.width}x${VIEWPORT.height}, panel open and closed, plus a ${KEYBOARD_VIEWPORT.height}px-tall pass. ` +
-        `Named gap: a real software-keyboard inset cannot be produced headless — Playwright's viewport moves ` +
-        `\`innerHeight\` and \`visualViewport.height\` together, while a keyboard moves only the second. This covers ` +
-        `the short-viewport half of BENCHMARKS' "composer above the keyboard inset"; the inset half is proven on a ` +
-        `phone, by hand, and is reported rather than claimed. [ENGINEERING §3.9]`,
+        `at ${VIEWPORT.width}x${VIEWPORT.height}, panel open and closed, plus a ${KEYBOARD_VIEWPORT.height}px-tall pass ` +
+        `and a stubbed keyboard inset (shorter \`visualViewport\` at a non-zero \`offsetTop\`, which is the pair a ` +
+        `real keyboard produces and a Playwright viewport cannot: it moves \`innerHeight\` and ` +
+        `\`visualViewport.height\` together). The stub proves the widget answers those numbers by putting the panel ` +
+        `on the visible region; that iOS produces them is still proven on a phone, by hand, and reported rather than ` +
+        `claimed. [ENGINEERING §3.9]`,
     }
   } finally {
     await browser.close()
