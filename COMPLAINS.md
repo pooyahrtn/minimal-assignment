@@ -390,3 +390,30 @@ keyboard inset that fails without either fix.
   usable answers; risk: unowned red gates train the next session to skip the suite. **Left as
   found** — none of them is this fix's, and editing a gate to go green is forbidden
   [`BENCHMARKS §4.1`].
+
+## Mobile keyboard fix, round 2 — 2026-08-20
+
+**What changed:** A 16px floor on the composer input under a coarse pointer (iOS zooms into anything
+smaller and never zooms back), and the panel now releases its inline height and transform entirely
+while the shopper is pinch-zoomed.
+
+**Complaints**
+- **Round 1's fix introduced round 2's second defect.** Compensating for `offsetLeft`/`offsetTop`
+  unconditionally makes the panel follow a zoomed shopper's pan, so magnifying the dialog buys them
+  nothing — harm: a fix for one mobile defect shipped another one in the same file, and it took the
+  shopper's next screenshot to find it; risk: the keyboard and a pinch move the same two numbers,
+  and the fix was written against only one of them. The gate written in round 1 could not have
+  caught it, because it stubs a keyboard and never a pinch — a check inherits the blind spot of the
+  defect it was written for [same lesson as `[T9]`'s fault injections].
+- **The zoom was a per-brand defect and was nearly measured on the wrong brand.** The composer's
+  size comes from the merchant's ramp: 14px on KRACHT, 18px on VELDE and HELDER. Reading it once, on
+  either of the two brands that clear the threshold, would have produced "the input is already
+  16px+, this is not the bug" — harm: none, because it was measured across all three before
+  anything was written; risk: every widget-wide claim in this repo about a size, a spacing or a
+  colour is a claim about a token ramp that differs per merchant, and one measurement does not
+  establish it.
+- **The reported storefront and the measured defect do not line up, and that is left open rather
+  than fixed over.** The screenshot was VELDE, whose input is 18px and which iOS should not
+  auto-zoom; the 14px is KRACHT's. The pinch-follow defect is brand-independent and is the more
+  likely VELDE explanation, but a phone still owns that answer — reported in the hand-off rather
+  than folded quietly into a fix that would then read as complete.

@@ -101,7 +101,13 @@ async function panelTracksViewport(page: Page): Promise<string | null> {
 /** What the panel and composer measured while the stubbed keyboard was up, or why not. */
 type InsetShot =
   | { error: string }
-  | { panelTop: number; panelBottom: number; composerBottom: number }
+  | {
+      panelTop: number
+      panelBottom: number
+      composerBottom: number
+      inlineHeight: string
+      inlineTransform: string
+    }
 
 /**
  * The stubbed inset: an iPhone-sized keyboard on the 667px phone this check already renders. iOS
@@ -110,10 +116,10 @@ type InsetShot =
  * stays 667 throughout, which is exactly the divergence a Playwright viewport cannot produce and
  * the widget has to survive.
  */
-const INSET = { height: 340, offsetTop: 40, offsetLeft: 0 }
+const INSET = { height: 340, offsetTop: 40, offsetLeft: 0, scale: 1 }
 
 /** Installs the stub, lets the widget answer it, measures, and always puts the real one back. */
-async function measureUnderKeyboard(page: Page): Promise<InsetShot> {
+async function measureUnderKeyboard(page: Page, stubbed: typeof INSET = INSET): Promise<InsetShot> {
   return page.evaluate(async (inset: typeof INSET): Promise<InsetShot> => {
     const real = window.visualViewport
     if (real === null || real === undefined) return { error: 'no visualViewport in this browser' }
@@ -139,6 +145,9 @@ async function measureUnderKeyboard(page: Page): Promise<InsetShot> {
         panelTop: box.top,
         panelBottom: box.bottom,
         composerBottom: composer.getBoundingClientRect().bottom,
+        // The inline pair is what `syncViewport` owns, so it is what a zoomed shopper needs empty.
+        inlineHeight: panel.style.height,
+        inlineTransform: panel.style.transform,
       }
     } finally {
       // Put the real one back and let the widget settle onto it, so nothing measured after this
@@ -148,7 +157,7 @@ async function measureUnderKeyboard(page: Page): Promise<InsetShot> {
       await frame()
       await frame()
     }
-  }, INSET)
+  }, stubbed)
 }
 
 /**
@@ -190,6 +199,62 @@ async function panelTracksKeyboardInset(page: Page): Promise<string | null> {
   return problems.length === 0 ? null : problems.join('; ')
 }
 
+/**
+ * iOS zooms the whole page into any focused text field whose font resolves under 16px, and it does
+ * not zoom back out — one tap on the composer and the storefront is left pannable sideways, which
+ * is how this was reported. The threshold is the browser's, so it is a floor the widget has to
+ * clear rather than a number anyone chose: KRACHT's `compact` ramp puts `--mx-text-md` at 14px and
+ * trips it, VELDE's `generous` 18px does not, which is why this is measured per brand and not
+ * asserted once.
+ *
+ * Reading the COMPUTED size, not the token: the floor is applied in a media query over `max()`, and
+ * the whole point is what the browser ends up with.
+ */
+const IOS_ZOOM_FLOOR_PX = 16
+
+async function composerInvitesZoom(page: Page): Promise<string | null> {
+  return page.evaluate((floor: number) => {
+    const host = document.querySelector('mx-agent')
+    const input = host instanceof HTMLElement ? host.shadowRoot?.querySelector('.input') : null
+    if (!(input instanceof HTMLElement)) return 'no composer input rendered'
+    const size = Number.parseFloat(window.getComputedStyle(input).fontSize)
+    if (Number.isNaN(size)) return 'the composer input has no computed font-size'
+    return size >= floor
+      ? null
+      : `the composer input is ${size}px, under the ${floor}px iOS zoom floor — focusing it zooms ` +
+          'the storefront and leaves it pannable sideways'
+  }, IOS_ZOOM_FLOOR_PX)
+}
+
+/**
+ * The other half of the same complaint, and the one the fix for the keyboard could have caused.
+ * `offsetLeft`/`offsetTop` move when a ZOOMED shopper pans, so a widget that compensates for them
+ * unconditionally drags the panel along with the pan and the magnification buys nothing. Under a
+ * pinch the widget has to let go — no inline height, no transform — and let the browser do what
+ * the shopper asked for [WCAG 1.4.4].
+ */
+async function panelFollowsAPinch(page: Page): Promise<string | null> {
+  const pinched = await measureUnderKeyboard(page, {
+    height: 300,
+    offsetTop: 120,
+    offsetLeft: 60,
+    scale: 2,
+  })
+  if ('error' in pinched) return pinched.error
+  const problems: string[] = []
+  if (pinched.inlineTransform !== '') {
+    problems.push(
+      `the panel is still transformed (${pinched.inlineTransform}) while the shopper is zoomed in`,
+    )
+  }
+  if (pinched.inlineHeight !== '') {
+    problems.push(
+      `the panel still has an inline height (${pinched.inlineHeight}) while the shopper is zoomed in`,
+    )
+  }
+  return problems.length === 0 ? null : problems.join('; ')
+}
+
 /** One brand, both surfaces. Returns what it found rather than throwing at the first thing. */
 async function measureBrand(
   browser: Browser,
@@ -224,6 +289,12 @@ async function measureBrand(
     const inset = await panelTracksKeyboardInset(page)
     if (inset) failures.push(`${brand.name}, keyboard inset: ${inset}`)
 
+    const zoom = await composerInvitesZoom(page)
+    if (zoom) failures.push(`${brand.name}: ${zoom}`)
+
+    const pinch = await panelFollowsAPinch(page)
+    if (pinch) failures.push(`${brand.name}, pinch-zoomed: ${pinch}`)
+
     // Short viewport: the composer has to stay reachable when the page gets 267px shorter.
     await page.setViewportSize(KEYBOARD_VIEWPORT)
     await settle(page)
@@ -240,7 +311,7 @@ async function measureBrand(
      */
     const tracked = await panelTracksViewport(page)
     if (tracked) failures.push(`${brand.name}: ${tracked}`)
-    measured += 3
+    measured += 5
   } finally {
     await page.close()
   }

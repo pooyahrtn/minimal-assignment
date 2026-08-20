@@ -523,6 +523,12 @@ export class MxAgent extends HTMLElement {
     }
   }
 
+  /** Hands the panel back to the stylesheet: desktop, and the zoomed shopper. */
+  private releaseViewport(): void {
+    this.panel.style.height = ''
+    this.panel.style.transform = ''
+  }
+
   /**
    * Coalesced to one write per frame: iOS fires resize and scroll all through the keyboard's
    * slide-up animation, and every one of them asks the same question.
@@ -563,8 +569,23 @@ export class MxAgent extends HTMLElement {
   private syncViewport(): void {
     const viewport = window.visualViewport
     if (viewport === null || viewport === undefined || !window.matchMedia(MOBILE_QUERY).matches) {
-      this.panel.style.height = ''
-      this.panel.style.transform = ''
+      this.releaseViewport()
+      return
+    }
+    /*
+     * A PINCH is not a keyboard, and the difference is who asked for it. `offsetLeft`/`offsetTop`
+     * move when a zoomed shopper pans, so compensating for them here drags the panel along with
+     * the pan: whatever they zoomed in to read stays exactly where it was on screen, and the
+     * magnification buys them nothing. Panning away from a modal that follows you is the one thing
+     * a zoomed page has to be able to do [WCAG 1.4.4].
+     *
+     * So: at rest we own the geometry, and under a pinch we let go and let the browser do what the
+     * shopper asked for. `> 1.01` rather than `!== 1` because a storefront is free to ship
+     * `initial-scale` a hair off 1, and that must not read as a pinch and disable the fix for the
+     * defect this whole method exists for.
+     */
+    if (viewport.scale > 1.01) {
+      this.releaseViewport()
       return
     }
     // Read before the write, because the write is what moves it. A shopper who has scrolled back

@@ -714,6 +714,16 @@ export function styles(tokens: DerivedTokens): string {
   }
   .input::placeholder { color: var(--mx-text-muted); }
 
+  /* iOS zooms the page into any focused field under 16px and does not zoom back out, which is
+     what leaves the storefront pannable sideways after one tap on the composer. KRACHT is the
+     case: \`compact\` puts \`--mx-text-md\` at 14px, VELDE's \`generous\` 18px never tripped it.
+     The browser's threshold, so a floor rather than a value anyone chose — \`max()\` leaves a
+     larger ramp alone. Coarse pointer is the real condition (an iPad zooms too); the width arm is
+     the one a headless gate can match. */
+  @media (pointer: coarse), ${MOBILE_QUERY} {
+    .input { font-size: max(16px, var(--mx-text-md)); }
+  }
+
   .send {
     flex: 0 0 auto;
     min-height: 44px;
