@@ -355,3 +355,54 @@ landed in the main tree.
   harm: the task text overclaimed its own coverage; risk: scope language describing a fix as complete
   against a bug *class* rather than the call sites actually touched reads as done to anyone who does
   not re-derive it.
+
+---
+
+## T19 — 2026-08-20
+
+**What changed:** Verified and recorded T19's finished state; did not build it. The regex
+shopper-intake parser is deleted (the model is the only intake path) and a second half grew out of
+closing box 9 honestly: a `goal`/`any-of` chip kind for outcomes the closed `tags` vocabulary
+cannot express, a `RESULT_CAP` with a merchant-owned disclosure, and a 46-scenario paid eval sweep
+(45/46). This entry covers only what a same-day verification pass can see; neither this task's
+parser-deletion phase nor its goal/any-of phase had a COMPLAINS entry before it.
+
+**Complaints**
+- The hand-off summary this pass was given described a shopper's mid-conversation retraction of one
+  attribute inside an `any-of` chip as a known, undocumented gap ("cannot strike that chip … with
+  the upgrade path"). It is not a gap: `fsm.ts`'s `shrinkAnyOf` narrows the chip by member tag
+  specifically because a plain id match can't, with its own passing self-check — harm: none this
+  time, because the diff was actually read before the claim was written into `DECISIONS-LOG.md`; risk:
+  a "known ceiling" that turns out to be already-fixed code is the same species as T11's fabricated
+  contrast ratio and T13's fictional tool self-correction — a confident, specific claim about
+  behaviour nobody had re-checked against the tree it describes.
+- The hand-off's eval-sweep progression ("23/46 → 42/46 → 45/46") has no artifact backing the first
+  two numbers anywhere in the tree — `bench/scenario-report.json` is gitignored and overwritten on
+  every run, so only the FINAL count is checkable — harm: none, the intermediate figures were left
+  out of every tracker rather than copied in; risk: a number that sounds precise and cannot be
+  checked against anything in the repo is exactly the failure `DECISIONS-LOG`'s own citation
+  discipline exists to prevent, and it will keep arriving in hand-offs from sessions that watched
+  the sweep run live and did not save the intermediate output.
+- `bun run bench/run.ts <any filter>`, including a single-check filter like `budget`, overwrites
+  `bench/report.md` on disk as a side effect of running at all — there is no dry-run or
+  stdout-only mode. Running it once to get a fresh gzip number silently clobbered another desk's
+  in-progress `Filter: transcript` report with a `budget`-only one — harm: had to be diffed against
+  its pre-run state and restored by hand, byte for byte, before this row could be written, costing
+  real time in a pass that was explicitly told not to touch bench files; risk: recurs for the next
+  verification-only pass that runs any bench check for "real numbers" without diffing the file
+  before and after, and PROGRESS.md lesson 10 already logged this exact class of hazard once for
+  `bun bench` specifically — it recurred on a single filtered check, which is the narrower case that
+  lesson did not cover.
+- The full, unfiltered `bun bench` has no time budget and no way to skip the SOFT `scorecard`
+  check, which re-judges all 17 landed tasks (uncalibrated, advisory, and almost certainly its own
+  LLM calls) even when the only thing being verified is one task's diff — backgrounded, it returned
+  zero output past the `transcript` line in 25+ minutes and was killed — harm: 25 minutes of wall
+  clock spent for no usable evidence, on top of the report-clobber above; risk: T19's own box 9
+  ("evidence, not exit codes") has no cheap path to real numbers for a single task without either
+  accepting partial coverage or paying for a full-suite judge pass that task did not touch.
+- The live platform process on `:4003` is running `kracht.json` from before this session's config
+  edit landed — a live check aimed at the new `recommend.more` string exercised the bundled English
+  fallback instead of KRACHT's own voiced sentence, because the dev server has not restarted since
+  the file changed on disk — harm: none yet, the fallback path is itself correct and tested; risk: a
+  live demo run right now would show generic copy instead of the one new merchant string this task
+  added, and nothing in the running process or the repo signals that the two have drifted apart.

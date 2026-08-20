@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { AA_GUARANTEED_PAIRS, VELDE } from '@maximal/tokens'
+import { chatEnabled } from '../apps/platform/chat'
 import { makeAsserter } from './checks/budget'
 import { judgeFuzz } from './checks/contrast'
 import { judgeDivergence } from './checks/divergence'
@@ -148,20 +149,62 @@ describe('H6 budget — the asserter', () => {
 
 describe('H3 transcript — the real check, fed a failing case', () => {
   /**
-   * No synthetic seam here: this drives `transcriptCheck.run()` itself. `--expect=empty` against
-   * VELDE's real catalog cannot be satisfied — the jacket opening finds products and the KRACHT
-   * opening is `degenerate` against a clothing catalog — so the check must fail.
+   * No synthetic seam here: this drives `transcriptCheck.run()` itself. `--expect=non-empty`
+   * against KRACHT's real catalog cannot be satisfied — its own opening message is the graded
+   * obstacle (`empty`), and the VELDE jacket opening reads no clothing attribute against a
+   * supplements vocabulary, leaving only its €250 ceiling, which every one of the 36 products
+   * clears. `non-empty` additionally demands 2-4 matches, and 36 is not in that band.
+   *
+   * THE INJECTION MOVED, and the reason is a real behaviour change rather than a gate being
+   * loosened to go green. This used to be `--expect=empty` against VELDE, unsatisfiable because
+   * the regex parser read the KRACHT sentence against a clothing catalog as nothing at all. The
+   * model reads it as a €30 ceiling PLUS three `unsupported` disclosures ("protein shake",
+   * "no sweeteners", "lactose-free") — strictly better behaviour, and it makes that pairing
+   * `empty` with a real rescue, so the old expectation became satisfiable. A new genuinely
+   * unsatisfiable input keeps the injection honest; weakening the assertion would not have.
+   *
+   * THESE TWO CALL A PAID API. H3 drives the real intake endpoint now [see the header of
+   * `bench/checks/transcript.ts`], so these are the two slowest tests in the repo and the only
+   * ones that need a network. The explicit timeout is the whole accommodation: bun's default is
+   * 5s and one model turn alone is budgeted at 8s. `transcript.ts` memoises a reading per
+   * (catalog, message) for the life of the process, so the second test below re-uses the first's
+   * turns rather than buying them again.
    */
-  test('an unsatisfiable --expect fails the check', async () => {
-    await expect(
-      transcriptCheck.run(['packages/agent/src/brain/catalog.velde.json', '--expect=empty']),
-    ).rejects.toThrow(/--expect=empty was not achieved/)
-  })
+  const LIVE_TIMEOUT_MS = 90_000
 
-  test('the same catalog without that expectation passes, so the failure above is the expectation', async () => {
-    const result = await transcriptCheck.run(['packages/agent/src/brain/catalog.velde.json'])
-    expect(grade({ count: result.count, failures: result.failures ?? [] })).toBe(true)
-  })
+  /**
+   * `chatEnabled()` is the same kill switch `chat.ts` itself fails closed on, and now decides
+   * whether these two run at all: `transcript.ts` no longer forces `MAXIMAL_LLM=1` under `bun
+   * test` [see the comment on that force], so a plain `bun run test` has no model wired in. The
+   * choice here is to skip loudly rather than either inventing a synthetic seam below `run()`
+   * (the comment above explains why this file deliberately has none for H3) or letting the run
+   * fail on a paid call nobody opted into. A skip that does not say why or how to get the real
+   * answer is indistinguishable from a check nobody wrote, so the reason and the exact live
+   * command ride in the test name, where `bun test`'s own output prints them.
+   */
+  const live = chatEnabled()
+  const skipNote = live
+    ? ''
+    : " [skipped: no live model — MAXIMAL_LLM is not '1' with a real ANTHROPIC_API_KEY; run `MAXIMAL_LLM=1 bun run bench/run.ts transcript` to exercise this]"
+
+  test.skipIf(!live)(
+    `an unsatisfiable --expect fails the check${skipNote}`,
+    async () => {
+      await expect(
+        transcriptCheck.run(['packages/agent/src/brain/catalog.kracht.json', '--expect=non-empty']),
+      ).rejects.toThrow(/--expect=non-empty was not achieved/)
+    },
+    LIVE_TIMEOUT_MS,
+  )
+
+  test.skipIf(!live)(
+    `the same catalog without that expectation passes, so the failure above is the expectation${skipNote}`,
+    async () => {
+      const result = await transcriptCheck.run(['packages/agent/src/brain/catalog.kracht.json'])
+      expect(grade({ count: result.count, failures: result.failures ?? [] })).toBe(true)
+    },
+    LIVE_TIMEOUT_MS,
+  )
 })
 
 describe('SOFT scorecard — the real check, fed malformed input', () => {

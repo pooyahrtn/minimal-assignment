@@ -675,6 +675,27 @@ export function styles(tokens: DerivedTokens): string {
   .cta { padding: var(--mx-space-3); display: flex; }
   .cta-link { flex: 1 1 auto; }
 
+  /* The intake-unavailable banner [widget.ts setError]. Pinned between the transcript and the
+     composer so it cannot scroll away while the widget is still broken, and deliberately NOT
+     shaped like an agent bubble — "I cannot reach my own brain" must not read as the merchant's
+     voice answering a question.
+
+     Built from the existing tokens on purpose. An --mx-danger token would be a new value to derive
+     per brand AND a new pair for H1 to clamp at 4.5:1; sunken ground with primary text is already
+     an AA_GUARANTEED_PAIRS entry, and the accent rule down the leading edge is what makes it read
+     as system chrome rather than prose. */
+  .error {
+    padding: var(--mx-space-2) var(--mx-space-3);
+    background: var(--mx-surface-sunken);
+    color: var(--mx-text-primary);
+    border-top: 1px solid var(--mx-border);
+    border-inline-start: var(--mx-space-1) solid var(--mx-accent);
+    font-size: var(--mx-text-sm);
+    /* The panel is a fixed-width column and this is the one string a merchant does not author to
+       fit it. Wrapping, never clipping — H4 measures horizontal overflow at 375px. */
+    overflow-wrap: anywhere;
+  }
+
   .composer {
     display: flex;
     gap: var(--mx-space-2);

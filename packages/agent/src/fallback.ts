@@ -83,6 +83,8 @@ const VELDE_CONFIG: ConfigResponse = {
     clarify: 'Tell me the piece and what it has to do.',
     'recommend.lead': 'Matches:',
     'recommend.item': '{title} · {price}',
+    'recommend.more':
+      'Showing {shown} of {total} pieces, cheapest first. Add a detail to narrow it.',
     'obstacle.text':
       'No match on all of it. {options} everything except “{blocking}”. Closest: {closest}. Tap “{blocking}” to drop it, or drop something else instead.',
     'obstacle.count.one': 'One piece fits',
@@ -98,6 +100,11 @@ const VELDE_CONFIG: ConfigResponse = {
     'no-results': 'Nothing in the range does all of that. Drop a filter and I will look again.',
     'catalog.offline':
       'I cannot reach the catalogue right now, so I cannot show you pieces. Your brief is kept. Try again in a moment.',
+    'chat.error':
+      'I cannot read that right now. The assistant is unreachable, so nothing has been filtered. Try again in a moment.',
+    'chip.label.office': 'office-ready',
+    'chip.label.bike': 'bike-ready',
+    'chip.label.matte': 'matte finish',
   },
   catalog: [],
 }
@@ -173,6 +180,8 @@ const KRACHT_CONFIG: ConfigResponse = {
     clarify: 'Give me something to work with — a goal, an ingredient, a budget.',
     'recommend.lead': "Here's what fits:",
     'recommend.item': '{title} · {price}',
+    'recommend.more':
+      "Showing the {shown} cheapest of {total} options. Give me more to work with and I'll narrow it down.",
     'obstacle.text':
       "Nothing clears all of it. {options} everything except “{blocking}” — the closest is {closest}. Tap “{blocking}” to drop it and I'll show you those, or keep it and drop something else.",
     'obstacle.count.one': 'One option fits',
@@ -188,6 +197,10 @@ const KRACHT_CONFIG: ConfigResponse = {
     'no-results': "Nothing in the range does all that. Drop one filter and I'll look again.",
     'catalog.offline':
       "I can't reach the catalogue right now, so I can't check what's in stock. Your filters are saved — try me again in a minute.",
+    'chat.error':
+      "I can't read that right now — I'm not reachable, so nothing's been filtered. Give me a moment and try again.",
+    'chip.label.protein-shake': 'protein shake',
+    'chip.label.no-sweeteners': 'no sweeteners',
   },
   catalog: [],
 }
@@ -260,6 +273,8 @@ const HELDER_CONFIG: ConfigResponse = {
     clarify: 'Give me the occasion, or a budget, and I will work from there.',
     'recommend.lead': 'Here is what fits:',
     'recommend.item': '{title} · {price}',
+    'recommend.more':
+      'Showing the {shown} cheapest of {total} options. Tell me more and I will work from there.',
     'obstacle.text':
       'Nothing matches all of it. {options} everything except “{blocking}”. Closest: {closest}. Tap “{blocking}” to drop it, or drop something else instead.',
     'obstacle.count.one': 'One option fits',
@@ -275,6 +290,11 @@ const HELDER_CONFIG: ConfigResponse = {
     'no-results': 'Nothing matches all of that. Drop a filter and I will look again.',
     'catalog.offline':
       'I cannot reach the catalogue right now, so I cannot show you anything. Your filters are kept — try again in a moment.',
+    'chat.error':
+      'I cannot read that right now — I am unreachable, so nothing has been filtered. Try again in a moment.',
+    'chip.label.office': 'office-ready',
+    'chip.label.bike': 'bike-ready',
+    'chip.label.matte': 'matte finish',
   },
   catalog: [],
 }

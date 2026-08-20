@@ -66,6 +66,7 @@
     "clarify": "Tell me what you need and I will narrow it down.",
     "recommend.lead": "Here is what fits:",
     "recommend.item": "{title} · {price}",
+    "recommend.more": "Showing the {shown} cheapest of {total} options. Tell me more and I will narrow it down.",
     "obstacle.text": "Nothing matches all of it. {options} everything except “{blocking}”. Closest: {closest}. Tap “{blocking}” to drop it, or drop something else instead.",
     "obstacle.count.one": "One option fits",
     "obstacle.count.many": "{n} options fit",
@@ -78,7 +79,8 @@
     "compare.heading": "Side by side",
     "chips.cannot": "I cannot filter on {labels}. The rest of the brief is applied.",
     "no-results": "Nothing matches all of that. Drop a filter and I will look again.",
-    "catalog.offline": "This shop is not set up yet, so I cannot show you products. Tell the shop owner their embed key does not match a configured shop."
+    "catalog.offline": "This shop is not set up yet, so I cannot show you products. Tell the shop owner their embed key does not match a configured shop.",
+    "chat.error": "I cannot read your message right now — the assistant is unreachable. Nothing has been filtered. Try again in a moment."
   },
   "catalog": []
 }

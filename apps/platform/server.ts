@@ -85,6 +85,17 @@ const CORS: Record<string, string> = {
   // then have fallen back to the local brain on every single turn, on every page, silently and
   // by design — with T13's whole feature dead and every DoD box but one still green.
   'access-control-allow-headers': 'content-type',
+  // Response headers are NOT readable cross-origin unless they are named here — only the seven
+  // CORS-safelisted ones are, and `x-mx-chat` is not one of them. Without this line
+  // `converse.ts`'s `response.headers.get('x-mx-chat')` reads `null` on every merchant page, so
+  // the carefully-documented distinction between "there is no key here" (permanent for the
+  // session) and "this one turn failed" (retry next turn) silently collapsed into the second on
+  // the only origin that matters. It cost nothing while a local parser answered anyway; with the
+  // model as the only intake path it is the difference between re-asking a dead endpoint on every
+  // message of a demo and asking once. Found by reading the widget's own console.error during the
+  // T19 acceptance walk, not by a test — no test could see it, because every same-origin caller
+  // reads the header fine.
+  'access-control-expose-headers': 'x-mx-chat',
 }
 
 /**
@@ -800,8 +811,9 @@ async function handleChat(request: Request, _url: URL): Promise<Response> {
   const { chatEnabled, proposeChips } = await import('./chat')
 
   // A bodiless 503 either way, but the header says WHICH kind, because the widget must treat them
-  // differently: "off" is true for the whole session and worth remembering, while a declined
-  // reading is about this one sentence. [converse.ts]
+  // differently: "off" is true for the whole session and worth remembering, while a failed turn is
+  // about this one sentence and the next one should try again. Both now surface as the widget's
+  // visible error state — there is no silent local fallback behind them. [converse.ts]
   if (!chatEnabled()) {
     return new Response(null, { status: 503, headers: { ...CORS, 'x-mx-chat': 'off' } })
   }
@@ -817,9 +829,11 @@ async function handleChat(request: Request, _url: URL): Promise<Response> {
   }
   if (!isConfigResponse(config)) return new Response(null, { status: 503, headers: CORS })
 
-  const chips = await proposeChips(body.text, config.catalog)
-  if (chips === null) return new Response(null, { status: 503, headers: CORS })
-  return Response.json({ chips }, { headers: CORS })
+  // `config.strings` is passed for the chip LABELS and nothing else — the model never sees it.
+  // [parse.ts `chipsFrom`, PRINCIPLES §8: the row is computed, never generated]
+  const reading = await proposeChips(body.text, config.catalog, config.strings)
+  if (reading === null) return new Response(null, { status: 503, headers: CORS })
+  return Response.json(reading, { headers: CORS })
 }
 
 function handlePublished(_request: Request, url: URL): Response {

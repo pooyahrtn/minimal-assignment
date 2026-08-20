@@ -69,6 +69,7 @@
     "clarify": "Give me something to work with — a goal, an ingredient, a budget.",
     "recommend.lead": "Here's what fits:",
     "recommend.item": "{title} · {price}",
+    "recommend.more": "Showing the {shown} cheapest of {total} options. Give me more to work with and I'll narrow it down.",
     "obstacle.text": "Nothing clears all of it. {options} everything except “{blocking}” — the closest is {closest}. Tap “{blocking}” to drop it and I'll show you those, or keep it and drop something else.",
     "obstacle.count.one": "One option fits",
     "obstacle.count.many": "{n} options fit",
@@ -81,7 +82,10 @@
     "compare.heading": "Side by side",
     "chips.cannot": "I can't filter on {labels} — it's not in the product data.",
     "no-results": "Nothing in the range does all that. Drop one filter and I'll look again.",
-    "catalog.offline": "I can't reach the catalogue right now, so I can't check what's in stock. Your filters are saved — try me again in a minute."
+    "catalog.offline": "I can't reach the catalogue right now, so I can't check what's in stock. Your filters are saved — try me again in a minute.",
+    "chat.error": "I can't read that right now — I'm not reachable, so nothing's been filtered. Give me a moment and try again.",
+    "chip.label.protein-shake": "protein shake",
+    "chip.label.no-sweeteners": "no sweeteners"
   },
   "catalog": [
     {

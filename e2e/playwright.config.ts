@@ -37,11 +37,17 @@ export default defineConfig({
     {
       command: 'bun run dev:platform',
       cwd: repoRoot,
-      // T13's live intake turn is opt-in, and this pins it off for a platform THIS config starts.
+      // The intake model is the ONLY intake path now, so a suite that pinned it off would be
+      // testing a widget that cannot answer anything. This turns it ON for a platform THIS config
+      // starts, and `ANTHROPIC_API_KEY` comes from `.env.local`, which Bun loads for `dev:platform`.
+      //
       // It is not sufficient on its own — `reuseExistingServer` below means a server someone
       // already started by hand is reused and this block never applies — which is why
-      // `offline.spec.ts` asserts the endpoint is actually off rather than trusting this line.
-      env: { ...process.env, MAXIMAL_LLM: '0' },
+      // `live.spec.ts` asserts the endpoint is actually answering rather than trusting this line.
+      //
+      // This suite now SPENDS MONEY on every message it types. That inverts the box T13 wrote
+      // ("stay green and stay offline"); the override and its reason are in DECISIONS-LOG.md.
+      env: { ...process.env, MAXIMAL_LLM: '1' },
       url: 'http://localhost:4003/v1/config/velde',
       reuseExistingServer: true,
       timeout: 30_000,

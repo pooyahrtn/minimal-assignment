@@ -83,6 +83,8 @@ export class MxAgent extends HTMLElement {
   private readonly input: HTMLInputElement
   private chipRow: HTMLElement
   private chips: Chip[] = []
+  /** The error banner's node while intake is unavailable, else null. See `setError`. */
+  private errorBar: HTMLElement | null = null
   /** The turn indicator's node while a turn is in flight, else null. See `setPending`. */
   private pending: HTMLElement | null = null
   /** One sticky-bar measurement per frame, however many events asked for one. */
@@ -338,6 +340,39 @@ export class MxAgent extends HTMLElement {
       return
     }
     this.appendMessage(node)
+  }
+
+  /**
+   * The loud failure, made visible [ENGINEERING §2.9]. The model is the only intake path, so when
+   * it cannot be reached the panel must SAY so rather than answer as if it had.
+   *
+   * A persistent bar pinned above the composer, not a message bubble, and that is the whole design
+   * argument: a bubble scrolls away after two more turns while the widget stays broken, and it
+   * reads as the agent's own voice — "I cannot filter on that" and "I cannot reach my own brain"
+   * are different claims and must not look alike. The bar is `role="alert"`, so it is announced
+   * once when it appears.
+   *
+   * Idempotent in both directions, and it never touches the chip row, the transcript or the
+   * composer: the shopper keeps their standing brief, keeps what they typed, and can send again on
+   * the next turn — a per-turn failure does not latch [converse.ts].
+   *
+   * The panel is not the launcher: the widget MOUNTS whatever happens here, so a dead endpoint can
+   * never break the merchant's page.
+   */
+  setError(message: string | null): void {
+    if (message === null) {
+      this.errorBar?.remove()
+      this.errorBar = null
+      return
+    }
+    const bar = this.errorBar ?? el('div', 'error')
+    bar.setAttribute('role', 'alert')
+    bar.textContent = message
+    if (this.errorBar === null) {
+      // Directly above the composer — the last thing read before typing again.
+      this.list.after(bar)
+      this.errorBar = bar
+    }
   }
 
   /**

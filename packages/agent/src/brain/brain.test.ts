@@ -3,48 +3,34 @@ import type { Block } from '../types'
 import { loadCatalog, parseCatalog } from './catalog'
 import { createBrain, step } from './fsm'
 import { findObstacle } from './obstacle'
-import { parseChips } from './parse'
+import { chipsFrom } from './parse'
 import { intersect } from './retrieve'
 
-// Verbatim opening messages, PRINCIPLES §8. Named for the category they open, not the shop —
-// this module carries zero brand-specific branches.
-const shakeOpeningMessage =
-  "I'm after a protein shake with no sweeteners, lactose-free, and ideally under €30."
-const jacketOpeningMessage =
-  'I need a jacket I can wear to the office and on the bike. Black, nothing shiny, and ideally under €250.'
+/**
+ * The two readings below are what `apps/platform/chat.ts` returns for the two verbatim PRINCIPLES
+ * §8 opening messages ("…a protein shake with no sweeteners, lactose-free, and ideally under €30."
+ * and "…a jacket I can wear to the office and on the bike. Black, nothing shiny, and ideally under
+ * €250."). They are hand-written here on purpose: whether the MODEL actually reads those sentences
+ * that way is measured separately, against the real endpoint, by `bench/checks/transcript.ts`.
+ *
+ * This file tests the pure reducer — no model, no network. Chip labels are the bare tags because
+ * no merchant `strings` are in scope; the label source itself is covered by `parse.ts`'s
+ * self-check and by `shell.test.ts`, which passes the merchant's own strings.
+ */
+const SHAKE_READING = chipsFrom({
+  tags: ['protein-shake', 'no-sweeteners', 'lactose-free'],
+  maxPrice: 30,
+})
+const JACKET_READING = chipsFrom({
+  tags: ['jacket', 'office', 'bike', 'black', 'matte'],
+  maxPrice: 250,
+})
 
 const fixturePath = `${import.meta.dir}/fixture.json`
 
 function noMatchBlock(blocks: Block[]): Extract<Block, { kind: 'no-match' }> | undefined {
   return blocks.find((b): b is Extract<Block, { kind: 'no-match' }> => b.kind === 'no-match')
 }
-
-describe('parse: free text -> constraint chips', () => {
-  test('extracts >=3 chips from the shake opening message via keyword/synonym matching, not a whole-sentence match', () => {
-    const chips = parseChips(shakeOpeningMessage)
-    expect(chips.length).toBeGreaterThanOrEqual(3)
-    const ids = chips.map((c) => c.id)
-    expect(ids).toContain('chip-protein-shake')
-    expect(ids).toContain('chip-no-sweeteners')
-    expect(ids).toContain('chip-lactose-free')
-    expect(ids).toContain('chip-price')
-    const priceChip = chips.find((c) => c.id === 'chip-price')
-    expect(priceChip?.kind).toEqual({ type: 'price-max', max: 30 })
-  })
-
-  test('extracts >=3 chips from the jacket opening message via keyword/synonym matching, not a whole-sentence match', () => {
-    const chips = parseChips(jacketOpeningMessage)
-    expect(chips.length).toBeGreaterThanOrEqual(3)
-    const ids = chips.map((c) => c.id)
-    expect(ids).toContain('chip-jacket')
-    expect(ids).toContain('chip-office')
-    expect(ids).toContain('chip-bike')
-    expect(ids).toContain('chip-black')
-    expect(ids).toContain('chip-matte')
-    const priceChip = chips.find((c) => c.id === 'chip-price')
-    expect(priceChip?.kind).toEqual({ type: 'price-max', max: 250 })
-  })
-})
 
 describe('catalog: runtime-guarded load from a path argument', () => {
   test('loads a valid catalog from disk', async () => {
@@ -61,8 +47,8 @@ describe('catalog: runtime-guarded load from a path argument', () => {
 describe('retrieve + obstacle: computed, never scripted', () => {
   test('the shake constraints intersect to empty by arithmetic on the fixture catalog, using more chips than the number that first empties the set', async () => {
     const catalog = await loadCatalog(fixturePath)
-    const chips = parseChips(shakeOpeningMessage)
-    // 4 chips parsed (category + 2 attributes + price); the category tag alone is non-binding
+    const chips = SHAKE_READING
+    // 4 chips read (category + 2 attributes + price); the category tag alone is non-binding
     // here (every shake product carries it), so the minimal set that empties the intersection is
     // 3 — this runs the full 4, above that threshold. [ENGINEERING §3.3]
     expect(chips.length).toBe(4)
@@ -75,15 +61,42 @@ describe('retrieve + obstacle: computed, never scripted', () => {
 
   test('the jacket constraints are satisfiable on the fixture catalog (recommend path, not obstacle)', async () => {
     const catalog = await loadCatalog(fixturePath)
-    const chips = parseChips(jacketOpeningMessage)
-    const results = intersect(chips, catalog)
+    const results = intersect(JACKET_READING, catalog)
     expect(results.length).toBeGreaterThan(0)
+  })
+
+  test('a goal chip WIDENS: any of its attributes matches, where ANDing the same two is empty', async () => {
+    const catalog = await loadCatalog(fixturePath)
+    // These two families share no product on this fixture, exactly as `protein` and `creatine` do
+    // on the real KRACHT catalog — the case the kind exists for. Read as two tag chips it is an
+    // obstacle; read as one goal it is a recommendation.
+    expect(intersect(chipsFrom({ tags: ['jacket', 'protein-shake'] }), catalog)).toEqual([])
+
+    const goal = chipsFrom({ tags: [], goal: ['jacket', 'protein-shake'] })
+    expect(goal.map((c) => c.id)).toEqual(['chip-any-jacket-protein-shake'])
+    const either = catalog.filter(
+      (p) => p.tags.includes('jacket') || p.tags.includes('protein-shake'),
+    )
+    expect(
+      intersect(goal, catalog)
+        .map((p) => p.id)
+        .sort(),
+    ).toEqual(either.map((p) => p.id).sort())
+    expect(
+      step(createBrain(catalog), { type: 'message', chips: goal, dropped: [] }).state.state,
+    ).toBe('recommend')
+
+    // It widens WITHIN itself and still ANDs with the rest of the row: a budget cuts the union.
+    const withBudget = [...goal, ...chipsFrom({ tags: [], maxPrice: 30 })]
+    const cheap = intersect(withBudget, catalog)
+    expect(cheap.length).toBeGreaterThan(0)
+    expect(cheap.length).toBeLessThan(either.length)
+    expect(cheap.every((p) => p.price <= 30)).toBe(true)
   })
 
   test('obstacle names the blocking constraint and quantifies the trade-off with a number', async () => {
     const catalog = await loadCatalog(fixturePath)
-    const chips = parseChips(shakeOpeningMessage)
-    const obstacle = findObstacle(chips, catalog)
+    const obstacle = findObstacle(SHAKE_READING, catalog)
     expect(obstacle).not.toBeNull()
     // On this assortment, three near-clean products clear both attribute chips but sit over
     // budget, while dropping either single attribute chip frees exactly one cheaper product.
@@ -102,7 +115,7 @@ describe('retrieve + obstacle: computed, never scripted', () => {
 describe('fsm: pure reducer, chip drop/restore is one call, undoable, never evicted', () => {
   test('a message against an empty catalog reaches obstacle with no rescuing removal (no no-match block, since no chip drop can help)', () => {
     const brain = createBrain([])
-    const result = step(brain, { type: 'message', text: shakeOpeningMessage })
+    const result = step(brain, { type: 'message', chips: SHAKE_READING, dropped: [] })
     expect(result.state.state).toBe('obstacle')
     expect(noMatchBlock(result.blocks)).toBeUndefined()
   })
@@ -111,7 +124,7 @@ describe('fsm: pure reducer, chip drop/restore is one call, undoable, never evic
     const catalog = await loadCatalog(fixturePath)
     const brain = createBrain(catalog)
 
-    const opened = step(brain, { type: 'message', text: shakeOpeningMessage })
+    const opened = step(brain, { type: 'message', chips: SHAKE_READING, dropped: [] })
     expect(opened.state.state).toBe('obstacle')
     const match = noMatchBlock(opened.blocks)
     expect(match).toBeDefined()
@@ -136,7 +149,7 @@ describe('fsm: pure reducer, chip drop/restore is one call, undoable, never evic
   test('works against the same fixture with a differently-shaped product (no brand-specific branch)', async () => {
     const catalog = await loadCatalog(fixturePath)
     const brain = createBrain(catalog)
-    const result = step(brain, { type: 'message', text: jacketOpeningMessage })
+    const result = step(brain, { type: 'message', chips: JACKET_READING, dropped: [] })
     expect(result.state.state).toBe('recommend')
     const cards = result.blocks.filter((b) => b.kind === 'product-card')
     expect(cards.length).toBeGreaterThan(0)

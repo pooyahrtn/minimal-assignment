@@ -66,6 +66,7 @@
     "clarify": "Tell me the piece and what it has to do.",
     "recommend.lead": "Matches:",
     "recommend.item": "{title} · {price}",
+    "recommend.more": "Showing {shown} of {total} pieces, cheapest first. Add a detail to narrow it.",
     "obstacle.text": "No match on all of it. {options} everything except “{blocking}”. Closest: {closest}. Tap “{blocking}” to drop it, or drop something else instead.",
     "obstacle.count.one": "One piece fits",
     "obstacle.count.many": "{n} pieces fit",
@@ -78,7 +79,11 @@
     "compare.heading": "Side by side",
     "chips.cannot": "I cannot filter on {labels}. The rest of the brief is applied.",
     "no-results": "Nothing in the range does all of that. Drop a filter and I will look again.",
-    "catalog.offline": "I cannot reach the catalogue right now, so I cannot show you pieces. Your brief is kept. Try again in a moment."
+    "catalog.offline": "I cannot reach the catalogue right now, so I cannot show you pieces. Your brief is kept. Try again in a moment.",
+    "chat.error": "I cannot read that right now. The assistant is unreachable, so nothing has been filtered. Try again in a moment.",
+    "chip.label.office": "office-ready",
+    "chip.label.bike": "bike-ready",
+    "chip.label.matte": "matte finish"
   },
   "catalog": [
     {

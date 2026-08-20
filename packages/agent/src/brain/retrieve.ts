@@ -8,6 +8,14 @@ export function predicateFor(chip: ParsedChip): (product: Product) => boolean {
       const tag = chip.kind.tag
       return (product) => product.tags.includes(tag)
     }
+    // ANY of them, not all. The chip is ONE goal the shopper stated and the tags are the ways this
+    // merchant can serve it, so a product that does either satisfies it. `every` here would be an
+    // empty set on any catalog where the alternatives do not co-occur, which is the normal case —
+    // protein powders and creatine are different products in every shop that sells both.
+    case 'any-of': {
+      const tags = chip.kind.tags
+      return (product) => product.tags.some((tag) => tags.includes(tag))
+    }
     case 'price-max': {
       const max = chip.kind.max
       return (product) => product.price <= max

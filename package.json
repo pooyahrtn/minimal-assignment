@@ -17,7 +17,8 @@
     "dev:kracht": "cd apps/shop-kracht && bun run dev",
     "test:e2e": "playwright test -c e2e/playwright.config.ts",
     "test": "./bench/no-empty-test-run.sh",
-    "bench": "bun run bench/run.ts"
+    "bench": "bun run bench/run.ts",
+    "scenarios": "bun run bench/checks/scenarios.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.9",

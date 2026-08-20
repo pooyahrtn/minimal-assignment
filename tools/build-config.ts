@@ -38,6 +38,31 @@ type ShopSpec = {
 }
 
 /**
+ * Chip labels, merchant-owned, keyed `chip.label.<catalog tag>`.
+ *
+ * These used to be a `SYNONYMS` table compiled into `parse.ts` alongside the regex intake parser.
+ * The parser is deleted (the model is the only intake path) but the LABELS still have to come from
+ * somewhere the shopper can read, and `PRINCIPLES §8` forbids taking one off the wire from the
+ * model — the chip row is COMPUTED, never generated. So they live here, in the config, which is
+ * where a decision that could change belongs [ENGINEERING §2.1]: renaming "office-ready" is now a
+ * `bun run build:config` away rather than a re-release of a binary we cannot recall.
+ *
+ * ONLY the tags whose own word reads badly in a chip row need an entry. `chipsFrom` falls back to
+ * the tag itself, never to the key, so `vegan`, `leather`, `navy` and `creatine` are deliberately
+ * absent — an entry that restates its own tag is a line of config to keep in sync for nothing.
+ */
+const VELDE_CHIP_LABELS: Record<string, string> = {
+  'chip.label.office': 'office-ready',
+  'chip.label.bike': 'bike-ready',
+  'chip.label.matte': 'matte finish',
+}
+
+const KRACHT_CHIP_LABELS: Record<string, string> = {
+  'chip.label.protein-shake': 'protein shake',
+  'chip.label.no-sweeteners': 'no sweeteners',
+}
+
+/**
  * The house-neutral string set. `default` uses it as-is; a new brand spreads it and overrides only
  * the lines that carry voice, so adding a brand does not mean authoring 24 strings by hand.
  * A named const rather than an optional `ShopSpec.strings` — ENGINEERING §2.7 prefers non-optional
@@ -54,6 +79,12 @@ const NEUTRAL_STRINGS: Record<string, string> = {
   clarify: 'Tell me what you need and I will narrow it down.',
   'recommend.lead': 'Here is what fits:',
   'recommend.item': '{title} · {price}',
+  // The disclosure T-shirt-cap comment [fsm.ts RESULT_CAP] made necessary: a goal-shaped brief can
+  // match most of a catalog, and the panel now shows only the cheapest few. Never silent — this
+  // says what is hidden and how to get past it, in words, since there is no "show more" control to
+  // point at. "options" echoes this brand's own `obstacle.count.*` noun for a matching product.
+  'recommend.more':
+    'Showing the {shown} cheapest of {total} options. Tell me more and I will narrow it down.',
   'obstacle.text':
     'Nothing matches all of it. {options} everything except “{blocking}”. Closest: {closest}. Tap “{blocking}” to drop it, or drop something else instead.',
   'obstacle.count.one': 'One option fits',
@@ -69,6 +100,10 @@ const NEUTRAL_STRINGS: Record<string, string> = {
   'no-results': 'Nothing matches all of that. Drop a filter and I will look again.',
   'catalog.offline':
     'This shop is not set up yet, so I cannot show you products. Tell the shop owner their embed key does not match a configured shop.',
+  // The loud failure. Shown when the intake model cannot be reached at all — there is no silent
+  // local fallback any more, so this string IS the behaviour. [ENGINEERING §2.9]
+  'chat.error':
+    'I cannot read your message right now — the assistant is unreachable. Nothing has been filtered. Try again in a moment.',
 }
 
 /**
@@ -79,7 +114,8 @@ const NEUTRAL_STRINGS: Record<string, string> = {
  * Placeholders the widget fills:
  *   {blocking} the computed blocking chip's label · {options} how many products fit everything
  *   else (pluralised through obstacle.count.*) · {closest} the nearest price, in the catalog's
- *   own currency · {n} a count · {title} {price} one recommended product.
+ *   own currency · {n} a count · {title} {price} one recommended product · {shown} {total} the
+ *   recommend cap's disclosure: cards actually sent vs. products that matched [fsm.ts RESULT_CAP].
  */
 const SHOPS: Record<string, ShopSpec> = {
   velde: {
@@ -99,6 +135,10 @@ const SHOPS: Record<string, ShopSpec> = {
       clarify: 'Tell me the piece and what it has to do.',
       'recommend.lead': 'Matches:',
       'recommend.item': '{title} · {price}',
+      // "pieces" echoes `obstacle.count.many` below — this brand's own noun for a matching
+      // product — rather than a generic "results" or "matches" invented just for this string.
+      'recommend.more':
+        'Showing {shown} of {total} pieces, cheapest first. Add a detail to narrow it.',
       'obstacle.text':
         'No match on all of it. {options} everything except “{blocking}”. Closest: {closest}. Tap “{blocking}” to drop it, or drop something else instead.',
       'obstacle.count.one': 'One piece fits',
@@ -114,6 +154,9 @@ const SHOPS: Record<string, ShopSpec> = {
       'no-results': 'Nothing in the range does all of that. Drop a filter and I will look again.',
       'catalog.offline':
         'I cannot reach the catalogue right now, so I cannot show you pieces. Your brief is kept. Try again in a moment.',
+      'chat.error':
+        'I cannot read that right now. The assistant is unreachable, so nothing has been filtered. Try again in a moment.',
+      ...VELDE_CHIP_LABELS,
     },
   },
   kracht: {
@@ -133,6 +176,10 @@ const SHOPS: Record<string, ShopSpec> = {
       clarify: 'Give me something to work with — a goal, an ingredient, a budget.',
       'recommend.lead': "Here's what fits:",
       'recommend.item': '{title} · {price}',
+      // "options" echoes `obstacle.count.many` below. "Give me more to work with" echoes `clarify`
+      // above — same coach, same ask, the second time round.
+      'recommend.more':
+        "Showing the {shown} cheapest of {total} options. Give me more to work with and I'll narrow it down.",
       'obstacle.text':
         "Nothing clears all of it. {options} everything except “{blocking}” — the closest is {closest}. Tap “{blocking}” to drop it and I'll show you those, or keep it and drop something else.",
       'obstacle.count.one': 'One option fits',
@@ -148,6 +195,9 @@ const SHOPS: Record<string, ShopSpec> = {
       'no-results': "Nothing in the range does all that. Drop one filter and I'll look again.",
       'catalog.offline':
         "I can't reach the catalogue right now, so I can't check what's in stock. Your filters are saved — try me again in a minute.",
+      'chat.error':
+        "I can't read that right now — I'm not reachable, so nothing's been filtered. Give me a moment and try again.",
+      ...KRACHT_CHIP_LABELS,
     },
   },
   /**
@@ -174,8 +224,18 @@ const SHOPS: Record<string, ShopSpec> = {
       // Without this override `clarify` reads 'Tell me what you need and I will narrow it down.',
       // three bubbles from the greeting and near-verbatim to it — it reads as a repeat bug.
       clarify: 'Give me the occasion, or a budget, and I will work from there.',
+      // Overridden rather than left on the NEUTRAL line for the same reason as `clarify` above:
+      // "and I will work from there" is this brand's own refrain (see `clarify`/`greeting`), so
+      // repeating it here reads as one voice rather than a silent fall-through to the houseline.
+      'recommend.more':
+        'Showing the {shown} cheapest of {total} options. Tell me more and I will work from there.',
       'catalog.offline':
         'I cannot reach the catalogue right now, so I cannot show you anything. Your filters are kept — try again in a moment.',
+      'chat.error':
+        'I cannot read that right now — I am unreachable, so nothing has been filtered. Try again in a moment.',
+      // HELDER borrows VELDE's catalog [see productOrigin above], so it inherits its tags and
+      // therefore needs the same label copy or its chip row would read `office` and `matte`.
+      ...VELDE_CHIP_LABELS,
     },
   },
   /**

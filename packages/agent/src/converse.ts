@@ -109,6 +109,26 @@ function voice(block: Block, state: BrainState, strings: Record<string, string>)
 }
 
 /**
+ * The disclosure sentence when the merchant's config has no `recommend.more` key. Same problem
+ * `chat.error` solves below, for the same reason: this key is new, so every runtime-minted
+ * `shop-*.json` predates it, and `str()` renders a missing key AS THE KEY — a shopper on a minted
+ * shop would read the literal text "recommend.more" stapled under six product cards, which is a
+ * worse defect than the truncation this whole feature exists to disclose. English, in the bundle,
+ * deliberately, and still run through `fill()` — unlike `chat.error`, this template carries
+ * placeholders, so the fallback needs the same interpolation a real merchant string gets, not just
+ * a static sentence. [config.ts `str`]
+ */
+const BUILT_IN_RECOMMEND_MORE =
+  'Showing the {shown} cheapest of {total} matches. Tell me more to narrow the list.'
+
+function recommendMoreText(strings: Record<string, string>, shown: number, total: number): string {
+  return fill(strings['recommend.more'] ?? BUILT_IN_RECOMMEND_MORE, {
+    shown: String(shown),
+    total: String(total),
+  })
+}
+
+/**
  * Never answer with silence. Exported so the graded turn is checkable without a DOM.
  * A turn that produced no sentence — no rescue exists, or the config
  * arrived from the built-in fallback with no catalog at all — says so in the merchant's own
@@ -130,6 +150,17 @@ export function reply(
       out.push(text(str(strings, 'recommend.lead')))
     }
     out.push(...voice(block, state, strings))
+  }
+  // The bookend to the lead-in above: `led` is reused rather than a second flag because it is
+  // already exactly "this turn showed at least one card" — the precondition the disclosure needs
+  // too. `shown`/`total` are recomputed from the live chip row rather than threaded through a
+  // block, for the same reason `obstacleText` recomputes `rescued` above: `evaluate` [fsm.ts
+  // RESULT_CAP] only forwards the CAPPED cards, so the full match count does not otherwise reach
+  // this file, and the FSM stays brand-blind — it does the cut, never the copy.
+  if (led) {
+    const shown = blocks.filter((block) => block.kind === 'product-card').length
+    const total = intersect(state.chips, state.catalog).length
+    if (total > shown) out.push(text(recommendMoreText(strings, shown, total)))
   }
   // The predicate is "the turn answered nothing", not "the turn produced no prose". Before T5 the
   // two were the same thing only because every block was flattened into text; testing for prose
@@ -160,6 +191,22 @@ function parsedKind(kind: unknown): ParsedChip['kind'] | null {
   if (kind.type === 'price-max' && typeof kind.max === 'number' && Number.isFinite(kind.max)) {
     return { type: 'price-max', max: kind.max }
   }
+  // A goal chip: several attributes, satisfied by any ONE of them. Length-checked rather than
+  // quietly filtered — an `any-of` missing an entry is a DIFFERENT constraint, and an empty one
+  // matches nothing at all (`some` over `[]` is false), so it would empty the catalog instead of
+  // widening it, which is the exact opposite of what the shopper asked for.
+  if (kind.type === 'any-of' && Array.isArray(kind.tags)) {
+    const tags = kind.tags.filter((tag): tag is string => typeof tag === 'string')
+    if (tags.length > 0 && tags.length === kind.tags.length) return { type: 'any-of', tags }
+    return null
+  }
+  // An `unsupported` chip is a DISCLOSURE and it now travels this wire: the model is the only
+  // thing that can recognise "exactly one button" as a constraint this catalog has no field for.
+  // Inert by construction — `intersect` and `findObstacle` both read `state === 'active'` only —
+  // and rendered with `textContent`, never markup [blocks.ts `renderChips`].
+  if (kind.type === 'unsupported' && typeof kind.phrase === 'string') {
+    return { type: 'unsupported', phrase: kind.phrase }
+  }
   return null
 }
 
@@ -167,12 +214,41 @@ function parsedChip(chip: unknown): ParsedChip | null {
   if (!isRecord(chip)) return null
   const { id, label, state } = chip
   if (typeof id !== 'string' || typeof label !== 'string') return null
-  if (state !== 'active' && state !== 'dropped') return null
+  if (state !== 'active' && state !== 'dropped' && state !== 'unsupported') return null
   const kind = parsedKind(chip.kind)
   return kind === null ? null : { id, label, state, kind }
 }
 
-export function parsedChips(value: unknown): ParsedChip[] | null {
+/**
+ * One turn of intake, as `POST /v1/chat` puts it on the wire. Declared here rather than imported
+ * from `apps/platform/chat.ts`: that module imports `ai`, `@ai-sdk/anthropic` and `zod`, and even
+ * a type-only import across that boundary is one refactor away from dragging the provider SDK into
+ * a bundle H6 caps at 18 kB. Two fields is a cheaper duplicate than that risk.
+ */
+export type Reading = { chips: ParsedChip[]; dropped: string[] }
+
+/**
+ * The error sentence when the merchant's config has no `chat.error` key. The ~150 runtime-minted
+ * `shop-*.json` configs predate the key and will never have it, and `str()` renders a missing key
+ * AS THE KEY — so without this a shopper on a minted shop would read the literal text
+ * "chat.error" in the panel. English, in the bundle, deliberately: a shipped default that reads
+ * like a sentence is the one thing that cannot be missing. [config.ts `str`]
+ */
+const BUILT_IN_CHAT_ERROR =
+  'I cannot read your message right now. Nothing has been filtered — try again in a moment.'
+
+function chatErrorText(strings: Record<string, string>): string {
+  return strings['chat.error'] ?? BUILT_IN_CHAT_ERROR
+}
+
+/**
+ * One turn's reading off the network, or null. Nothing here trusts the platform's shape.
+ *
+ * An EMPTY chip list is a valid reading now, not a miss: with no local parser behind it, "the
+ * model understood no constraint" and "the model could not be reached" are different answers and
+ * the shopper is owed a different one for each. Only a malformed body is null.
+ */
+export function parsedReading(value: unknown): Reading | null {
   if (!isRecord(value) || !Array.isArray(value.chips)) return null
   const chips: ParsedChip[] = []
   for (const raw of value.chips) {
@@ -180,33 +256,32 @@ export function parsedChips(value: unknown): ParsedChip[] | null {
     if (chip === null) return null
     chips.push(chip)
   }
-  return chips.length > 0 ? chips : null
+  const dropped = Array.isArray(value.dropped)
+    ? value.dropped.filter((id): id is string => typeof id === 'string')
+    : []
+  return { chips, dropped }
 }
 
 /**
- * The model's reading of one message, or null to use the local parser for this turn [TASKS T13].
+ * The model's reading of one message, or a failure. There is no third answer and no local parser
+ * behind it any more [DECISIONS-LOG: T13's "degrade, never break" overridden by ENGINEERING §2.9].
  *
- * Every branch answers null: the kill switch is server-side, a 503 is the platform saying it has
- * no key or no confidence, and a network error, an abort, a non-JSON body or a malformed chip all
- * mean the same thing to a shopper. The 5s timeout is the widget's own — the platform has one too,
- * and neither is allowed to be the only one.
- */
-/**
  * `off` means "stop asking for the rest of this session" — the platform has no key or the kill
- * switch is set, and neither changes without a restart. Everything else is `null`: this ONE turn
- * goes local and the next one asks again.
+ * switch is set, and neither changes without a restart. `null` is everything else: a timeout, a
+ * network error, a non-JSON body, a malformed chip, a provider outage. Both now paint the same
+ * visible error state, and the DISTINCTION is about what happens NEXT: `off` latches and stops
+ * spending a round trip per turn to be told the same thing, while `null` does not, so the turn
+ * after a slow one on hotel wifi asks again and can succeed.
  *
- * The distinction is the whole point. Latching on every failure meant a single slow first turn on
- * hotel wifi — or one reading the platform declined as no better than the local brain — silently
- * switched the model off for the rest of the conversation, with a page reload the only way back.
- * That is the demo, and it degraded far past "the shopper sees a slower answer".
+ * Latching on every failure was the defect this split exists to prevent, and it costs more now
+ * than it did: with no fallback path, a latched widget is a widget that has stopped working.
  */
-type ChatOutcome = ParsedChip[] | null | 'off'
+type ChatOutcome = Reading | null | 'off'
 
 /**
- * The client timeout is deliberately LONGER than the platform's own (5s): if they were equal the
- * client would always win the race and the server's own reasons — including a considered decline —
- * would never reach the widget. The server is the one that should be timing the model out.
+ * The client timeout is deliberately LONGER than the platform's own (8s): if they were equal the
+ * client would always win the race and the server's own reasons would never reach the widget. The
+ * server is the one that should be timing the model out.
  */
 const CLIENT_TIMEOUT_MS = 11000
 
@@ -221,7 +296,7 @@ async function askPlatform(url: string, shop: string, text: string): Promise<Cha
     })
     if (response.headers.get('x-mx-chat') === 'off') return 'off'
     if (!response.ok) return null
-    return parsedChips(await response.json())
+    return parsedReading(await response.json())
   } catch {
     return null
   }
@@ -248,22 +323,46 @@ export function converse(agent: MxAgent, config: ConfigResponse, chat?: ChatEndp
 
   /**
    * Turned off only by an explicit `off` from the platform — no key, or the kill switch — because
-   * that answer cannot change without a server restart and re-asking every turn would make the
-   * shopper watch the dots on every message of a demo that has already fallen back. A transient
-   * failure or a declined reading does NOT latch: the next turn asks again.
+   * that answer cannot change without a server restart and re-asking every turn would spend a
+   * round trip to be told the same thing. A transient failure does NOT latch: the next turn asks
+   * again.
    */
   let live = chat !== undefined
 
+  /**
+   * The loud failure [ENGINEERING §2.9 "Fail loudly, never half-paint"]. Nothing is parsed, nothing
+   * is guessed, and no block is pushed — the FSM is not stepped at all, so the chip row keeps
+   * showing the brief the shopper actually built rather than being redrawn as if this turn had
+   * happened. The panel shows the merchant's own sentence and the console carries the detail for
+   * whoever is debugging the storefront.
+   */
+  const fail = (reason: string): void => {
+    console.error(`maximal: intake unavailable (${reason}) — the shopper's turn was not read`)
+    agent.setError(chatErrorText(config.strings))
+  }
+
   const message = async (text: string): Promise<void> => {
+    // No endpoint at all: a widget built by a test or by `bench/gallery.ts` has no network path,
+    // and with the local parser deleted there is nothing else it could do with the sentence.
     if (!live || chat === undefined) {
-      run({ type: 'message', text })
+      fail(chat === undefined ? 'no chat endpoint' : 'the platform reported no model')
       return
     }
     agent.setPending(true)
     try {
       const outcome = await askPlatform(chat.url, chat.shop, text)
-      if (outcome === 'off') live = false
-      run({ type: 'message', text, chips: outcome === 'off' ? undefined : (outcome ?? undefined) })
+      if (outcome === 'off') {
+        live = false
+        fail('the platform reported no model')
+        return
+      }
+      if (outcome === null) {
+        fail('the platform could not read that turn')
+        return
+      }
+      // Only a real reading clears the banner, and only on the turn that produced one.
+      agent.setError(null)
+      run({ type: 'message', chips: outcome.chips, dropped: outcome.dropped })
     } finally {
       // The turn is over however it ended. `push` clears this too, but a turn that produced no
       // block at all — or threw somewhere unforeseen — must not leave the dots running forever.

@@ -30,3 +30,7 @@ apps/platform/config/shop-*.json
 .agents/
 .claude/skills/
 skills-lock.json
+
+# Scenario sweep report — bench/checks/scenarios.ts (bun run scenarios) regenerates this on every
+# run. Machine-written output, not source, never hand-edited.
+bench/scenario-report.json

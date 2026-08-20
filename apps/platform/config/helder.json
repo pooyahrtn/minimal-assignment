@@ -66,6 +66,7 @@
     "clarify": "Give me the occasion, or a budget, and I will work from there.",
     "recommend.lead": "Here is what fits:",
     "recommend.item": "{title} · {price}",
+    "recommend.more": "Showing the {shown} cheapest of {total} options. Tell me more and I will work from there.",
     "obstacle.text": "Nothing matches all of it. {options} everything except “{blocking}”. Closest: {closest}. Tap “{blocking}” to drop it, or drop something else instead.",
     "obstacle.count.one": "One option fits",
     "obstacle.count.many": "{n} options fit",
@@ -78,7 +79,11 @@
     "compare.heading": "Side by side",
     "chips.cannot": "I cannot filter on {labels}. The rest of the brief is applied.",
     "no-results": "Nothing matches all of that. Drop a filter and I will look again.",
-    "catalog.offline": "I cannot reach the catalogue right now, so I cannot show you anything. Your filters are kept — try again in a moment."
+    "catalog.offline": "I cannot reach the catalogue right now, so I cannot show you anything. Your filters are kept — try again in a moment.",
+    "chat.error": "I cannot read that right now — I am unreachable, so nothing has been filtered. Try again in a moment.",
+    "chip.label.office": "office-ready",
+    "chip.label.bike": "bike-ready",
+    "chip.label.matte": "matte finish"
   },
   "catalog": [
     {
